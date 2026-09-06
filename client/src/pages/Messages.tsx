@@ -1,6 +1,6 @@
 import { Alert, Box, Button, Center, Group, Loader, SimpleGrid, Text, Title } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useHaptic } from "use-haptic";
 
 import { ApiError } from "../api/apiClient";
@@ -8,9 +8,9 @@ import { useSession } from "../api/authService";
 import {
   useMessages,
   useDeleteMessage,
-  useRespondToMessage,
   useAddExampleMessages,
   Message,
+  type ResponseMessageResponse,
 } from "../api/messageService";
 import { useUserSettings, useUpdateUserSettings } from "../api/settingsService";
 import { ConfirmationModal } from "../components/ConfirmationModal";
@@ -23,26 +23,20 @@ import { resolveApiErrorMessage } from "../lib/i18n/apiErrors";
 import { useTranslations } from "../lib/i18n";
 import { getTouchpointTranslations } from "../lib/touchpointTranslations";
 import { useMessagePreferences } from "../lib/useMessagePreferences";
-import { useQuestionRender } from "../lib/useQuestionRender";
+import { useReplyComposer } from "../lib/useReplyComposer";
 import { useThreadRoot } from "../lib/useThreadRoot";
 import { highlightButton } from "../styles/tokens";
 
-const shortlinkurl = import.meta.env.VITE_SHORTLINK_URL || "localhost:5173/profile";
+const SHORTLINK_URL = import.meta.env.VITE_SHORTLINK_URL || "localhost:5173/profile";
+
+const MESSAGE_REFETCH_INTERVAL_MS = 10000;
 
 const MAX_BSKY_POST_LENGTH = 280;
-const GENERAL_BUFFER = 3;
+/** Slack against Bluesky's own grapheme counting, which is not this one. */
+const POST_LENGTH_SAFETY_MARGIN = 3;
 /** How the question is quoted into the post when it is not sent as an image. */
 const quotedQuestion = (message: string) =>
   ` \\n\\nAnon asked via 💙📩❓: *${message}*`; /* i18n-allow: budget-only, mirrors the server's own quoting, never rendered by this client */
-
-/** /messages/respond's answer when the render it was handed is not ready yet. */
-const RENDER_NOT_READY = 409;
-
-/** A reply the user has committed to, waiting on its question image. */
-interface QueuedSend {
-  message: Message;
-  response: string;
-}
 
 export default function Messages() {
   const { triggerHaptic } = useHaptic(1);
@@ -57,7 +51,7 @@ export default function Messages() {
     isLoading: messagesLoading,
     refetch: refetchMessages,
   } = useMessages(session?.did || null, {
-    refetchInterval: 10000,
+    refetchInterval: MESSAGE_REFETCH_INTERVAL_MS,
     refetchOnWindowFocus: true,
     refetchOnReconnect: true,
   });
@@ -65,7 +59,6 @@ export default function Messages() {
   const thread = useThreadRoot(session?.did, messagesData?.messages);
 
   const { mutate: deleteMessage, isPending: deleteLoading } = useDeleteMessage();
-  const { mutate: respondToMessage, isPending: respondLoading } = useRespondToMessage();
   const { mutate: addExamples, isPending: examplesLoading } = useAddExampleMessages();
 
   const { data: userSettings, isLoading: settingsLoading } = useUserSettings();
@@ -79,27 +72,40 @@ export default function Messages() {
     },
   });
 
-  const [respondingTid, setRespondingTid] = useState<string | null>(null);
-  const [responseText, setResponseText] = useState("");
   const [deleteModalOpened, setDeleteModalOpened] = useState(false);
   const [messageIdToDelete, setMessageIdToDelete] = useState<string | null>(null);
   const [deletingTid, setDeletingTid] = useState<string | null>(null);
-  const [queuedSend, setQueuedSend] = useState<QueuedSend | null>(null);
-
-  const respondingMessage = messagesData?.messages?.find((m) => m.tid === respondingTid) ?? null;
-  const render = useQuestionRender({
-    target: respondingMessage
-      ? { tid: respondingMessage.tid, original: respondingMessage.message }
-      : null,
-    theme: userSettings?.imageTheme,
-    enabled: includeQuestionAsImage,
-  });
 
   const handle = session?.profile?.handle ?? "";
-  const shortUrl = `${shortlinkurl}/${handle}`;
+  const shortUrl = `${SHORTLINK_URL}/${handle}`;
+
+  const composer = useReplyComposer({
+    messages: messagesData?.messages,
+    thread,
+    imageTheme: userSettings?.imageTheme,
+    includeQuestionAsImage,
+    appendProfileLink,
+    shortUrl,
+    handle,
+    renderPostedNotice: useCallback(
+      (posted: ResponseMessageResponse, inThread: boolean) => (
+        <PostedNotice
+          link={postedAnswerLink(
+            posted.uri,
+            posted.link,
+            session?.profile?.handle,
+            userSettings?.defaultClient ?? null
+          )}
+          inThread={inThread}
+        />
+      ),
+      [session?.profile?.handle, userSettings?.defaultClient]
+    ),
+    onPosted: refetchMessages,
+  });
 
   const characterLimitFor = (message: Message) => {
-    let budget = MAX_BSKY_POST_LENGTH - GENERAL_BUFFER;
+    let budget = MAX_BSKY_POST_LENGTH - POST_LENGTH_SAFETY_MARGIN;
     if (appendProfileLink && handle) budget -= ` ${shortUrl}`.length;
     if (!includeQuestionAsImage) budget -= quotedQuestion(message.message).length;
     return Math.max(0, budget);
@@ -112,8 +118,7 @@ export default function Messages() {
     if (!session?.did) return;
     addExamples(session.did, {
       onSuccess: () => refetchMessages(),
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      onError: (err: any) => {
+      onError: (err) => {
         notifications.show({
           title: messages.messagesPage.addExamplesErrorTitle,
           message: resolveApiErrorMessage(err, messages),
@@ -132,12 +137,11 @@ export default function Messages() {
     setDeletingTid(tid);
     deleteMessage(tid, {
       onSuccess: () => {
-        if (respondingTid === tid) closeComposer();
+        if (composer.respondingTid === tid) composer.close();
         closeModal();
         refetchMessages().finally(() => setDeletingTid(null));
       },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      onError: (err: any) => {
+      onError: (err) => {
         notifications.show({
           title: messages.messagesPage.deleteErrorTitle,
           message: resolveApiErrorMessage(err, messages),
@@ -149,28 +153,6 @@ export default function Messages() {
     });
   };
 
-  /**
-   * The open composer is what the render follows, so moving it while a send is
-   * waiting would hand that send the *new* question's image. `claimReady` only
-   * checks the DID, so the wrong image would post to Bluesky rather than be
-   * rejected.
-   *
-   * @see [Messages.test.tsx](../tests/pages/Messages.test.tsx) — "opening
-   * another question while a send waits on its render does not move the
-   * composer" and "posts the queued reply with its own question's render".
-   */
-  const openComposer = (tid: string) => {
-    if (queuedSend) return;
-    setRespondingTid(tid);
-    setResponseText("");
-  };
-
-  /** Abandons the queued send too: a reply nobody is waiting for must not post. */
-  const closeComposer = () => {
-    setRespondingTid(null);
-    setQueuedSend(null);
-  };
-
   const handleDeleteRequest = (tid: string) => {
     if (confirmBeforeDelete) {
       setMessageIdToDelete(tid);
@@ -180,124 +162,7 @@ export default function Messages() {
     performDelete(tid);
   };
 
-  const postResponse = (message: Message, response: string, renderId?: string) => {
-    const text = appendProfileLink && handle ? `${response} ${shortUrl}` : response;
-    const replyTo = thread.replyTarget(message.tid);
-
-    respondToMessage(
-      {
-        tid: message.tid,
-        recipient: message.recipient,
-        original: message.message,
-        response: text,
-        includeQuestionAsImage,
-        replyTo,
-        renderId,
-      },
-      {
-        onSuccess: (data) => {
-          if (thread.isRoot(message.tid) && data.uri && data.cid) {
-            thread.recordReply(message.tid, { uri: data.uri, cid: data.cid, link: data.link });
-          }
-          closeComposer();
-          setResponseText("");
-          notifications.show({
-            title: replyTo
-              ? messages.messagesPage.threadReplyTitle
-              : messages.messagesPage.responseSentTitle,
-            message: (
-              <PostedNotice
-                link={postedAnswerLink(
-                  data.uri,
-                  data.link,
-                  session?.profile?.handle,
-                  userSettings?.defaultClient ?? null
-                )}
-                inThread={!!replyTo}
-              />
-            ),
-            color: "green",
-            autoClose: 8000,
-          });
-          refetchMessages();
-        },
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        onError: (err: any) => {
-          // The render was consumed, expired, or never finished. The server told
-          // us which, so go back to waiting on it rather than blaming the user.
-          if (err.status === RENDER_NOT_READY) {
-            render.recover();
-            setQueuedSend({ message, response });
-            return;
-          }
-          notifications.show({
-            title: messages.messagesPage.responseErrorTitle,
-            message: resolveApiErrorMessage(err, messages),
-            color: "red",
-          });
-        },
-      }
-    );
-  };
-
-  /**
-   * @see [Messages.test.tsx](../tests/pages/Messages.test.tsx) — "pressing Enter
-   * while a response is already in flight does not submit again" and "a second
-   * Enter while the question image is still rendering posts once" pin the guard
-   * below. Nothing downstream of it is idempotent: /messages/respond creates a
-   * fresh Bluesky post per call, and the wait is now long enough to invite a
-   * second press.
-   */
-  const handleSendResponse = (message: Message, response: string) => {
-    if (respondLoading || queuedSend) return;
-
-    if (!response.trim()) {
-      notifications.show({
-        title: messages.messagesPage.emptyResponseTitle,
-        message: messages.messagesPage.emptyResponseMessage,
-        color: "yellow",
-      });
-      return;
-    }
-
-    if (!includeQuestionAsImage) {
-      postResponse(message, response);
-      return;
-    }
-
-    // Reading a failed render clears it server-side, so a send after one has to
-    // ask for a fresh render rather than wait on the key it already reported.
-    if (render.status === "failed") render.retry();
-    setQueuedSend({ message, response });
-  };
-
-  useEffect(() => {
-    if (!queuedSend) return;
-    // No render to wait for: send it the old way and let the server render it.
-    // `idle` belongs here too — the image toggle going off mid-wait, or the open
-    // message leaving the list, ends the render without ever settling it, and a
-    // status this effect does not release strands the send with no way back.
-    if (render.status === "unavailable" || render.status === "idle") {
-      setQueuedSend(null);
-      postResponse(queuedSend.message, queuedSend.response);
-      return;
-    }
-    if (render.status === "failed") {
-      setQueuedSend(null);
-      notifications.show({
-        title: messages.messagesPage.imageRenderFailedTitle,
-        message: render.error || messages.messagesPage.imageRenderFailedMessage,
-        color: "red",
-      });
-      return;
-    }
-    if (!render.readyRenderId) return;
-    setQueuedSend(null);
-    postResponse(queuedSend.message, queuedSend.response, render.readyRenderId);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [queuedSend, render.status, render.readyRenderId]);
-
-  const msgCount = messagesData?.messages?.length ?? 0;
+  const messageCount = messagesData?.messages?.length ?? 0;
 
   if (sessionLoading) {
     return (
@@ -318,7 +183,7 @@ export default function Messages() {
   const ownerName = session.profile?.displayName || session.profile?.handle || "";
   // Localised because this text leaves the DOM into a tweet/DM, where Google
   // Translate cannot reach it (#266).
-  const t = getTouchpointTranslations(userSettings?.touchpointLocale);
+  const touchpoint = getTouchpointTranslations(userSettings?.touchpointLocale);
 
   return (
     <Box maw={1080}>
@@ -327,7 +192,7 @@ export default function Messages() {
           <Title order={1} style={{ letterSpacing: "-0.03em" }}>
             {messages.messagesPage.heading}
           </Title>
-          {!messagesLoading && <MessageCount count={msgCount} />}
+          {!messagesLoading && <MessageCount count={messageCount} />}
         </Box>
       </Group>
 
@@ -336,8 +201,8 @@ export default function Messages() {
         fullUrl={`https://${shortUrl}`}
         handle={handle}
         shareData={{
-          title: t.inboxShareTitle,
-          text: t.inboxShareText(ownerName),
+          title: touchpoint.inboxShareTitle,
+          text: touchpoint.inboxShareText(ownerName),
           url: `https://${shortUrl}`,
         }}
       />
@@ -346,7 +211,7 @@ export default function Messages() {
         <Center>
           <Loader size="lg" />
         </Center>
-      ) : msgCount > 0 ? (
+      ) : messageCount > 0 ? (
         <>
           <SimpleGrid
             cols={{ base: 1, md: 2 }}
@@ -371,15 +236,15 @@ export default function Messages() {
             messages={thread.ordered}
             thread={thread}
             gradient={useGradients}
-            respondingTid={respondingTid}
-            onExpand={openComposer}
-            onCollapse={closeComposer}
-            responseText={responseText}
-            onResponseTextChange={setResponseText}
+            respondingTid={composer.respondingTid}
+            onExpand={composer.open}
+            onCollapse={composer.close}
+            responseText={composer.responseText}
+            onResponseTextChange={composer.setResponseText}
             characterLimitFor={characterLimitFor}
-            onSend={handleSendResponse}
-            sending={respondLoading || queuedSend !== null}
-            awaitingRender={queuedSend !== null}
+            onSend={composer.send}
+            sending={composer.sending}
+            awaitingRender={composer.awaitingRender}
             includesImage={includeQuestionAsImage}
             deletingTid={deletingTid}
             onDelete={handleDeleteRequest}

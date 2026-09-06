@@ -1,7 +1,7 @@
 import assert from "node:assert";
 import { test, describe, afterEach, mock } from "bun:test";
 
-import { createProfileHono, type ProfileDeps } from "#/hono/message-routes";
+import { createProfileHono, type ProfileDeps } from "#/hono/profile-routes";
 import { withTestSession, sessionHeader } from "./helpers/hono-test";
 
 import type { AppContext } from "#/index";

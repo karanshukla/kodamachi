@@ -15,12 +15,10 @@ import { createDb, migrateToLatest } from "./database/db";
 import { assertProductionBindHost, WILDCARD_HOSTS } from "./lib/assert-production-bind-host";
 import { createBidirectionalResolver, createIdResolver } from "./lib/id-resolver";
 import { createAuthHono } from "./hono/auth-routes";
-import {
-  createMessageHono,
-  createNotificationHono,
-  createProfileHono,
-  createSettingsHono,
-} from "./hono/message-routes";
+import { createMessageHono } from "./hono/message-routes";
+import { createNotificationHono } from "./hono/notification-routes";
+import { createProfileHono } from "./hono/profile-routes";
+import { createSettingsHono } from "./hono/settings-routes";
 import { sessionMiddleware, type SessionVars } from "./hono/session-middleware";
 
 import type { Database } from "./database/db";

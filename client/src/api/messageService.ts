@@ -181,8 +181,8 @@ export function useMessages(
 }
 
 export function useStartRender() {
-  return useMutation({
-    mutationFn: (data: StartRenderRequest) => messageService.startRender(data),
+  return useMutation<StartRenderResponse, ApiError, StartRenderRequest>({
+    mutationFn: (data) => messageService.startRender(data),
   });
 }
 
@@ -211,14 +211,14 @@ export function useRenderStatus(
 }
 
 export function useSendMessage() {
-  return useMutation({
-    mutationFn: (data: SendMessageRequest) => messageService.sendMessage(data),
+  return useMutation<{ success: boolean }, ApiError, SendMessageRequest>({
+    mutationFn: (data) => messageService.sendMessage(data),
   });
 }
 
 export function useDeleteMessage() {
-  return useMutation({
-    mutationFn: (tid: string) => messageService.deleteMessage(tid),
+  return useMutation<{ success: boolean }, ApiError, string>({
+    mutationFn: (tid) => messageService.deleteMessage(tid),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: messageKeys.all });
       queryClient.invalidateQueries({ queryKey: settingsKeys.stats() });
@@ -227,8 +227,8 @@ export function useDeleteMessage() {
 }
 
 export function useRespondToMessage() {
-  return useMutation({
-    mutationFn: (data: ResponseMessageRequest) => messageService.respondToMessage(data),
+  return useMutation<ResponseMessageResponse, ApiError, ResponseMessageRequest>({
+    mutationFn: (data) => messageService.respondToMessage(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: messageKeys.all });
       queryClient.invalidateQueries({ queryKey: settingsKeys.stats() });
@@ -237,8 +237,8 @@ export function useRespondToMessage() {
 }
 
 export function useAddExampleMessages() {
-  return useMutation({
-    mutationFn: (recipient: string) => messageService.addExampleMessages(recipient),
+  return useMutation<MessagesResponse, ApiError, string>({
+    mutationFn: (recipient) => messageService.addExampleMessages(recipient),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: messageKeys.all });
       queryClient.invalidateQueries({ queryKey: settingsKeys.stats() });
@@ -247,7 +247,7 @@ export function useAddExampleMessages() {
 }
 
 export function useSyncMessages() {
-  return useMutation({
+  return useMutation<MessagesResponse, ApiError, void>({
     mutationFn: () => messageService.syncMessages(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: messageKeys.all });

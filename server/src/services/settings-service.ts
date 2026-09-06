@@ -26,6 +26,12 @@ export interface UserSettings {
 
 const USE_APP_DEFAULT = null;
 
+/** What `com.atproto.repo.listRecords` accepts as its per-page maximum. */
+const PDS_PAGE_SIZE = 100;
+
+/** Caps the count at a number worth showing rather than paging a whole repo. */
+const MAX_PDS_PAGES_COUNTED = 10;
+
 const SETTINGS_DEFAULTS = {
   pdsSyncEnabled: toDbBoolean(true),
   imageTheme: "default",
@@ -168,21 +174,21 @@ export class SettingsService {
     let recordCount = 0;
     try {
       let cursor: string | undefined;
-      for (let page = 0; page < 10; page++) {
-        const res = await withRetry(
+      for (let pageNumber = 0; pageNumber < MAX_PDS_PAGES_COUNTED; pageNumber++) {
+        const page = await withRetry(
           () =>
             agent.com.atproto.repo.listRecords({
               repo: userDid,
               collection: LEXICON_NSID,
-              limit: 100,
+              limit: PDS_PAGE_SIZE,
               cursor,
             }),
           this.logger,
           { did: userDid, op: "listRecords" }
         );
-        if (!res.success) break;
-        recordCount += res.data.records.length;
-        cursor = res.data.cursor;
+        if (!page.success) break;
+        recordCount += page.data.records.length;
+        cursor = page.data.cursor;
         if (!cursor) break;
       }
     } catch (err) {

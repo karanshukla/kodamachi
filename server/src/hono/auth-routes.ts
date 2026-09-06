@@ -1,6 +1,5 @@
 import { z } from "zod";
-import { zValidator } from "@hono/zod-validator";
-import { Hono } from "hono";
+import { Hono, type Context } from "hono";
 import { setCookie } from "hono/cookie";
 import { isValidDid, isValidHandle } from "@atproto/syntax";
 
@@ -18,9 +17,13 @@ import { AuthService } from "#/services/auth-service";
 import { NotificationService } from "#/services/notification-service";
 import { clearSession, getSession, setSession } from "./session-middleware";
 import { createE2EAuthHono } from "./e2e-auth-routes";
+import { validateJson } from "./route-helpers";
 
 import type { AppContext } from "#/index";
 import type { AppSessionData } from "#/auth/session";
+
+/** Derived so it stays in step with what `AuthService.checkSession` returns. */
+type BlueskyProfile = NonNullable<Awaited<ReturnType<AuthService["checkSession"]>>>;
 
 export interface AuthDeps {
   service?: AuthService;
@@ -37,87 +40,104 @@ export function createAuthHono(ctx: AppContext, deps: AuthDeps = {}): Hono {
     handle: z.string().min(1, { error: "INVALID_HANDLE" }).max(64),
   });
 
-  app.post(
-    "/login",
-    zValidator("json", loginSchema, (result, c) => {
-      if (!result.success) {
-        return c.json({ errors: result.error.issues }, 400);
-      }
-    }),
-    async (c) => {
-      const { handle } = c.req.valid("json");
-      if (!isValidHandle(handle)) {
-        return c.json(errorBody("INVALID_HANDLE", "invalid handle"), 400);
-      }
-      try {
-        ctx.logger.info({ handle }, "Starting OAuth authorize");
-        const redirectUrl = await service.getOAuthRedirectUrl(handle);
-        ctx.logger.info({ redirectUrl }, "OAuth authorize succeeded");
-        return c.json({ redirectUrl });
-      } catch (err: unknown) {
-        ctx.logger.error({ err, handle }, "Failed to start OAuth authorize");
-        return c.json(errorBody("LOGIN_INIT_FAILED", "Couldn't initiate login"), 500);
-      }
+  app.post("/login", validateJson(loginSchema), async (c) => {
+    const { handle } = c.req.valid("json");
+    if (!isValidHandle(handle)) {
+      return c.json(errorBody("INVALID_HANDLE", "invalid handle"), 400);
     }
-  );
+    try {
+      ctx.logger.info({ handle }, "Starting OAuth authorize");
+      const redirectUrl = await service.getOAuthRedirectUrl(handle);
+      ctx.logger.info({ redirectUrl }, "OAuth authorize succeeded");
+      return c.json({ redirectUrl });
+    } catch (err: unknown) {
+      ctx.logger.error({ err, handle }, "Failed to start OAuth authorize");
+      return c.json(errorBody("LOGIN_INIT_FAILED", "Couldn't initiate login"), 500);
+    }
+  });
+
+  const LOGGED_OUT = { isLoggedIn: false, profile: null, did: null } as const;
+
+  /** Writes the session back with `did`'s account entry refreshed from `profile`. */
+  async function rememberAccount(
+    c: Context,
+    session: AppSessionData,
+    profile: BlueskyProfile
+  ): Promise<void> {
+    await setSession(
+      c,
+      mutateSession(session, (draft) => upsertAccount(draft, toAccountEntry(profile)))
+    );
+  }
+
+  /** Writes the session back with `did` dropped, for an account Bluesky rejected. */
+  async function forgetAccount(
+    c: Context,
+    session: AppSessionData,
+    did: string
+  ): Promise<AppSessionData> {
+    const next = mutateSession(session, (draft) => removeAccount(draft, did));
+    await setSession(c, next);
+    return next;
+  }
+
+  /**
+   * The account `/session` should answer for: the active one while Bluesky still
+   * honours its OAuth grant, otherwise the first of the remaining signed-in
+   * accounts. Null once neither has a live grant, which is a logged-out answer.
+   *
+   * @see [auth-controller.test.ts](../tests/auth-controller.test.ts) — pins the
+   * fallback to a second account and the drop when that one is dead too.
+   */
+  async function resolveActiveAccount(
+    c: Context,
+    session: AppSessionData
+  ): Promise<{ did: string; profile: BlueskyProfile } | null> {
+    const activeDid = session.did!;
+    const activeProfile = await service.checkSession(activeDid);
+    if (activeProfile) {
+      await rememberAccount(c, session, activeProfile);
+      return { did: activeDid, profile: activeProfile };
+    }
+
+    const withoutActive = mutateSession(session, (draft) => removeAccount(draft, activeDid));
+    const fallback = getAccounts(withoutActive)[0];
+    if (!fallback) return null;
+
+    const switched = { ...withoutActive, did: fallback.did };
+    await setSession(c, switched);
+    const fallbackProfile = await service.checkSession(fallback.did);
+    if (!fallbackProfile) {
+      await forgetAccount(c, switched, fallback.did);
+      return null;
+    }
+    await rememberAccount(c, switched, fallbackProfile);
+    return { did: fallback.did, profile: fallbackProfile };
+  }
 
   app.get("/session", async (c) => {
-    let session = getSession(c);
+    const session = getSession(c);
     if (!session?.did) {
       clearSession(c);
       ctx.logger.debug("No session cookie, returning not logged in");
-      return c.json({ isLoggedIn: false, profile: null, did: null });
+      return c.json(LOGGED_OUT);
     }
     try {
-      let did = session.did;
-      let profile = await service.checkSession(did);
-
-      if (!profile) {
-        session = mutateSession(session, (s) => removeAccount(s, did));
-        const fallback = getAccounts(session)[0];
-        if (fallback) {
-          did = fallback.did;
-          const updated = { ...session, did };
-          await setSession(c, updated);
-          session = updated;
-          profile = await service.checkSession(did);
-          if (profile) {
-            const p = profile;
-            await setSession(
-              c,
-              mutateSession(session, (s) => upsertAccount(s, toAccountEntry(p)))
-            );
-          } else {
-            await setSession(
-              c,
-              mutateSession(session, (s) => removeAccount(s, did))
-            );
-          }
-        }
-      } else {
-        const p = profile;
-        await setSession(
-          c,
-          mutateSession(session, (s) => upsertAccount(s, toAccountEntry(p)))
-        );
-      }
-
-      if (!profile) {
+      const active = await resolveActiveAccount(c, session);
+      if (!active) {
         clearSession(c);
-        return c.json({ isLoggedIn: false, profile: null, did: null });
+        return c.json(LOGGED_OUT);
       }
-
-      const finalSession = getSession(c) as AppSessionData;
       return c.json({
         isLoggedIn: true,
-        profile,
-        did,
-        accounts: getAccounts(finalSession),
+        profile: active.profile,
+        did: active.did,
+        accounts: getAccounts(getSession(c) as AppSessionData),
       });
     } catch (err) {
       clearSession(c);
       ctx.logger.error({ err }, "Error fetching profile");
-      return c.json({ isLoggedIn: false, profile: null, did: null });
+      return c.json(LOGGED_OUT);
     }
   });
 
@@ -134,7 +154,7 @@ export function createAuthHono(ctx: AppContext, deps: AuthDeps = {}): Hono {
       ctx.logger.error({ err, did }, "Failed to revoke OAuth session");
       return c.json(errorBody("LOGOUT_FAILED", "Failed to log out"), 500);
     }
-    const next = mutateSession(session, (s) => removeAccount(s, did));
+    const next = mutateSession(session, (draft) => removeAccount(draft, did));
     const remaining = getAccounts(next);
     if (remaining.length > 0) {
       const switched = { ...next, did: remaining[0].did };
@@ -153,58 +173,50 @@ export function createAuthHono(ctx: AppContext, deps: AuthDeps = {}): Hono {
     did: z.string().min(1, { error: "DID_REQUIRED" }).max(512),
   });
 
-  app.post(
-    "/accounts/switch",
-    zValidator("json", switchSchema, (result, c) => {
-      if (!result.success) {
-        return c.json({ errors: result.error.issues }, 400);
-      }
-    }),
-    async (c) => {
-      const { did } = c.req.valid("json");
-      if (!isValidDid(did)) {
-        return c.json(errorBody("INVALID_DID", "Invalid DID format"), 400);
-      }
-      const session = getSession(c);
-      if (!session || !findAccount(session, did)) {
-        ctx.logger.warn(
-          { requestedDid: did, activeDid: session?.did },
-          "Account switch denied: DID not in session"
-        );
-        return c.json(errorBody("NOT_AUTHENTICATED", "Account not found in session"), 403);
-      }
-      try {
-        const profile = await service.checkSession(did);
-        if (!profile) {
-          await setSession(
-            c,
-            mutateSession(session, (s) => removeAccount(s, did))
-          );
-          ctx.logger.info({ did }, "Switch failed, account session expired");
-          return c.json(
-            errorBody("ACCOUNT_SESSION_EXPIRED", "That account's session has expired"),
-            401
-          );
-        }
-        const updated = { ...session, did };
+  app.post("/accounts/switch", validateJson(switchSchema), async (c) => {
+    const { did } = c.req.valid("json");
+    if (!isValidDid(did)) {
+      return c.json(errorBody("INVALID_DID", "Invalid DID format"), 400);
+    }
+    const session = getSession(c);
+    if (!session || !findAccount(session, did)) {
+      ctx.logger.warn(
+        { requestedDid: did, activeDid: session?.did },
+        "Account switch denied: DID not in session"
+      );
+      return c.json(errorBody("NOT_AUTHENTICATED", "Account not found in session"), 403);
+    }
+    try {
+      const profile = await service.checkSession(did);
+      if (!profile) {
         await setSession(
           c,
-          mutateSession(updated, (s) => upsertAccount(s, toAccountEntry(profile)))
+          mutateSession(session, (draft) => removeAccount(draft, did))
         );
-        ctx.logger.info({ did }, "Switched active account");
-        // Fire-and-forget — the switch response must not wait on this.
-        notificationService
-          .syncSubscriptionsAcrossAccounts(getAccounts(updated).map((a) => a.did))
-          .catch((err) =>
-            ctx.logger.error({ err, did }, "Failed to sync push subscriptions across accounts")
-          );
-        return c.json({ success: true, did });
-      } catch (err) {
-        ctx.logger.error({ err, did }, "Failed to switch account");
-        return c.json(errorBody("ACCOUNT_SWITCH_FAILED", "Failed to switch account"), 500);
+        ctx.logger.info({ did }, "Switch failed, account session expired");
+        return c.json(
+          errorBody("ACCOUNT_SESSION_EXPIRED", "That account's session has expired"),
+          401
+        );
       }
+      const updated = { ...session, did };
+      await setSession(
+        c,
+        mutateSession(updated, (draft) => upsertAccount(draft, toAccountEntry(profile)))
+      );
+      ctx.logger.info({ did }, "Switched active account");
+      // Fire-and-forget — the switch response must not wait on this.
+      notificationService
+        .syncSubscriptionsAcrossAccounts(getAccounts(updated).map((a) => a.did))
+        .catch((err) =>
+          ctx.logger.error({ err, did }, "Failed to sync push subscriptions across accounts")
+        );
+      return c.json({ success: true, did });
+    } catch (err) {
+      ctx.logger.error({ err, did }, "Failed to switch account");
+      return c.json(errorBody("ACCOUNT_SWITCH_FAILED", "Failed to switch account"), 500);
     }
-  );
+  });
 
   app.get("/client-metadata.json", (c) => c.json(ctx.oauthClient.clientMetadata));
 
@@ -266,15 +278,15 @@ export function createAuthHono(ctx: AppContext, deps: AuthDeps = {}): Hono {
 
       // Non-fatal: without the hint Caddy falls back to the EU backend.
       try {
-        const atData = await ctx.idResolver.did.resolveAtprotoData(did);
-        const region = pdsRegion(atData.pds);
+        const atprotoData = await ctx.idResolver.did.resolveAtprotoData(did);
+        const region = pdsRegion(atprotoData.pds);
         setCookie(c, "nf-region", region, {
           maxAge: 14 * 24 * 60 * 60,
           httpOnly: false,
           sameSite: "Lax",
           path: "/",
         });
-        ctx.logger.info({ did, pds: atData.pds, region }, "PDS region resolved");
+        ctx.logger.info({ did, pds: atprotoData.pds, region }, "PDS region resolved");
       } catch (regionErr) {
         ctx.logger.warn(
           { err: regionErr, did },
@@ -292,14 +304,18 @@ export function createAuthHono(ctx: AppContext, deps: AuthDeps = {}): Hono {
     env.E2E_TESTING && env.NODE_ENV !== "production" ? createE2EAuthHono(ctx, service) : null;
   if (e2eSubApp) app.route("/", e2eSubApp);
 
-  function mutateSession(session: AppSessionData, fn: (s: AppSessionData) => void): AppSessionData {
-    const copy: AppSessionData = {
+  /** Applies `mutate` to a shallow copy, so a rejected write leaves the original intact. */
+  function mutateSession(
+    session: AppSessionData,
+    mutate: (draft: AppSessionData) => void
+  ): AppSessionData {
+    const draft: AppSessionData = {
       did: session.did,
       accounts: session.accounts ? [...session.accounts] : undefined,
       oauthState: session.oauthState,
     };
-    fn(copy);
-    return copy;
+    mutate(draft);
+    return draft;
   }
 
   function expireNfRegionCookie(): string {

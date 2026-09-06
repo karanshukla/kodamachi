@@ -1,7 +1,7 @@
 import assert from "node:assert";
 import { test, describe, afterEach, mock } from "bun:test";
 
-import { createNotificationHono, type NotificationDeps } from "#/hono/message-routes";
+import { createNotificationHono, type NotificationDeps } from "#/hono/notification-routes";
 import { withTestSession, sessionHeader } from "./helpers/hono-test";
 
 import type { AppContext } from "#/index";
