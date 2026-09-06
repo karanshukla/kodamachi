@@ -25,6 +25,9 @@ export interface Message {
   recipient: string;
 }
 
+/** What `com.atproto.repo.listRecords` accepts as its per-page maximum. */
+const PDS_PAGE_SIZE = 100;
+
 interface SyncOutcome {
   count: number;
   errors: { tid: string; error: string }[];
@@ -152,9 +155,7 @@ export class MessageService {
       return { success: true };
     } catch (err) {
       this.logger.error({ err, recipient }, "Failed to send message");
-      throw new Error(err instanceof Error ? err.message : "Failed to send message", {
-        cause: err,
-      });
+      throw new Error(errorMessage(err) || "Failed to send message", { cause: err });
     }
   }
 
@@ -196,9 +197,7 @@ export class MessageService {
       return { success: true };
     } catch (err) {
       this.logger.error({ err, tid, userDid }, "Failed to delete message");
-      throw new Error(err instanceof Error ? err.message : "Failed to delete message", {
-        cause: err,
-      });
+      throw new Error(errorMessage(err) || "Failed to delete message", { cause: err });
     }
   }
 
@@ -215,9 +214,9 @@ export class MessageService {
   }
 
   private async toRichTextFields(text: string, agent: Agent) {
-    const rt = new RichText({ text });
-    await rt.detectFacets(agent);
-    return { text: rt.text, facets: rt.facets || [] };
+    const richText = new RichText({ text });
+    await richText.detectFacets(agent);
+    return { text: richText.text, facets: richText.facets || [] };
   }
 
   private async resolveReplyReference(
@@ -331,46 +330,44 @@ export class MessageService {
         );
       }
 
-      const postRes = await agent.post(postRecord);
-      this.logger.debug({ tid, did, uri: postRes.uri }, "Response posted to Bluesky");
+      const posted = await agent.post(postRecord);
+      this.logger.debug({ tid, did, uri: posted.uri }, "Response posted to Bluesky");
 
       return {
         success: true,
-        uri: postRes.uri,
-        cid: postRes.cid,
-        link: await this.resolveBskyWebUrl(postRes.uri, agent),
+        uri: posted.uri,
+        cid: posted.cid,
+        link: await this.resolveBskyWebUrl(posted.uri, agent),
       };
     } catch (err) {
       this.logger.error({ err, tid, did }, "Error while trying to post response to Bluesky");
-      throw new Error(err instanceof Error ? err.message : "Failed to post to Bluesky", {
-        cause: err,
-      });
+      throw new Error(errorMessage(err) || "Failed to post to Bluesky", { cause: err });
     }
   }
 
   private async deleteAllPdsMessages(userDid: string, agent: Agent): Promise<void> {
     try {
-      const rkeys = await this.db
+      const messageRows = await this.db
         .selectFrom("message")
         .select(["tid"])
         .where("recipient", "=", userDid)
         .execute();
 
-      if (rkeys.length === 0) {
+      if (messageRows.length === 0) {
         this.logger.info({ did: userDid }, "No messages found for deletion in PDS");
       }
 
-      for (const rkey of rkeys) {
+      for (const { tid } of messageRows) {
         await agent.com.atproto.repo.deleteRecord({
           repo: userDid,
           collection: ids.AppNavyfragenMessage,
-          rkey: rkey.tid,
+          rkey: tid,
         });
       }
 
       this.logger.info({ did: userDid }, "Successfully deleted all messages from PDS");
     } catch (err) {
-      this.logger.error({ error: err, did: userDid }, "Failed to delete messages from PDS");
+      this.logger.error({ err, did: userDid }, "Failed to delete messages from PDS");
       throw new Error("Failed to delete messages from PDS, but data deleted in the DB", {
         cause: err,
       });
@@ -406,23 +403,23 @@ export class MessageService {
     const pdsRecords: { rkey: string; value: MessageSchemaRecord }[] = [];
     let cursor: string | undefined;
     do {
-      const res = await withRetry(
+      const page = await withRetry(
         () =>
           agent.com.atproto.repo.listRecords({
             repo: userDid,
             collection: ids.AppNavyfragenMessage,
-            limit: 100,
+            limit: PDS_PAGE_SIZE,
             cursor,
           }),
         this.logger,
         { did: userDid, op: "listRecords" }
       );
-      if (!res.success) break;
-      for (const r of res.data.records) {
-        const rkey = r.uri.split("/").pop()!;
-        pdsRecords.push({ rkey, value: r.value as MessageSchemaRecord });
+      if (!page.success) break;
+      for (const record of page.data.records) {
+        const rkey = record.uri.split("/").pop()!;
+        pdsRecords.push({ rkey, value: record.value as MessageSchemaRecord });
       }
-      cursor = res.data.cursor;
+      cursor = page.data.cursor;
     } while (cursor);
     return pdsRecords;
   }
@@ -516,7 +513,7 @@ export class MessageService {
 
       this.logger.info(
         { did: userDid, syncedCount, importedCount, errorCount },
-        "Bidirectional PDS sync completed."
+        "Bidirectional PDS sync completed"
       );
 
       return {
@@ -527,7 +524,7 @@ export class MessageService {
         errors: syncErrors,
       };
     } catch (err: unknown) {
-      this.logger.error({ did: userDid, error: err }, "Error during message sync process");
+      this.logger.error({ err, did: userDid }, "Error during message sync process");
       throw new Error("Failed to sync messages to PDS", { cause: err });
     }
   }

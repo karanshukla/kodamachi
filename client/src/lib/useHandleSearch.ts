@@ -20,12 +20,12 @@ const MIN_HANDLE_LENGTH = 3;
  * Lower score = higher in the list. Exact full-handle match → 0, local-part
  * exact → 1, handle prefix → 2, display-name prefix → 3, anything else → 4.
  */
-export function rankActor(actor: BlueskyActor, localQ: string, fullHandle: string): number {
+export function rankActor(actor: BlueskyActor, localPart: string, fullHandle: string): number {
   const handle = actor.handle.toLowerCase();
   if (handle === fullHandle) return 0;
-  if (handle === localQ || handle.startsWith(`${localQ}.`)) return 1;
-  if (handle.startsWith(localQ)) return 2;
-  if ((actor.displayName ?? "").toLowerCase().startsWith(localQ)) return 3;
+  if (handle === localPart || handle.startsWith(`${localPart}.`)) return 1;
+  if (handle.startsWith(localPart)) return 2;
+  if ((actor.displayName ?? "").toLowerCase().startsWith(localPart)) return 3;
   return 4;
 }
 
@@ -66,18 +66,18 @@ export function useHandleSearch(): HandleSearch {
   const isHandleReady = cleanHandle.length >= MIN_HANDLE_LENGTH && cleanHandle.includes(".");
 
   // "karan.bsky.social" → "karan", so prefix matching works for full handles too.
-  const dotIdx = debouncedQuery.indexOf(".");
-  const searchQ = dotIdx > 1 ? debouncedQuery.slice(0, dotIdx) : debouncedQuery;
+  const firstDotIndex = debouncedQuery.indexOf(".");
+  const searchTerm = firstDotIndex > 1 ? debouncedQuery.slice(0, firstDotIndex) : debouncedQuery;
 
   const { data: actors = [], isFetching } = useQuery({
-    queryKey: ["bsky-handle-search", searchQ],
+    queryKey: ["bsky-handle-search", searchTerm],
     queryFn: async (): Promise<BlueskyActor[]> => {
       const data = await apiClient.get<{ actors: BlueskyActor[] }>(
-        `/handle-search?q=${encodeURIComponent(searchQ)}`
+        `/handle-search?q=${encodeURIComponent(searchTerm)}`
       );
       return data.actors ?? [];
     },
-    enabled: searchQ.length >= MIN_QUERY_LENGTH && !manualSelectedActor,
+    enabled: searchTerm.length >= MIN_QUERY_LENGTH && !manualSelectedActor,
     staleTime: 30_000,
     throwOnError: false,
   });
@@ -91,10 +91,12 @@ export function useHandleSearch(): HandleSearch {
 
   const suggestions = useMemo(() => {
     if (actors.length <= 1) return actors;
-    const full = cleanHandle.toLowerCase();
-    const q = searchQ.toLowerCase();
-    return [...actors].sort((a, b) => rankActor(a, q, full) - rankActor(b, q, full));
-  }, [actors, cleanHandle, searchQ]);
+    const fullHandle = cleanHandle.toLowerCase();
+    const localPart = searchTerm.toLowerCase();
+    return [...actors].sort(
+      (a, b) => rankActor(a, localPart, fullHandle) - rankActor(b, localPart, fullHandle)
+    );
+  }, [actors, cleanHandle, searchTerm]);
 
   // A lone exact handle match auto-selects so Enter goes straight to Continue.
   const selectedActor = useMemo(() => {

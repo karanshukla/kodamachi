@@ -1,7 +1,7 @@
 import assert from "node:assert";
 import { test, describe, afterEach, mock } from "bun:test";
 
-import { createSettingsHono, type SettingsDeps } from "#/hono/message-routes";
+import { createSettingsHono, type SettingsDeps } from "#/hono/settings-routes";
 import { withTestSession, sessionHeader } from "./helpers/hono-test";
 
 import type { AppContext } from "#/index";

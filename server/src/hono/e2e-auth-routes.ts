@@ -3,7 +3,6 @@
 
 import { AtpAgent } from "@atproto/api";
 import { z } from "zod";
-import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 
 import { setE2EAgent } from "#/auth/e2e-agent-store";
@@ -11,6 +10,7 @@ import { env } from "#/lib/env";
 import { errorBody } from "#/lib/errors";
 import { AuthService } from "#/services/auth-service";
 import { getSession, setSession } from "./session-middleware";
+import { validateJson } from "./route-helpers";
 
 import type { AppContext } from "#/index";
 import type { AppSessionData } from "#/auth/session";
@@ -20,15 +20,11 @@ export function createE2EAuthHono(ctx: AppContext, service: AuthService): Hono {
 
   app.post(
     "/auth/e2e-login",
-    zValidator(
-      "json",
+    validateJson(
       z.object({
         identifier: z.string().min(1).max(100),
         password: z.string().min(1).max(200),
-      }),
-      (r, c) => {
-        if (!r.success) return c.json({ errors: r.error.issues }, 400);
-      }
+      })
     ),
     async (c) => {
       // Defense in depth: refuse even if the route was somehow mounted in production.

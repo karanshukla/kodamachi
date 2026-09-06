@@ -1,9 +1,7 @@
 import { z } from "zod";
-import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 
 import { errorBody, errorMessage } from "#/lib/errors";
-import { isSupportedLocaleTag } from "#/lib/i18n";
 import {
   INBOX_CLOSED,
   MESSAGE_NOT_FOUND,
@@ -12,27 +10,22 @@ import {
   RECIPIENT_NOT_FOUND,
 } from "#/services/message-service";
 import { NotificationService } from "#/services/notification-service";
-import { AtmosphereService } from "#/services/atmosphere-service";
-import { ProfileService } from "#/services/profile-service";
 import {
   QUESTION_NOT_IN_INBOX,
   RenderService,
   type RenderedQuestionImage,
 } from "#/services/render-service";
-import { SettingsService } from "#/services/settings-service";
-import { getAccounts } from "#/auth/session";
-import { clearSession, getSession } from "./session-middleware";
+import { clearSession } from "./session-middleware";
 import { initializeAgentFromHonoSession } from "./session-agent-hono";
+import { notAuthenticated, sessionDid, validateJson } from "./route-helpers";
 
 import type { AppContext } from "#/index";
-
-const BOT_DID = "did:plc:3d4awubjiftylwrhhyp5vl7i";
 
 /** The key expired, was lost to a deploy, or has already been posted with. */
 const NO_READY_RENDER = "That question image is no longer available.";
 
 /** What `/messages/send` accepts, and so the longest a stored question can be. */
-const MAX_MESSAGE_LENGTH = 500;
+export const MAX_MESSAGE_LENGTH = 500;
 
 export interface MessageDeps {
   messageService?: MessageService;
@@ -52,11 +45,9 @@ export function createMessageHono(ctx: AppContext, deps: MessageDeps = {}): Hono
 
   app.post(
     "/messages/example",
-    zValidator("json", z.object({ recipient: z.string().min(1) }), (r, c) => {
-      if (!r.success) return c.json({ errors: r.error.issues }, 400);
-    }),
+    validateJson(z.object({ recipient: z.string().min(1) })),
     async (c) => {
-      const recipient = getSession(c)?.did;
+      const recipient = sessionDid(c);
       if (!recipient)
         return c.json(errorBody("RECIPIENT_DID_REQUIRED", "Recipient DID required"), 403);
       try {
@@ -80,8 +71,8 @@ export function createMessageHono(ctx: AppContext, deps: MessageDeps = {}): Hono
    * the caller is typing rather than waiting.
    */
   app.post("/messages/warm-image", async (c) => {
-    const did = getSession(c)?.did;
-    if (!did) return c.json(errorBody("NOT_AUTHENTICATED", "Not authenticated"), 403);
+    const did = sessionDid(c);
+    if (!did) return notAuthenticated(c);
     messageService
       .warmImageService()
       .catch((err) => ctx.logger.error({ err, did }, "Failed to warm image service"));
@@ -105,27 +96,22 @@ export function createMessageHono(ctx: AppContext, deps: MessageDeps = {}): Hono
    */
   app.post(
     "/messages/render",
-    zValidator(
-      "json",
+    validateJson(
       z.object({
         tid: z.string().min(1),
         original: z.string().min(1).max(MAX_MESSAGE_LENGTH),
         theme: z.string().min(1).optional(),
-      }),
-      (r, c) => {
-        if (!r.success) return c.json({ errors: r.error.issues }, 400);
-      }
+      })
     ),
     async (c) => {
-      const did = getSession(c)?.did;
-      if (!did) return c.json(errorBody("NOT_AUTHENTICATED", "Not authenticated"), 403);
+      const did = sessionDid(c);
+      if (!did) return notAuthenticated(c);
       const { tid, original, theme } = c.req.valid("json");
       try {
         const enqueued = await renderService.enqueue({ did, tid, original, theme });
         return c.json(enqueued, 202);
       } catch (err) {
-        const msg = errorMessage(err);
-        if (msg === QUESTION_NOT_IN_INBOX) {
+        if (errorMessage(err) === QUESTION_NOT_IN_INBOX) {
           ctx.logger.warn({ tid, did }, "Render requested for a question outside the inbox");
           return c.json(errorBody("RENDER_QUESTION_NOT_IN_INBOX", QUESTION_NOT_IN_INBOX), 404);
         }
@@ -136,15 +122,14 @@ export function createMessageHono(ctx: AppContext, deps: MessageDeps = {}): Hono
   );
 
   app.get("/messages/render/:renderId", async (c) => {
-    const did = getSession(c)?.did;
-    if (!did) return c.json(errorBody("NOT_AUTHENTICATED", "Not authenticated"), 403);
+    const did = sessionDid(c);
+    if (!did) return notAuthenticated(c);
     return c.json(renderService.readStatus(c.req.param("renderId"), did));
   });
 
   app.post(
     "/messages/respond",
-    zValidator(
-      "json",
+    validateJson(
       z.object({
         tid: z.string().min(1),
         recipient: z.string().min(1),
@@ -153,25 +138,22 @@ export function createMessageHono(ctx: AppContext, deps: MessageDeps = {}): Hono
         includeQuestionAsImage: z.boolean().optional(),
         renderId: z.string().min(1).optional(),
         replyTo: z.object({ uri: z.string(), cid: z.string().optional() }).passthrough().optional(),
-      }),
-      (r, c) => {
-        if (!r.success) return c.json({ errors: r.error.issues }, 400);
-      }
+      })
     ),
     async (c) => {
-      const body = c.req.valid("json");
       const { tid, recipient, original, response, includeQuestionAsImage, renderId, replyTo } =
-        body;
-      const did = getSession(c)?.did;
+        c.req.valid("json");
+      const did = sessionDid(c);
       if (!did) {
         ctx.logger.warn("No authenticated user session found");
-        return c.json(errorBody("NOT_AUTHENTICATED", "Not authenticated"), 403);
+        return notAuthenticated(c);
       }
       const agent = await initializeAgentFromHonoSession(c, ctx);
       if (!agent) {
         ctx.logger.warn({ did }, "No agent could be initialized from session");
         return c.json({ isLoggedIn: false, profile: null, did: null });
       }
+
       let preRendered: RenderedQuestionImage | undefined;
       if (includeQuestionAsImage && renderId) {
         const claim = renderService.claimReady(renderId, did);
@@ -185,6 +167,7 @@ export function createMessageHono(ctx: AppContext, deps: MessageDeps = {}): Hono
         preRendered = claim.image;
         ctx.logger.info({ renderId, tid, did }, "Respond used a pre-rendered question image");
       }
+
       try {
         const result = await messageService.respondToMessage(
           tid,
@@ -210,15 +193,11 @@ export function createMessageHono(ctx: AppContext, deps: MessageDeps = {}): Hono
 
   app.post(
     "/messages/send",
-    zValidator(
-      "json",
+    validateJson(
       z.object({
         recipient: z.string().min(1),
         message: z.string().min(1).max(MAX_MESSAGE_LENGTH),
-      }),
-      (r, c) => {
-        if (!r.success) return c.json({ errors: r.error.issues }, 400);
-      }
+      })
     ),
     async (c) => {
       const { recipient, message } = c.req.valid("json");
@@ -233,11 +212,11 @@ export function createMessageHono(ctx: AppContext, deps: MessageDeps = {}): Hono
         return c.json(result);
       } catch (err: unknown) {
         ctx.logger.error({ err, recipient }, "Failed to send message");
-        const msg = errorMessage(err);
-        if (msg === RECIPIENT_NOT_FOUND) {
+        const rejection = errorMessage(err);
+        if (rejection === RECIPIENT_NOT_FOUND) {
           return c.json(errorBody("USER_NOT_FOUND", RECIPIENT_NOT_FOUND), 404);
         }
-        if (msg === INBOX_CLOSED) {
+        if (rejection === INBOX_CLOSED) {
           return c.json(errorBody("INBOX_CLOSED", INBOX_CLOSED), 403);
         }
         return c.json(errorBody("MESSAGE_SEND_FAILED", "Failed to send message"), 500);
@@ -246,8 +225,8 @@ export function createMessageHono(ctx: AppContext, deps: MessageDeps = {}): Hono
   );
 
   app.get("/messages/:recipient", async (c) => {
-    const recipient = getSession(c)?.did;
-    if (!recipient) return c.json(errorBody("NOT_AUTHENTICATED", "Not authenticated"), 403);
+    const recipient = sessionDid(c);
+    if (!recipient) return notAuthenticated(c);
     try {
       const messages = await messageService.getMessages(recipient);
       return c.json({ messages });
@@ -266,32 +245,32 @@ export function createMessageHono(ctx: AppContext, deps: MessageDeps = {}): Hono
   app.delete("/messages/:tid", async (c) => {
     const tid = c.req.param("tid");
     if (!tid) return c.json(errorBody("MESSAGE_TID_REQUIRED", "Message TID required"), 400);
-    const userSessionDid = getSession(c)?.did;
-    if (!userSessionDid) return c.json(errorBody("NOT_AUTHENTICATED", "Not authenticated"), 403);
+    const did = sessionDid(c);
+    if (!did) return notAuthenticated(c);
     const agent = await initializeAgentFromHonoSession(c, ctx);
     if (!agent) {
-      ctx.logger.warn({ userSessionDid }, "No agent could be initialized from session");
+      ctx.logger.warn({ did }, "No agent could be initialized from session");
       return c.json({ isLoggedIn: false, profile: null, did: null });
     }
     try {
-      await messageService.deleteMessage(tid, userSessionDid, agent);
+      await messageService.deleteMessage(tid, did, agent);
       return c.json({ success: true });
     } catch (err: unknown) {
-      const msg = errorMessage(err);
-      if (msg === MESSAGE_NOT_FOUND) {
+      const rejection = errorMessage(err);
+      if (rejection === MESSAGE_NOT_FOUND) {
         return c.json(errorBody("MESSAGE_NOT_FOUND", MESSAGE_NOT_FOUND), 404);
       }
-      if (msg === NOT_AUTHORIZED_TO_DELETE) {
+      if (rejection === NOT_AUTHORIZED_TO_DELETE) {
         return c.json(errorBody("MESSAGE_DELETE_NOT_AUTHORIZED", NOT_AUTHORIZED_TO_DELETE), 403);
       }
-      ctx.logger.error({ err, tid, userSessionDid }, "Failed to delete message");
+      ctx.logger.error({ err, tid, did }, "Failed to delete message");
       return c.json(errorBody("MESSAGE_DELETE_FAILED", "Failed to delete message"), 500);
     }
   });
 
   app.delete("/delete-account", async (c) => {
-    const userSessionDid = getSession(c)?.did;
-    if (!userSessionDid) return c.json(errorBody("NOT_AUTHENTICATED", "Not authenticated"), 403);
+    const did = sessionDid(c);
+    if (!did) return notAuthenticated(c);
     const agent = await initializeAgentFromHonoSession(c, ctx);
     if (!agent) {
       return c.json(
@@ -303,30 +282,28 @@ export function createMessageHono(ctx: AppContext, deps: MessageDeps = {}): Hono
       );
     }
     try {
-      await messageService.deleteUserData(userSessionDid, agent);
+      await messageService.deleteUserData(did, agent);
       notificationService
-        .deleteAllSubscriptionsForUser(userSessionDid)
-        .catch((err) =>
-          ctx.logger.error({ err, did: userSessionDid }, "Failed to delete push subscriptions")
-        );
+        .deleteAllSubscriptionsForUser(did)
+        .catch((err) => ctx.logger.error({ err, did }, "Failed to delete push subscriptions"));
       clearSession(c);
-      ctx.logger.info({ did: userSessionDid }, "Account and all data deleted");
+      ctx.logger.info({ did }, "Account and all data deleted");
       return c.json({ success: true });
     } catch (err: unknown) {
-      ctx.logger.error({ err, did: userSessionDid }, "Failed to delete account data");
+      ctx.logger.error({ err, did }, "Failed to delete account data");
       return c.json(errorBody("ACCOUNT_DELETE_FAILED", "Failed to delete account data"), 500);
     }
   });
 
   app.post("/messages/sync", async (c) => {
-    const userSessionDid = getSession(c)?.did;
-    if (!userSessionDid) return c.json(errorBody("NOT_AUTHENTICATED", "Not authenticated"), 403);
+    const did = sessionDid(c);
+    if (!did) return notAuthenticated(c);
     const userSettings = await ctx.db
       .selectFrom("user_settings")
       .selectAll()
-      .where("did", "=", userSessionDid)
+      .where("did", "=", did)
       .executeTakeFirst();
-    if (!userSettings || !userSettings?.pdsSyncEnabled) {
+    if (!userSettings?.pdsSyncEnabled) {
       return c.json({ success: true, message: "PDS sync is disabled" });
     }
     const agent = await initializeAgentFromHonoSession(c, ctx);
@@ -337,10 +314,10 @@ export function createMessageHono(ctx: AppContext, deps: MessageDeps = {}): Hono
       );
     }
     try {
-      const syncResult = await messageService.syncMessages(userSessionDid, agent);
+      const syncResult = await messageService.syncMessages(did, agent);
       return c.json(syncResult);
     } catch (err: unknown) {
-      ctx.logger.error({ err, did: userSessionDid }, "Failed to sync messages to PDS");
+      ctx.logger.error({ err, did }, "Failed to sync messages to PDS");
       return c.json(
         {
           ...errorBody("PDS_SYNC_FAILED", "Failed to sync messages to PDS"),
@@ -350,342 +327,6 @@ export function createMessageHono(ctx: AppContext, deps: MessageDeps = {}): Hono
       );
     }
   });
-
-  return app;
-}
-
-export interface ProfileDeps {
-  profileService?: ProfileService;
-}
-
-export function createProfileHono(ctx: AppContext, deps: ProfileDeps = {}): Hono {
-  const app = new Hono();
-  const profileService =
-    deps.profileService ??
-    new ProfileService(
-      ctx.db,
-      ctx.resolver,
-      ctx.logger,
-      new AtmosphereService(ctx.idResolver, ctx.logger)
-    );
-
-  app.get(
-    "/public-profile/:did",
-    zValidator("param", z.object({ did: z.string().min(1) }), (r, c) => {
-      if (!r.success) return c.json({ errors: r.error.issues }, 400);
-    }),
-    async (c) => {
-      const { did } = c.req.valid("param");
-      try {
-        const profileData = await profileService.getPublicProfile(did);
-        return c.json(profileData);
-      } catch (err: unknown) {
-        if (errorMessage(err) === "Profile not found") {
-          return c.json(errorBody("PROFILE_NOT_FOUND", "Profile not found"), 404);
-        }
-        ctx.logger.error({ err, did }, "Failed to fetch public profile");
-        return c.json(errorBody("PROFILE_FETCH_FAILED", "Failed to fetch profile"), 500);
-      }
-    }
-  );
-
-  app.get(
-    "/user-exists/:did",
-    zValidator("param", z.object({ did: z.string().min(1) }), (r, c) => {
-      if (!r.success) return c.json({ errors: r.error.issues }, 400);
-    }),
-    async (c) => {
-      const { did } = c.req.valid("param");
-      try {
-        const exists = await profileService.checkUserExists(did);
-        return c.json({ exists, did });
-      } catch (err) {
-        ctx.logger.error({ err, did }, "Failed to check user existence");
-        return c.json(
-          errorBody("USER_EXISTENCE_CHECK_FAILED", "Failed to check user existence"),
-          500
-        );
-      }
-    }
-  );
-
-  app.get("/friends", async (c) => {
-    const userDid = getSession(c)?.did;
-    if (!userDid) return c.json(errorBody("NOT_AUTHENTICATED", "Not authenticated"), 403);
-    try {
-      const result = await profileService.getFriendsOnApp(userDid);
-      return c.json(result);
-    } catch (err) {
-      ctx.logger.error({ err, did: userDid }, "Failed to fetch friends on app");
-      return c.json(errorBody("FRIENDS_FETCH_FAILED", "Failed to fetch friends"), 500);
-    }
-  });
-
-  app.get("/check-bot-follow", async (c) => {
-    const userDid = getSession(c)?.did;
-    if (!userDid) return c.json(errorBody("NOT_AUTHENTICATED", "Not authenticated"), 403);
-    const agent = await initializeAgentFromHonoSession(c, ctx);
-    if (!agent) return c.json(errorBody("SESSION_EXPIRED", "Session expired"), 401);
-    try {
-      const following = await profileService.checkFollowsBot(agent, BOT_DID);
-      return c.json({ following });
-    } catch (err) {
-      ctx.logger.error({ err, did: userDid }, "Failed to check bot follow status");
-      return c.json(errorBody("BOT_FOLLOW_CHECK_FAILED", "Failed to check bot follow status"), 500);
-    }
-  });
-
-  app.get(
-    "/handle-pds/:handle",
-    zValidator("param", z.object({ handle: z.string().min(1) }), (r, c) => {
-      if (!r.success) return c.json({ errors: r.error.issues }, 400);
-    }),
-    async (c) => {
-      const { handle } = c.req.valid("param");
-      try {
-        const did = await ctx.resolver.resolveHandleToDid(handle);
-        if (!did) return c.json(errorBody("HANDLE_NOT_FOUND", "Handle not found"), 404);
-        const atprotoData = await ctx.idResolver.did.resolveAtprotoData(did);
-        const pdsUrl = new URL(atprotoData.pds);
-        return c.json({ pds: pdsUrl.hostname });
-      } catch (err) {
-        ctx.logger.error({ err, handle }, "Failed to resolve PDS for handle");
-        return c.json(errorBody("PDS_RESOLVE_FAILED", "Failed to resolve PDS"), 500);
-      }
-    }
-  );
-
-  app.get(
-    "/handle-search",
-    zValidator("query", z.object({ q: z.string().min(1).max(64) }), (r, c) => {
-      if (!r.success) return c.json({ errors: r.error.issues }, 400);
-    }),
-    async (c) => {
-      const { q } = c.req.valid("query");
-      try {
-        const actors = await profileService.searchActorsTypeahead(q);
-        return c.json({ actors });
-      } catch (err) {
-        ctx.logger.error({ err }, "Failed to search handles");
-        return c.json(errorBody("HANDLE_SEARCH_FAILED", "Failed to search handles"), 500);
-      }
-    }
-  );
-
-  app.get(
-    "/resolve-handle/:handle",
-    zValidator("param", z.object({ handle: z.string().min(1) }), (r, c) => {
-      if (!r.success) return c.json({ errors: r.error.issues }, 400);
-    }),
-    async (c) => {
-      const { handle } = c.req.valid("param");
-      try {
-        const did = await profileService.resolveHandleToDid(handle);
-        return c.json({ did });
-      } catch (err: unknown) {
-        if (errorMessage(err) === "Handle not found") {
-          return c.json(errorBody("HANDLE_NOT_FOUND", "Handle not found"), 404);
-        }
-        ctx.logger.error({ err, handle }, "Failed to resolve handle");
-        return c.json(errorBody("HANDLE_RESOLVE_FAILED", "Failed to resolve handle"), 500);
-      }
-    }
-  );
-
-  return app;
-}
-
-export interface SettingsDeps {
-  settingsService?: SettingsService;
-}
-
-export function createSettingsHono(ctx: AppContext, deps: SettingsDeps = {}): Hono {
-  const app = new Hono();
-  const settingsService = deps.settingsService ?? new SettingsService(ctx.db, ctx.logger);
-
-  app.get("/settings", async (c) => {
-    const userSessionDid = getSession(c)?.did;
-    if (!userSessionDid) return c.json(errorBody("NOT_AUTHENTICATED", "Not authenticated"), 403);
-    try {
-      let userSettings = await settingsService.getUserSettings(userSessionDid);
-      if (!userSettings) {
-        userSettings = await settingsService.createDefaultSettings(userSessionDid);
-      }
-      return c.json(userSettings);
-    } catch (err) {
-      ctx.logger.error({ err, did: userSessionDid }, "Failed to fetch user settings");
-      return c.json(errorBody("SETTINGS_FETCH_FAILED", "Failed to fetch user settings"), 500);
-    }
-  });
-
-  app.get("/stats", async (c) => {
-    const userSessionDid = getSession(c)?.did;
-    if (!userSessionDid) return c.json(errorBody("NOT_AUTHENTICATED", "Not authenticated"), 403);
-    try {
-      const stats = await settingsService.getStats(userSessionDid);
-      return c.json(stats);
-    } catch (err) {
-      ctx.logger.error({ err, did: userSessionDid }, "Failed to fetch user stats");
-      return c.json(errorBody("STATS_FETCH_FAILED", "Failed to fetch user stats"), 500);
-    }
-  });
-
-  app.get("/pds-info", async (c) => {
-    const userDid = getSession(c)?.did;
-    if (!userDid) return c.json(errorBody("NOT_AUTHENTICATED", "Not authenticated"), 403);
-    const agent = await initializeAgentFromHonoSession(c, ctx);
-    if (!agent) return c.json(errorBody("SESSION_EXPIRED", "Session expired"), 401);
-    try {
-      const info = await settingsService.getPdsInfo(userDid, agent, ctx.idResolver);
-      return c.json(info);
-    } catch (err) {
-      ctx.logger.error({ err, did: userDid }, "Failed to fetch PDS info");
-      return c.json(errorBody("PDS_INFO_FETCH_FAILED", "Failed to fetch PDS info"), 500);
-    }
-  });
-
-  // Both locale columns are read back by formatters that reject a malformed
-  // BCP-47 tag outright — `Intl.NumberFormat`/`toLocaleString` on the client
-  // throw `RangeError`, which takes the page down — so an unusable tag is
-  // rejected here rather than persisted and rendered later.
-  // @see [settings-controller.test.ts](../tests/settings-controller.test.ts):
-  // "rejects a malformed locale tag" and "rejects an unsupported language".
-  const localeTag = z.string().refine(isSupportedLocaleTag);
-
-  const updateSchema = z.object({
-    pdsSyncEnabled: z.boolean().optional(),
-    imageTheme: z.string().min(1).nullable().optional(),
-    inboxEnabled: z.boolean().optional(),
-    profanityFilterEnabled: z.boolean().optional(),
-    customPrompt: z.string().max(100).nullable().optional(),
-    profileCardTheme: z.string().nullable().optional(),
-    touchpointLocale: localeTag.nullable().optional(),
-    uiLocale: localeTag.nullable().optional(),
-    // A waypoint id from Aturi's catalog, which only the client knows. Bounded
-    // rather than enumerated: the catalog gains clients without a deploy here,
-    // and an id this server has never heard of reads as "no preference" on the
-    // way back out.
-    // @see [settings-controller.test.ts](../tests/settings-controller.test.ts):
-    // "rejects an over-long default client id".
-    defaultClient: z.string().max(64).nullable().optional(),
-    openProfilesInApp: z.boolean().optional(),
-    atmosphereLinksEnabled: z.boolean().optional(),
-  });
-
-  app.post(
-    "/settings",
-    zValidator("json", updateSchema, (r, c) => {
-      if (!r.success) return c.json({ errors: r.error.issues }, 400);
-    }),
-    async (c) => {
-      const userSessionDid = getSession(c)?.did;
-      if (!userSessionDid) return c.json(errorBody("NOT_AUTHENTICATED", "Not authenticated"), 403);
-      const body = c.req.valid("json");
-      try {
-        // null and undefined must not be collapsed on the way through.
-        // @see [settings-service.test.ts](../tests/settings-service.test.ts):
-        // "should persist a null customPrompt to unset it" and "should update
-        // only the provided fields on an existing row" pin the two meanings.
-        const updatedSettings = await settingsService.updateSettings(userSessionDid, {
-          pdsSyncEnabled: body.pdsSyncEnabled,
-          // imageTheme is not nullable in the service, so null means "leave it".
-          imageTheme: body.imageTheme ?? undefined,
-          inboxEnabled: body.inboxEnabled,
-          profanityFilterEnabled: body.profanityFilterEnabled,
-          customPrompt: body.customPrompt,
-          profileCardTheme: body.profileCardTheme,
-          touchpointLocale: body.touchpointLocale,
-          uiLocale: body.uiLocale,
-          defaultClient: body.defaultClient,
-          openProfilesInApp: body.openProfilesInApp,
-          atmosphereLinksEnabled: body.atmosphereLinksEnabled,
-        });
-        ctx.logger.info(
-          { did: userSessionDid, updatedFields: Object.keys(body ?? {}) },
-          "Settings updated"
-        );
-        return c.json(updatedSettings);
-      } catch (err) {
-        ctx.logger.error({ err, did: userSessionDid }, "Failed to update user settings");
-        return c.json(errorBody("SETTINGS_UPDATE_FAILED", "Failed to update user settings"), 500);
-      }
-    }
-  );
-
-  return app;
-}
-
-export interface NotificationDeps {
-  notificationService?: NotificationService;
-}
-
-export function createNotificationHono(ctx: AppContext, deps: NotificationDeps = {}): Hono {
-  const app = new Hono();
-  const notificationService =
-    deps.notificationService ?? new NotificationService(ctx.db, ctx.resolver, ctx.logger);
-
-  app.get("/notifications/vapid-public-key", async (c) => {
-    const vapidPublicKey = notificationService.getVapidPublicKey();
-    if (!vapidPublicKey)
-      return c.json(errorBody("PUSH_NOT_CONFIGURED", "Web push not configured"), 501);
-    return c.json({ vapidPublicKey });
-  });
-
-  app.post(
-    "/notifications/subscribe",
-    zValidator(
-      "json",
-      z.object({
-        endpoint: z.string().url(),
-        keys: z.object({
-          p256dh: z.string().min(1),
-          auth: z.string().min(1),
-        }),
-      }),
-      (r, c) => {
-        if (!r.success) return c.json({ errors: r.error.issues }, 400);
-      }
-    ),
-    async (c) => {
-      const did = getSession(c)?.did;
-      if (!did) return c.json(errorBody("NOT_AUTHENTICATED", "Not authenticated"), 403);
-      if (!notificationService.getVapidPublicKey()) {
-        return c.json(errorBody("PUSH_NOT_CONFIGURED", "Web push not configured"), 501);
-      }
-      const { endpoint, keys } = c.req.valid("json");
-      try {
-        await notificationService.saveSubscription(did, endpoint, keys.p256dh, keys.auth);
-        const session = getSession(c);
-        const dids = getAccounts(session).map((account) => account.did);
-        await notificationService.syncSubscriptionsAcrossAccounts(dids);
-        ctx.logger.info({ did }, "Push subscription registered");
-        return c.json({ ok: true }, 201);
-      } catch (err) {
-        ctx.logger.error({ err, did }, "Failed to save push subscription");
-        return c.json(errorBody("PUSH_SUBSCRIBE_FAILED", "Failed to save subscription"), 500);
-      }
-    }
-  );
-
-  app.delete(
-    "/notifications/subscribe",
-    zValidator("json", z.object({ endpoint: z.string().url() }), (r, c) => {
-      if (!r.success) return c.json({ errors: r.error.issues }, 400);
-    }),
-    async (c) => {
-      const did = getSession(c)?.did;
-      if (!did) return c.json(errorBody("NOT_AUTHENTICATED", "Not authenticated"), 403);
-      const { endpoint } = c.req.valid("json");
-      try {
-        await notificationService.deleteSubscription(did, endpoint);
-        ctx.logger.info({ did }, "Push subscription removed");
-        return c.json({ ok: true });
-      } catch (err) {
-        ctx.logger.error({ err, did }, "Failed to delete push subscription");
-        return c.json(errorBody("PUSH_UNSUBSCRIBE_FAILED", "Failed to delete subscription"), 500);
-      }
-    }
-  );
 
   return app;
 }

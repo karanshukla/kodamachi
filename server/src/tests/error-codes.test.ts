@@ -1,12 +1,17 @@
 import assert from "node:assert";
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, it } from "bun:test";
 
 import { ERROR_CODES } from "../lib/contracts";
 
 const HONO_DIR = join(import.meta.dir, "../hono");
-const ROUTE_FILES = ["auth-routes.ts", "e2e-auth-routes.ts", "message-routes.ts"];
+
+/**
+ * Discovered rather than listed: a hand-maintained list silently stops
+ * covering the domain that gets split out of an existing route file next.
+ */
+const ROUTE_FILES = readdirSync(HONO_DIR).filter((file) => file.endsWith("-routes.ts"));
 
 const CLIENT_CONTRACTS_PATH = join(import.meta.dir, "../../../client/src/lib/contracts.ts");
 
