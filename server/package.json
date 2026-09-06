@@ -43,7 +43,6 @@
     "envalid": "^8.2.0",
     "hono": "^4.13.5",
     "hono-rate-limiter": "^0.5.3",
-    "iron-session": "^9.0.1",
     "kysely": "^0.29.5",
     "multiformats": "^14.0.5",
     "obscenity": "^0.4.6",
