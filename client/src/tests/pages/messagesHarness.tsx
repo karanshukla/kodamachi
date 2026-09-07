@@ -118,7 +118,25 @@ export const MESSAGES: messageService.Message[] = [
   },
 ];
 
-export const noopMutation = { mutate: vi.fn(), isPending: false } as any;
+/** Stands in for any mutation hook this page reads, React Query's or settings'. */
+export const noopMutation = {
+  mutate: vi.fn(),
+  isPending: false,
+  save: vi.fn(),
+  isSaving: () => false,
+  isSavingAny: false,
+} as any;
+
+/** Returns the settings `save` spy. `savingField` is the only field in flight. */
+export function mockSettingsMutation(savingField?: string) {
+  const save = vi.fn();
+  mockUseUpdateUserSettings.mockReturnValue({
+    save,
+    isSaving: (field: string) => field === savingField,
+    isSavingAny: savingField !== undefined,
+  } as any);
+  return save;
+}
 
 export function setupMocks(messages = MESSAGES) {
   mockUseSession.mockReturnValue({ data: SESSION, isLoading: false } as any);

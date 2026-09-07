@@ -73,12 +73,9 @@ export default function Settings() {
     <SettingsToggle
       label={messages.settingsPage.pdsSync}
       checked={Boolean(userSettings?.pdsSyncEnabled)}
-      saving={updateSettings.isPending}
+      saving={updateSettings.isSaving("pdsSyncEnabled")}
       onChange={(checked) => {
-        updateSettings.mutate({
-          pdsSyncEnabled: checked,
-          imageTheme: userSettings?.imageTheme || "default",
-        });
+        updateSettings.save({ pdsSyncEnabled: checked });
       }}
     />
   );
@@ -162,9 +159,9 @@ export default function Settings() {
                 onChange={(value) => {
                   // allowDeselect={false} — Mantine never emits null/"" here.
                   /* istanbul ignore next */
-                  updateSettings.mutate({ defaultClient: value || null });
+                  updateSettings.save({ defaultClient: value || null });
                 }}
-                disabled={updateSettings.isPending}
+                disabled={updateSettings.isSaving("defaultClient")}
                 allowDeselect={false}
                 aria-label={messages.settingsPage.defaultClient}
               />

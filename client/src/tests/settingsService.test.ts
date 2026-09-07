@@ -16,6 +16,27 @@ import {
   settingsKeys,
 } from "../api/settingsService";
 
+/** A promise plus the handles to settle it, so a save can be held mid-flight. */
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  let reject!: (reason: unknown) => void;
+  const promise = new Promise<T>((res, rej) => {
+    resolve = res;
+    reject = rej;
+  });
+  return { promise, resolve, reject };
+}
+
+/** Like `makeWrapper`, but hands back the client so a test can read the cache. */
+function makeSettingsWrapper() {
+  const qc = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  });
+  const Wrapper = ({ children }: { children: React.ReactNode }) =>
+    React.createElement(QueryClientProvider, { client: qc }, children);
+  return { Wrapper, qc };
+}
+
 function makeWrapper() {
   const qc = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
@@ -230,11 +251,12 @@ describe("settings hooks", () => {
     expect(typeof result.current.isLoading).toBe("boolean");
   });
 
-  it("useUpdateUserSettings returns a mutation object", () => {
+  it("useUpdateUserSettings returns a save function", () => {
     const { result } = renderHook(() => useUpdateUserSettings(), {
       wrapper: makeWrapper(),
     });
-    expect(typeof result.current.mutate).toBe("function");
+    expect(typeof result.current.save).toBe("function");
+    expect(result.current.isSavingAny).toBe(false);
   });
 
   it("useUserSettings does not retry on 403 errors", async () => {
@@ -259,15 +281,134 @@ describe("settings hooks", () => {
     expect(result.current.data).toEqual(mockSettings);
   });
 
-  it("useUpdateUserSettings onSuccess invalidates settings cache and calls options.onSuccess", async () => {
+  it("useUpdateUserSettings resolves with the saved row and calls options.onSuccess", async () => {
     const onSuccess = vi.fn();
     vi.mocked(apiClient.post).mockResolvedValueOnce(mockSettings);
     const { result } = renderHook(() => useUpdateUserSettings({ onSuccess }), {
       wrapper: makeWrapper(),
     });
     await act(async () => {
-      await result.current.mutateAsync({ pdsSyncEnabled: true });
+      await expect(result.current.save({ pdsSyncEnabled: true })).resolves.toEqual(mockSettings);
     });
     expect(onSuccess).toHaveBeenCalled();
+  });
+
+  it("resolves null and reports the failure through options.onError", async () => {
+    const onError = vi.fn();
+    vi.mocked(apiClient.post).mockRejectedValueOnce({ status: 500, error: "boom" });
+    const { result } = renderHook(() => useUpdateUserSettings({ onError }), {
+      wrapper: makeWrapper(),
+    });
+    await act(async () => {
+      await expect(result.current.save({ pdsSyncEnabled: true })).resolves.toBeNull();
+    });
+    expect(onError).toHaveBeenCalledWith({ status: 500, error: "boom" });
+  });
+
+  it("leaves a second field free while the first is in flight", async () => {
+    const first = deferred<UserSettings>();
+    const second = deferred<UserSettings>();
+    vi.mocked(apiClient.post)
+      .mockReturnValueOnce(first.promise)
+      .mockReturnValueOnce(second.promise);
+    const { result } = renderHook(() => useUpdateUserSettings(), { wrapper: makeWrapper() });
+
+    act(() => {
+      void result.current.save({ inboxEnabled: false });
+    });
+    await waitFor(() => expect(result.current.isSaving("inboxEnabled")).toBe(true));
+    expect(result.current.isSaving("uiLocale")).toBe(false);
+
+    act(() => {
+      void result.current.save({ uiLocale: "de" });
+    });
+    await waitFor(() => expect(result.current.isSaving("uiLocale")).toBe(true));
+    // Both requests are open at once: neither waited on the other.
+    expect(result.current.isSaving("inboxEnabled")).toBe(true);
+
+    await act(async () => {
+      first.resolve({ ...mockSettings, inboxEnabled: 0 });
+      second.resolve({ ...mockSettings, uiLocale: "de" });
+    });
+    await waitFor(() => expect(result.current.isSavingAny).toBe(false));
+  });
+
+  it("applies a save optimistically before the request lands", async () => {
+    const { Wrapper, qc } = makeSettingsWrapper();
+    qc.setQueryData(settingsKeys.user(), mockSettings);
+    const inFlight = deferred<UserSettings>();
+    vi.mocked(apiClient.post).mockReturnValueOnce(inFlight.promise);
+    const { result } = renderHook(() => useUpdateUserSettings(), { wrapper: Wrapper });
+
+    act(() => {
+      void result.current.save({ inboxEnabled: false });
+    });
+
+    await waitFor(() =>
+      expect(qc.getQueryData(settingsKeys.user())).toMatchObject({ inboxEnabled: false })
+    );
+    await act(async () => {
+      inFlight.resolve({ ...mockSettings, inboxEnabled: 0 });
+    });
+    await waitFor(() =>
+      expect(qc.getQueryData(settingsKeys.user())).toMatchObject({ inboxEnabled: 0 })
+    );
+  });
+
+  it("a failed save reverts its own field and leaves a sibling's success alone", async () => {
+    const { Wrapper, qc } = makeSettingsWrapper();
+    qc.setQueryData(settingsKeys.user(), mockSettings);
+    const failing = deferred<UserSettings>();
+    vi.mocked(apiClient.post)
+      .mockReturnValueOnce(failing.promise)
+      .mockResolvedValueOnce({ ...mockSettings, uiLocale: "de" });
+    const { result } = renderHook(() => useUpdateUserSettings(), { wrapper: Wrapper });
+
+    let failed!: Promise<UserSettings | null>;
+    act(() => {
+      failed = result.current.save({ inboxEnabled: false });
+    });
+    await act(async () => {
+      await result.current.save({ uiLocale: "de" });
+    });
+    expect(qc.getQueryData(settingsKeys.user())).toMatchObject({ uiLocale: "de" });
+
+    await act(async () => {
+      failing.reject({ status: 500, error: "boom" });
+      await failed;
+    });
+
+    expect(qc.getQueryData(settingsKeys.user())).toMatchObject({
+      inboxEnabled: 1,
+      uiLocale: "de",
+    });
+  });
+
+  it("refetches once the last concurrent save settles, not while one is still in flight", async () => {
+    const { Wrapper, qc } = makeSettingsWrapper();
+    const first = deferred<UserSettings>();
+    const second = deferred<UserSettings>();
+    vi.mocked(apiClient.post)
+      .mockReturnValueOnce(first.promise)
+      .mockReturnValueOnce(second.promise);
+    const invalidate = vi.spyOn(qc, "invalidateQueries");
+    const { result } = renderHook(() => useUpdateUserSettings(), { wrapper: Wrapper });
+
+    act(() => {
+      void result.current.save({ inboxEnabled: false });
+      void result.current.save({ uiLocale: "de" });
+    });
+    await waitFor(() => expect(result.current.isSaving("uiLocale")).toBe(true));
+
+    await act(async () => {
+      first.resolve({ ...mockSettings, inboxEnabled: 0 });
+    });
+    await waitFor(() => expect(result.current.isSaving("inboxEnabled")).toBe(false));
+    expect(invalidate).not.toHaveBeenCalled();
+
+    await act(async () => {
+      second.resolve({ ...mockSettings, uiLocale: "de" });
+    });
+    await waitFor(() => expect(invalidate).toHaveBeenCalledTimes(1));
   });
 });

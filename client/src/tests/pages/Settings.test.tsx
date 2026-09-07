@@ -54,7 +54,18 @@ const mockUsePushAvailable = vi.mocked(notificationService.usePushAvailable);
 const mockUseEnablePushNotifications = vi.mocked(notificationService.useEnablePushNotifications);
 const mockUseDisablePushNotifications = vi.mocked(notificationService.useDisablePushNotifications);
 
-const noopMutation = { mutate: vi.fn(), isPending: false } as any;
+const noopMutation = { save: vi.fn(), isSaving: () => false, isSavingAny: false } as any;
+
+/** Returns the `save` spy. `savingField`, if given, is the only field in flight. */
+function mockMutation(savingField?: string) {
+  const save = vi.fn();
+  mockUseUpdateUserSettings.mockReturnValue({
+    save,
+    isSaving: (field: string) => field === savingField,
+    isSavingAny: savingField !== undefined,
+  } as any);
+  return save;
+}
 
 function setupLoggedIn() {
   mockUseSession.mockReturnValue({
@@ -186,12 +197,8 @@ describe("Settings page", () => {
     expect(dashes.length).toBeGreaterThanOrEqual(4);
   });
 
-  it("calls updateSettings when the PDS sync switch is toggled", async () => {
-    const mockMutate = vi.fn();
-    mockUseUpdateUserSettings.mockReturnValue({
-      mutate: mockMutate,
-      isPending: false,
-    } as any);
+  it("saves only pdsSyncEnabled when the PDS sync switch is toggled", async () => {
+    const save = mockMutation();
     setupLoggedIn();
     mockUseUserSettings.mockReturnValue({
       data: { pdsSyncEnabled: 1, imageTheme: "default" },
@@ -212,8 +219,19 @@ describe("Settings page", () => {
     fireEvent.click(screen.getByRole("switch", { name: en.settingsPage.pdsSync }));
 
     await waitFor(() => {
-      expect(mockMutate).toHaveBeenCalledWith(expect.objectContaining({ pdsSyncEnabled: false }));
+      expect(save).toHaveBeenCalledWith({ pdsSyncEnabled: false });
     });
+  });
+
+  it("leaves the client picker usable while the PDS sync save is in flight", () => {
+    mockMutation("pdsSyncEnabled");
+    setupLoadedPage();
+    renderWithProviders(<Settings />);
+
+    expect(screen.getByRole("switch", { name: en.settingsPage.pdsSync })).toBeDisabled();
+    expect(
+      screen.getByRole("combobox", { name: en.settingsPage.defaultClient })
+    ).not.toBeDisabled();
   });
 
   it("onSuccess callback for updateSettings is a no-op and does not throw", () => {
@@ -462,9 +480,8 @@ describe("Settings page", () => {
     await waitFor(() => expect(mockRefetch).toHaveBeenCalled());
   });
 
-  it("picking a client fires updateSettings with only defaultClient", () => {
-    const mutate = vi.fn();
-    mockUseUpdateUserSettings.mockReturnValue({ mutate, isPending: false } as any);
+  it("picking a client saves only defaultClient", () => {
+    const save = mockMutation();
     setupLoadedPage();
     renderWithProviders(<Settings />);
 
@@ -472,7 +489,7 @@ describe("Settings page", () => {
     fireEvent.click(combobox);
     fireEvent.click(screen.getByRole("option", { name: "Deer" }));
 
-    expect(mutate).toHaveBeenCalledWith({ defaultClient: "deer" });
+    expect(save).toHaveBeenCalledWith({ defaultClient: "deer" });
   });
 
   it("takes no typed input: the client list is a picker, not a text box", () => {
@@ -564,41 +581,8 @@ describe("Settings page", () => {
     });
   });
 
-  it("uses 'default' imageTheme fallback when userSettings.imageTheme is falsy", async () => {
-    const mockMutate = vi.fn();
-    mockUseUpdateUserSettings.mockReturnValue({
-      mutate: mockMutate,
-      isPending: false,
-    } as any);
-    setupLoggedIn();
-    mockUseUserSettings.mockReturnValue({
-      data: { pdsSyncEnabled: 1, imageTheme: null },
-      isLoading: false,
-      error: null,
-      refetch: vi.fn(),
-    } as any);
-    mockUseUserStats.mockReturnValue({
-      data: { messageCount: 0, memberSince: null },
-      isLoading: false,
-    } as any);
-    mockUsePdsInfo.mockReturnValue({
-      data: { recordCount: 0, pdsUrl: null },
-      isLoading: false,
-    } as any);
-    renderWithProviders(<Settings />);
-
-    fireEvent.click(screen.getByRole("switch", { name: en.settingsPage.pdsSync }));
-
-    await waitFor(() => {
-      expect(mockMutate).toHaveBeenCalledWith(expect.objectContaining({ imageTheme: "default" }));
-    });
-  });
-
-  it("disables the PDS sync switch while the update is in flight", () => {
-    mockUseUpdateUserSettings.mockReturnValue({
-      mutate: vi.fn(),
-      isPending: true,
-    } as any);
+  it("disables the PDS sync switch while its own save is in flight", () => {
+    mockMutation("pdsSyncEnabled");
     setupLoggedIn();
     mockUseUserSettings.mockReturnValue({
       data: { pdsSyncEnabled: 1, imageTheme: "default" },

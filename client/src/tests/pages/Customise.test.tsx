@@ -50,13 +50,15 @@ function mockSettings(overrides: Record<string, unknown> = {}) {
   } as any;
 }
 
-function mockMutation() {
-  const mutate = vi.fn();
+/** Returns the `save` spy. `savingField`, if given, is the only field in flight. */
+function mockMutation(savingField?: string) {
+  const save = vi.fn();
   mockUseUpdateUserSettings.mockReturnValue({
-    mutate,
-    isPending: false,
+    save,
+    isSaving: (field: string) => field === savingField,
+    isSavingAny: savingField !== undefined,
   } as any);
-  return mutate;
+  return save;
 }
 
 describe("Customise page", () => {
@@ -103,28 +105,28 @@ describe("Customise page", () => {
     expect(screen.queryByText(/what sends a push/i)).toBeNull();
   });
 
-  it("toggling the profile switch fires updateSettings with only openProfilesInApp", () => {
+  it("toggling the profile switch saves with only openProfilesInApp", () => {
     mockUseUserSettings.mockReturnValue(mockSettings());
-    const mutate = mockMutation();
+    const save = mockMutation();
     renderWithProviders(<Customise />);
 
     fireEvent.click(
       screen.getByRole("switch", { name: en.customisePage.openProfilesInApp(APP_NAME) })
     );
 
-    expect(mutate).toHaveBeenCalledTimes(1);
-    expect(mutate).toHaveBeenCalledWith({ openProfilesInApp: false });
+    expect(save).toHaveBeenCalledTimes(1);
+    expect(save).toHaveBeenCalledWith({ openProfilesInApp: false });
   });
 
-  it("toggling the Atmosphere links switch fires updateSettings with only that key", () => {
+  it("toggling the Atmosphere links switch saves with only that key", () => {
     mockUseUserSettings.mockReturnValue(mockSettings());
-    const mutate = mockMutation();
+    const save = mockMutation();
     renderWithProviders(<Customise />);
 
     fireEvent.click(screen.getByRole("switch", { name: en.customisePage.atmosphereLinksSetting }));
 
-    expect(mutate).toHaveBeenCalledTimes(1);
-    expect(mutate).toHaveBeenCalledWith({ atmosphereLinksEnabled: false });
+    expect(save).toHaveBeenCalledTimes(1);
+    expect(save).toHaveBeenCalledWith({ atmosphereLinksEnabled: false });
   });
 
   it("shows the Atmosphere links switch on for an account with no settings row", () => {
@@ -139,35 +141,35 @@ describe("Customise page", () => {
     ).toBeChecked();
   });
 
-  it("toggling the inbox switch fires updateSettings with only inboxEnabled", () => {
+  it("toggling the inbox switch saves with only inboxEnabled", () => {
     mockUseUserSettings.mockReturnValue(mockSettings());
-    const mutate = mockMutation();
+    const save = mockMutation();
     renderWithProviders(<Customise />);
 
     const toggle = screen.getByRole("switch", { name: en.customisePage.inbox });
     fireEvent.click(toggle);
 
-    expect(mutate).toHaveBeenCalledTimes(1);
-    expect(mutate).toHaveBeenCalledWith({ inboxEnabled: false });
+    expect(save).toHaveBeenCalledTimes(1);
+    expect(save).toHaveBeenCalledWith({ inboxEnabled: false });
   });
 
-  it("toggling the profanity filter fires updateSettings with only profanityFilterEnabled", () => {
+  it("toggling the profanity filter saves with only profanityFilterEnabled", () => {
     mockUseUserSettings.mockReturnValue(mockSettings());
-    const mutate = mockMutation();
+    const save = mockMutation();
     renderWithProviders(<Customise />);
 
     const toggle = screen.getByRole("switch", { name: en.customisePage.profanityFilter });
     fireEvent.click(toggle);
 
-    expect(mutate).toHaveBeenCalledTimes(1);
-    expect(mutate).toHaveBeenCalledWith({ profanityFilterEnabled: true });
+    expect(save).toHaveBeenCalledTimes(1);
+    expect(save).toHaveBeenCalledWith({ profanityFilterEnabled: true });
   });
 
   it.each(touchpointLocales.filter((l) => l.value !== "en"))(
-    "picking $value fires updateSettings with touchpointLocale",
+    "picking $value saves with touchpointLocale",
     ({ value, label }) => {
       mockUseUserSettings.mockReturnValue(mockSettings());
-      const mutate = mockMutation();
+      const save = mockMutation();
       renderWithProviders(<Customise />);
 
       // Mantine Select renders a combobox. Query by role to avoid matching
@@ -177,15 +179,15 @@ describe("Customise page", () => {
       const option = screen.getByRole("option", { name: label });
       fireEvent.click(option);
 
-      expect(mutate).toHaveBeenCalledWith({ touchpointLocale: value });
+      expect(save).toHaveBeenCalledWith({ touchpointLocale: value });
     }
   );
 
   it.each(uiLocaleOptions.filter((l) => l.value !== "en"))(
-    "picking $value fires updateSettings with uiLocale",
+    "picking $value saves with uiLocale",
     ({ value, label }) => {
       mockUseUserSettings.mockReturnValue(mockSettings());
-      const mutate = mockMutation();
+      const save = mockMutation();
       renderWithProviders(<Customise />);
 
       const combobox = screen.getByRole("combobox", { name: en.customisePage.appLanguage });
@@ -193,7 +195,7 @@ describe("Customise page", () => {
       const option = screen.getByRole("option", { name: label });
       fireEvent.click(option);
 
-      expect(mutate).toHaveBeenCalledWith({ uiLocale: value });
+      expect(save).toHaveBeenCalledWith({ uiLocale: value });
     }
   );
 
@@ -253,59 +255,73 @@ describe("Customise page", () => {
     }
   );
 
-  it("disables the App language selector while an update is in flight", () => {
+  it("disables the App language selector while its own update is in flight", () => {
     mockUseUserSettings.mockReturnValue(mockSettings());
-    mockUseUpdateUserSettings.mockReturnValue({
-      mutate: vi.fn(),
-      isPending: true,
-    } as any);
+    mockMutation("uiLocale");
     renderWithProviders(<Customise />);
 
     expect(screen.getByRole("combobox", { name: en.customisePage.appLanguage })).toBeDisabled();
   });
 
-  it("picking a profile card theme swatch fires updateSettings with profileCardTheme", () => {
+  it("leaves every other control usable while one save is in flight", () => {
     mockUseUserSettings.mockReturnValue(mockSettings());
-    const mutate = mockMutation();
+    const save = mockMutation("uiLocale");
+    renderWithProviders(<Customise />);
+
+    expect(
+      screen.getByRole("combobox", { name: en.customisePage.messageLanguage })
+    ).not.toBeDisabled();
+    expect(screen.getByLabelText(en.customisePage.profilePrompt)).not.toBeDisabled();
+    expect(screen.getByRole("button", { name: en.themes.profileCard.ember })).not.toBeDisabled();
+
+    const inbox = screen.getByRole("switch", { name: en.customisePage.inbox });
+    expect(inbox).not.toBeDisabled();
+    fireEvent.click(inbox);
+    expect(save).toHaveBeenCalledWith({ inboxEnabled: false });
+  });
+
+  it("picking a profile card theme swatch saves with profileCardTheme", () => {
+    mockUseUserSettings.mockReturnValue(mockSettings());
+    const save = mockMutation();
     renderWithProviders(<Customise />);
 
     fireEvent.click(screen.getByRole("button", { name: en.themes.profileCard.ember }));
-    expect(mutate).toHaveBeenCalledWith({ profileCardTheme: "ember" });
+    expect(save).toHaveBeenCalledWith({ profileCardTheme: "ember" });
   });
 
-  it("persisting a custom prompt fires updateSettings with the trimmed value", () => {
+  it("persisting a custom prompt saves with the trimmed value", () => {
     mockUseUserSettings.mockReturnValue(mockSettings());
-    const mutate = mockMutation();
+    const save = mockMutation();
     renderWithProviders(<Customise />);
 
     const input = screen.getByLabelText(en.customisePage.profilePrompt) as HTMLInputElement;
     fireEvent.change(input, { target: { value: "Ask me anything" } });
     fireEvent.blur(input);
 
-    expect(mutate).toHaveBeenCalledWith({ customPrompt: "Ask me anything" });
+    expect(save).toHaveBeenCalledWith({ customPrompt: "Ask me anything" });
   });
 
   it("blurring an unchanged prompt does not fire a mutation", () => {
     mockUseUserSettings.mockReturnValue(mockSettings({ customPrompt: "existing" }));
-    const mutate = mockMutation();
+    const save = mockMutation();
     renderWithProviders(<Customise />);
 
     const input = screen.getByLabelText(en.customisePage.profilePrompt) as HTMLInputElement;
     fireEvent.blur(input); // no change
 
-    expect(mutate).not.toHaveBeenCalled();
+    expect(save).not.toHaveBeenCalled();
   });
 
   it("clearing the prompt persists null (revert to default)", () => {
     mockUseUserSettings.mockReturnValue(mockSettings({ customPrompt: "existing" }));
-    const mutate = mockMutation();
+    const save = mockMutation();
     renderWithProviders(<Customise />);
 
     const input = screen.getByLabelText(en.customisePage.profilePrompt) as HTMLInputElement;
     fireEvent.change(input, { target: { value: "" } });
     fireEvent.blur(input);
 
-    expect(mutate).toHaveBeenCalledWith({ customPrompt: null });
+    expect(save).toHaveBeenCalledWith({ customPrompt: null });
   });
 
   it("shows skeletons in every card while settings are loading", () => {
@@ -323,25 +339,18 @@ describe("Customise page", () => {
     expect(screen.queryByRole("switch")).toBeNull();
   });
 
-  it("disables every control while a mutation is pending", () => {
+  it("disables only the control whose own save is in flight", () => {
     mockUseUserSettings.mockReturnValue(mockSettings());
-    mockUseUpdateUserSettings.mockReturnValue({
-      mutate: vi.fn(),
-      isPending: true,
-    } as any);
+    mockMutation("profileCardTheme");
     renderWithProviders(<Customise />);
 
     expect(screen.getByRole("button", { name: en.themes.profileCard.ember })).toBeDisabled();
-    expect(screen.getByRole("switch", { name: en.customisePage.inbox })).toBeDisabled();
+    expect(screen.getByRole("switch", { name: en.customisePage.inbox })).not.toBeDisabled();
   });
 
-  it("spins only the switch whose field is in the in-flight payload", () => {
+  it("spins only the switch whose field is in flight", () => {
     mockUseUserSettings.mockReturnValue(mockSettings());
-    mockUseUpdateUserSettings.mockReturnValue({
-      mutate: vi.fn(),
-      isPending: true,
-      variables: { inboxEnabled: false },
-    } as any);
+    mockMutation("inboxEnabled");
     const { container } = renderWithProviders(<Customise />);
 
     // One thumb spinner on the page — the inbox switch, not the filter switch.

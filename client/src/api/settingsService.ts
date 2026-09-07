@@ -1,13 +1,13 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import {
+  useMutation,
+  useMutationState,
+  useQuery,
+  useQueryClient,
+  type QueryClient,
+} from "@tanstack/react-query";
 
 import { apiClient, ApiError } from "./apiClient";
-import { queryClient } from "./queryClient";
 
-/**
- * What the owner has changed about their ask card, in the shape both the
- * settings API and a public profile return it. `null` means "not customised":
- * the app's own headline, its default gradient, and English touchpoints.
- */
 export interface AskCardCustomisation {
   customPrompt: string | null;
   profileCardTheme: string | null;
@@ -20,22 +20,9 @@ export interface UserSettings extends AskCardCustomisation {
   imageTheme: string;
   inboxEnabled: number | boolean;
   profanityFilterEnabled: number | boolean;
-  /** The logged-in user's own app language. Private — never returned on a public profile. */
   uiLocale: string | null;
-  /**
-   * The Atmosphere client, by Aturi waypoint id, that this user's answers link
-   * to. Null keeps the Bluesky link the server posted. Private, like uiLocale.
-   */
   defaultClient: string | null;
-  /**
-   * Whether an @mention in a bio opens that account's profile inside this app
-   * rather than in `defaultClient`. Private, like `uiLocale`.
-   */
   openProfilesInApp: number | boolean;
-  /**
-   * Whether this account's profile advertises the other Atmosphere apps it
-   * publishes to. Unlike the two above, this one is the owner's and is public.
-   */
   atmosphereLinksEnabled: number | boolean;
   createdAt: string;
 }
@@ -55,7 +42,13 @@ export const settingsKeys = {
   user: () => [...settingsKeys.all, "user"] as const,
   stats: () => [...settingsKeys.all, "stats"] as const,
   pdsInfo: () => [...settingsKeys.all, "pds-info"] as const,
+  update: () => [...settingsKeys.all, "update"] as const,
 };
+
+/** The fields one save carries. Every request updates only the keys it names. */
+export type SettingsPatch = Partial<UserSettings>;
+
+export type SettingsField = keyof UserSettings;
 
 export const settingsService = {
   getUserSettings: async (): Promise<UserSettings> => {
@@ -98,7 +91,6 @@ export function useUserStats() {
     queryFn: () => settingsService.getStats(),
     retry: false,
     refetchOnWindowFocus: false,
-    // Invalidated by both message and settings mutations already.
     staleTime: Infinity,
   });
 }
@@ -109,21 +101,98 @@ export function usePdsInfo() {
     queryFn: () => settingsService.getPdsInfo(),
     retry: false,
     refetchOnWindowFocus: false,
-    // Static per user; settings mutations invalidate it.
     staleTime: Infinity,
   });
 }
 
+/** The keys of `shape`, read off `source`. */
+function project(source: UserSettings, shape: SettingsPatch): SettingsPatch {
+  return Object.fromEntries(
+    Object.keys(shape).map((key) => [key, source[key as SettingsField]])
+  ) as SettingsPatch;
+}
+
+function mergeIntoCache(client: QueryClient, patch: SettingsPatch) {
+  client.setQueryData<UserSettings>(settingsKeys.user(), (cached) =>
+    cached ? { ...cached, ...patch } : cached
+  );
+}
+
+interface SaveContext {
+  /** This save's own fields as they stood before it started, for rollback. */
+  previous?: SettingsPatch;
+}
+
+/**
+ * `onSettled` runs before the mutation leaves the pending set, so a count of one
+ * means this save is the last one standing.
+ *
+ * @see [settingsService.test.ts](../tests/settingsService.test.ts) — "refetches
+ * once the last concurrent save settles, not while one is still in flight".
+ */
+const ONLY_THIS_SAVE = 1;
+
+export interface UpdateUserSettings {
+  /** Persists one patch. Resolves with the saved row, or `null` if it failed. */
+  save: (patch: SettingsPatch) => Promise<UserSettings | null>;
+  /** True only while a request carrying this field is in flight. */
+  isSaving: (field: SettingsField) => boolean;
+  isSavingAny: boolean;
+}
+
+/**
+ * Saves settings one patch at a time, without any of them waiting on the others.
+ * Each call is its own request, applied to the cache optimistically and rolled
+ * back field-by-field on failure, so a slow save never blocks or reverts a
+ * sibling. Callers ask `isSaving(field)` rather than reading one shared pending
+ * flag.
+ *
+ * @see [settingsService.test.ts](../tests/settingsService.test.ts) — "leaves a
+ * second field free while the first is in flight".
+ * @see [customise.spec.ts](../../../e2e/web/customise.spec.ts) — "two switches
+ * flipped back to back both land" pins the same rule end to end.
+ */
 export function useUpdateUserSettings(options?: {
   onSuccess?: () => void;
   onError?: (error: ApiError) => void;
-}) {
-  return useMutation({
-    mutationFn: (settings: Partial<UserSettings>) => settingsService.updateUserSettings(settings),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: settingsKeys.all });
+}): UpdateUserSettings {
+  const client = useQueryClient();
+
+  const mutation = useMutation<UserSettings, ApiError, SettingsPatch, SaveContext>({
+    mutationKey: settingsKeys.update(),
+    mutationFn: (patch) => settingsService.updateUserSettings(patch),
+    onMutate: async (patch) => {
+      await client.cancelQueries({ queryKey: settingsKeys.user() });
+      const cached = client.getQueryData<UserSettings>(settingsKeys.user());
+      mergeIntoCache(client, patch);
+      return { previous: cached && project(cached, patch) };
+    },
+    onError: (error, _patch, context) => {
+      if (context?.previous) mergeIntoCache(client, context.previous);
+      options?.onError?.(error);
+    },
+    onSuccess: (saved, patch) => {
+      mergeIntoCache(client, project(saved, patch));
       options?.onSuccess?.();
     },
-    onError: options?.onError,
+    onSettled: () => {
+      if (client.isMutating({ mutationKey: settingsKeys.update() }) === ONLY_THIS_SAVE) {
+        client.invalidateQueries({ queryKey: settingsKeys.all });
+      }
+    },
   });
+
+  const inFlight = useMutationState<SettingsPatch>({
+    filters: { mutationKey: settingsKeys.update(), status: "pending" },
+    // A pending mutation always carries its variables, so there is nothing to guard.
+    select: (saving) => saving.state.variables as SettingsPatch,
+  });
+
+  return {
+    // The hook-level onError has already surfaced the failure, so the promise
+    // resolves rather than rejecting into every un-awaited call site.
+    save: (patch) => mutation.mutateAsync(patch).catch(() => null),
+    isSaving: (field) => inFlight.some((patch) => field in patch),
+    isSavingAny: inFlight.length > 0,
+  };
 }

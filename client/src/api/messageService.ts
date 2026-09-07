@@ -38,11 +38,6 @@ export interface ResponseMessageResponse {
   link?: string;
 }
 
-/**
- * Where a queued question-image render has got to. `unknown` means the key is
- * gone — expired, or lost to a deploy that moved the in-process store — which is
- * a reason to render again, not a failure.
- */
 export type RenderStatus = "pending" | "rendering" | "ready" | "failed" | "unknown";
 
 export interface StartRenderRequest {
@@ -63,12 +58,6 @@ export interface RenderStatusResponse {
 }
 
 /**
- * Deliberately not under `messageKeys.all`. Every message mutation invalidates
- * that key, and invalidation matches by prefix, so a nested render key would be
- * force-refetched by an unrelated send or delete. Both terminal statuses are
- * read-once on the server, so that refetch reads `unknown` and drives a fresh
- * Chromium render for a question the user has already answered.
- *
  * @see [messageService.test.ts](../tests/messageService.test.ts): pins that a
  * message invalidation matches the list key and leaves a live render poll alone.
  */
@@ -77,12 +66,6 @@ const RENDER_NAMESPACE = "message-render";
 export const messageKeys = {
   all: ["messages"] as const,
   detail: (did: string) => [...messageKeys.all, did] as const,
-  /**
-   * `attempt` separates successive polls of the same render key. The key is a
-   * content hash, so a re-render after a loss returns the *same* id, and without
-   * this the fresh poll would read the previous attempt's terminal result and
-   * conclude the same thing forever.
-   */
   render: (renderId: string, attempt: number) => [RENDER_NAMESPACE, renderId, attempt] as const,
   /** Where a poll with no key to read parks, rather than on the message list. */
   noRender: [RENDER_NAMESPACE, "none"] as const,

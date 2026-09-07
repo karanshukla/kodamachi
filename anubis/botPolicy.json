@@ -31,11 +31,6 @@
       "action": "ALLOW"
     },
     {
-      "name": "summary-html",
-      "path_regex": "^/summary\\.html$",
-      "action": "ALLOW"
-    },
-    {
       "name": "cardybot-bluesky",
       "user_agent_regex": "Bluesky Cardyb",
       "action": "ALLOW"

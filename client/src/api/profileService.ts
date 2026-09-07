@@ -127,9 +127,6 @@ export function useFriends(did: string | null) {
     staleTime: ONE_DAY,
     // Lazy: only when the cache entry is first created, not on every render.
     initialData: () => (did ? getCachedFriends(did)?.data : undefined) ?? undefined,
-    // React Query only calls this when initialData returned a value, which
-    // already implies `did` is set and the cache hit — so both the ternary's
-    // alternate and the `?? undefined` fallback are unreachable from here.
     initialDataUpdatedAt: () => {
       /* istanbul ignore next */
       return (did ? getCachedFriends(did)?.timestamp : undefined) ?? undefined;
@@ -144,8 +141,6 @@ export function useBotFollow(enabled: boolean) {
     queryKey: profileKeys.botFollow(),
     queryFn: () => profileService.checkBotFollow(),
     enabled,
-    // Always stale, so returning from the Bluesky tab refetches immediately
-    // (via the global refetchOnWindowFocus) and picks up a brand-new follow.
     staleTime: 0,
     retry: false,
   });

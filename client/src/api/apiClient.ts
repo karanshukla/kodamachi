@@ -2,17 +2,10 @@ const API_URL = import.meta.env.VITE_API_URL || "";
 
 export interface ApiError {
   error: string;
-  /** The server's untranslated English fallback for `error`, when it sent one. */
   message?: string;
   status?: number;
 }
 
-/**
- * What `apiClient` throws when a non-OK response carries no JSON body.
- * `error` holds a machine code everywhere else, and `resolveApiErrorMessage`
- * renders the localized generic string for any value it does not recognise,
- * so this one only ever reaches a log.
- */
 const UNPARSEABLE_ERROR_BODY = { error: "Unknown error" /* i18n-allow */ };
 
 export const apiClient = {

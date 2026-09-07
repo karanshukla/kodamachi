@@ -14,7 +14,7 @@ import { useState, useEffect } from "react";
 import { useSession } from "../api/authService";
 import { APP_NAME } from "../lib/brand";
 import { dbBoolean } from "../lib/dbBoolean";
-import { useUserSettings, useUpdateUserSettings, type UserSettings } from "../api/settingsService";
+import { useUserSettings, useUpdateUserSettings } from "../api/settingsService";
 import { ProfileThemeSwatches } from "../components/customise/ProfileThemeSwatches";
 import { SettingsSection } from "../components/customise/SettingsSection";
 import { SettingsCard } from "../components/SettingsCard";
@@ -48,10 +48,7 @@ export default function Customise() {
     setPromptDraft(userSettings?.customPrompt ?? "");
   }, [userSettings?.customPrompt]);
 
-  const busy = updateSettings.isPending;
-
-  /** One mutation hook serves every card, so the in-flight payload names the field. */
-  const saving = (field: keyof UserSettings) => busy && field in (updateSettings.variables ?? {});
+  const saving = updateSettings.isSaving;
 
   const loadError = (
     <Alert color="red" title={messages.common.settingsLoadErrorTitle} withCloseButton={false}>
@@ -110,11 +107,11 @@ export default function Customise() {
                 onChange={(e) => setPromptDraft(e.target.value.slice(0, MAX_PROMPT_LENGTH))}
                 onBlur={() => {
                   if (promptInSync) return;
-                  updateSettings.mutate({ customPrompt: promptDraft.trim() || null });
+                  updateSettings.save({ customPrompt: promptDraft.trim() || null });
                 }}
                 placeholder={messages.customisePage.profilePromptPlaceholder}
                 maxLength={MAX_PROMPT_LENGTH}
-                disabled={busy}
+                disabled={saving("customPrompt")}
                 aria-label={messages.customisePage.profilePrompt}
                 description={`${formatNumber(promptDraft.length)}/${formatNumber(MAX_PROMPT_LENGTH)}`}
                 styles={styles.promptCounter}
@@ -132,8 +129,8 @@ export default function Customise() {
               56,
               <ProfileThemeSwatches
                 value={userSettings?.profileCardTheme ?? null}
-                disabled={busy}
-                onPick={(value) => updateSettings.mutate({ profileCardTheme: value })}
+                disabled={saving("profileCardTheme")}
+                onPick={(value) => updateSettings.save({ profileCardTheme: value })}
               />
             )}
           </SettingsCard>
@@ -161,9 +158,9 @@ export default function Customise() {
                 onChange={(value) => {
                   // allowDeselect={false} — Mantine never emits null/"" here.
                   /* istanbul ignore next */
-                  updateSettings.mutate({ uiLocale: value || null });
+                  updateSettings.save({ uiLocale: value || null });
                 }}
-                disabled={busy}
+                disabled={saving("uiLocale")}
                 allowDeselect={false}
                 aria-label={messages.customisePage.appLanguage}
               />
@@ -188,9 +185,9 @@ export default function Customise() {
                 onChange={(value) => {
                   // allowDeselect={false} — Mantine never emits null/"" here.
                   /* istanbul ignore next */
-                  updateSettings.mutate({ touchpointLocale: value || null });
+                  updateSettings.save({ touchpointLocale: value || null });
                 }}
-                disabled={busy}
+                disabled={saving("touchpointLocale")}
                 allowDeselect={false}
                 aria-label={messages.customisePage.messageLanguage}
               />
@@ -211,8 +208,7 @@ export default function Customise() {
               <SettingsToggle
                 label={messages.customisePage.inbox}
                 checked={dbBoolean(userSettings?.inboxEnabled, false)}
-                onChange={(checked) => updateSettings.mutate({ inboxEnabled: checked })}
-                disabled={busy}
+                onChange={(checked) => updateSettings.save({ inboxEnabled: checked })}
                 saving={saving("inboxEnabled")}
               />
             )}
@@ -229,8 +225,7 @@ export default function Customise() {
               <SettingsToggle
                 label={messages.customisePage.profanityFilter}
                 checked={dbBoolean(userSettings?.profanityFilterEnabled, false)}
-                onChange={(checked) => updateSettings.mutate({ profanityFilterEnabled: checked })}
-                disabled={busy}
+                onChange={(checked) => updateSettings.save({ profanityFilterEnabled: checked })}
                 saving={saving("profanityFilterEnabled")}
               />
             )}
@@ -253,8 +248,7 @@ export default function Customise() {
               <SettingsToggle
                 label={messages.customisePage.atmosphereLinksSetting}
                 checked={dbBoolean(userSettings?.atmosphereLinksEnabled, true)}
-                onChange={(checked) => updateSettings.mutate({ atmosphereLinksEnabled: checked })}
-                disabled={busy}
+                onChange={(checked) => updateSettings.save({ atmosphereLinksEnabled: checked })}
                 saving={saving("atmosphereLinksEnabled")}
               />
             )}
@@ -271,8 +265,7 @@ export default function Customise() {
               <SettingsToggle
                 label={messages.customisePage.openProfilesInApp(APP_NAME)}
                 checked={dbBoolean(userSettings?.openProfilesInApp, true)}
-                onChange={(checked) => updateSettings.mutate({ openProfilesInApp: checked })}
-                disabled={busy}
+                onChange={(checked) => updateSettings.save({ openProfilesInApp: checked })}
                 saving={saving("openProfilesInApp")}
               />
             )}

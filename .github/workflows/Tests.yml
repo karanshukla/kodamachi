@@ -43,13 +43,13 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Verify generated brand static assets are current
-        # public/sitemap.xml, public/client-metadata.json, and
-        # public/summary.html are generated from the repo-root brand.json
-        # (issue #386) — regenerate and fail if the committed files drifted.
+        # public/sitemap.xml and public/client-metadata.json are generated
+        # from the repo-root brand.json (issue #386) — regenerate and fail if
+        # the committed files drifted.
         working-directory: client
         run: |
           bun run render:brand-assets
-          git diff --exit-code public/sitemap.xml public/client-metadata.json public/summary.html
+          git diff --exit-code public/sitemap.xml public/client-metadata.json
 
       - name: Probe Vite dev server under Bun
         working-directory: client

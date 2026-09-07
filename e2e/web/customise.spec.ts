@@ -102,6 +102,39 @@ test("profanity filter toggle flips and is restored afterwards", async ({ page }
   await expect(toggle).toBeChecked({ checked: initiallyChecked });
 });
 
+test("two switches flipped back to back both land", async ({ page }) => {
+  const inbox = settingsSwitch(page, en.customisePage.inbox);
+  const filter = settingsSwitch(page, en.customisePage.profanityFilter);
+  await expect(inbox).toBeVisible({ timeout: 10_000 });
+  await expect(filter).toBeVisible({ timeout: 10_000 });
+
+  const inboxWas = await inbox.isChecked();
+  const filterWas = await filter.isChecked();
+
+  try {
+    // Nothing between the two flips: the second switch has to stay live while
+    // the first save is still open, and the two partial writes have to land on
+    // separate columns rather than one overwriting the other.
+    await flipSettingsSwitch(inbox);
+    await flipSettingsSwitch(filter);
+
+    await expect
+      .poll(
+        async () => {
+          const settings = await getSettings(page);
+          return [Boolean(settings.inboxEnabled), Boolean(settings.profanityFilterEnabled)];
+        },
+        { timeout: 10_000 }
+      )
+      .toEqual([!inboxWas, !filterWas]);
+  } finally {
+    await patchSettings(page, {
+      inboxEnabled: inboxWas,
+      profanityFilterEnabled: filterWas,
+    });
+  }
+});
+
 test("custom prompt persists on blur and is cleared afterwards", async ({ page }) => {
   const input = page.getByLabel(en.customisePage.profilePrompt);
   await expect(input).toBeVisible({ timeout: 10_000 });

@@ -9,6 +9,7 @@ import {
   mockUseMessages,
   mockUseRespondToMessage,
   mockUseSession,
+  mockSettingsMutation,
   mockUseUpdateUserSettings,
   mockUseUserSettings,
   noopMutation,
@@ -335,22 +336,15 @@ describe("Messages page", () => {
     expect(() => fireEvent.click(copyBtn)).not.toThrow();
   });
 
-  it("clicking a ThemeCard calls updateSettings.mutate when not loading", () => {
-    const mockMutate = vi.fn();
+  it("clicking a ThemeCard saves only imageTheme when not loading", () => {
     setupMocks();
-    mockUseUpdateUserSettings.mockReturnValue({
-      mutate: mockMutate,
-      isPending: false,
-    } as any);
+    const save = mockSettingsMutation();
     renderWithProviders(<Messages />);
 
     const defaultThemeBtn = screen.getByRole("button", { name: en.themes.image.default });
     fireEvent.click(defaultThemeBtn);
 
-    expect(mockMutate).toHaveBeenCalledWith({
-      imageTheme: "default",
-      pdsSyncEnabled: false,
-    });
+    expect(save).toHaveBeenCalledWith({ imageTheme: "default" });
   });
 
   it("keyboard Alt+R shortcut is ignored when an input element has focus", () => {
@@ -471,24 +465,22 @@ describe("Messages page", () => {
   });
 
   it("clicking a ThemeCard while settings are loading does not call updateSettings.mutate", () => {
-    const mockMutate = vi.fn();
     setupMocks();
     mockUseUserSettings.mockReturnValue({ data: undefined, isLoading: true } as any);
-    mockUseUpdateUserSettings.mockReturnValue({ mutate: mockMutate, isPending: false } as any);
+    const save = mockSettingsMutation();
     renderWithProviders(<Messages />);
 
     fireEvent.click(screen.getByRole("button", { name: en.themes.image.default }));
-    expect(mockMutate).not.toHaveBeenCalled();
+    expect(save).not.toHaveBeenCalled();
   });
 
-  it("clicking a ThemeCard while an update is already pending does not call updateSettings.mutate again", () => {
-    const mockMutate = vi.fn();
+  it("clicking a ThemeCard while its own save is in flight does not save again", () => {
     setupMocks();
-    mockUseUpdateUserSettings.mockReturnValue({ mutate: mockMutate, isPending: true } as any);
+    const save = mockSettingsMutation("imageTheme");
     renderWithProviders(<Messages />);
 
     fireEvent.click(screen.getByRole("button", { name: en.themes.image.default }));
-    expect(mockMutate).not.toHaveBeenCalled();
+    expect(save).not.toHaveBeenCalled();
   });
 
   it("arrow keys do nothing until a card has been focused", () => {

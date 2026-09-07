@@ -1,19 +1,16 @@
-# global options
+# Routing, retry budgets, headers and cache policy are documented in README.md.
 {
-	admin off # theres no need for the admin api in railway's environment
-	persist_config off # storage isn't persistent anyway
-	auto_https off # railway handles https termination, so we don't need to
+	admin off
+	persist_config off
+	auto_https off
 	log {
-		format json # set runtime log format to json mode
+		format json
 	}
-	# server options
 	servers {
-		trusted_proxies static private_ranges # trust railway's proxy
+		trusted_proxies static private_ranges
 	}
 }
 
-# For the API backends: /api/* is stateless JSON, so replaying a request that
-# may never have reached the upstream costs nothing but latency.
 (lb_settings) {
 	lb_policy round_robin
 	lb_retries 100
@@ -21,13 +18,6 @@
 	lb_try_interval 250ms
 }
 
-# The WAF upstream cannot use the settings above. Anubis owns challenge state,
-# and /.within.website/.../pass-challenge is a GET — which Caddy treats as safe
-# to replay when a connection fails. If Anubis has already marked the challenge
-# spent and the connection then drops, Caddy cannot tell that from an unsent
-# request, so it re-sends it and Anubis answers `double_spend`: a 500 the user
-# sees as "administrator has misconfigured Anubis" (issue #306). Retries here
-# only need to cover a replica swap, not ride out a sustained outage.
 (waf_lb_settings) {
 	lb_policy round_robin
 	lb_retries 2
@@ -51,14 +41,11 @@
 	header_up X-Forwarded-Host {host}
 }
 
-# site block, listens on the $PORT environment variable, automatically assigned by railway
 :{$PORT} {
-	# access logs
 	log {
-		format json # set access log format to json mode
+		format json
 	}
 
-	# Security headers applied to all responses
 	header {
 		X-Content-Type-Options "nosniff"
 		X-Frame-Options "SAMEORIGIN"
@@ -67,15 +54,9 @@
 		-Server
 	}
 
-	# Vite builds content-hashed filenames under /assets/ — cache forever
 	@assets path /assets/*
 	header @assets Cache-Control "public, max-age=31536000, immutable"
 
-	# Everything else (index.html, manifest, etc.) must revalidate on every load.
-	# /og-cache/* is excluded because this directive *replaces* the header: the
-	# shim varies it deliberately, a long max-age for a stored render and a short
-	# one for the fallback it serves while a render is still in flight, and
-	# no-store here would flatten both to "never cache" for every crawler.
 	@non_assets {
 		not path /assets/*
 		not path /api/*
@@ -83,14 +64,7 @@
 	}
 	header @non_assets Cache-Control "no-cache, no-store, must-revalidate"
 
-	# the handle_path directive WILL strip /api/ from the path before proxying
-	# use `handle` instead of `handle_path` if you dont want to strip the /api/ path
-	# this is needed if your backend's api routes don't start with /api/
-	# change paths as needed
 	handle_path {$BACKEND_PATH:/api}/* {
-		# Route requests to the NA backend when the nf-region cookie is "us".
-		# The cookie is set after OAuth completes, based on the user's PDS location.
-		# Requests without the cookie (first login, pre-auth) fall through to the EU backend.
 		@us_user header Cookie *nf-region=us*
 
 		handle @us_user {
@@ -112,7 +86,6 @@
 			log_append backend_region "eu"
 			header X-Backend-Region "eu"
 			reverse_proxy {
-				# for private networking replicas are exposed as multiple dns results, use those dns results as the upstreams
 				dynamic a {
 					name {$BACKEND_EU_DOMAIN}
 					port {$BACKEND_EU_PORT:3000}
@@ -125,9 +98,7 @@
 		}
 	}
 
-	# proxy all requests for /* to the frontend, configure these variables in the service settings
 	reverse_proxy {
-		# for private networking replicas are exposed as multiple dns results, use those dns results as the upstreams
 		dynamic a {
 			name {$FRONTEND_DOMAIN}
 			port {$FRONTEND_PORT}
@@ -136,13 +107,9 @@
 			versions ipv4 ipv6
 		}
 
-		# conservative retries — this upstream is Anubis, which owns challenge state
 		import waf_lb_settings
-
-		# configure passive health checks
 		import passive_health_checks
 
-		# sets the Host header to the header to the dynamic name and port options
 		header_up Host {upstream_hostport}
 	}
 }

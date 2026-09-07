@@ -222,13 +222,8 @@ export default function Messages() {
             <PostingPreferences state={prefs} />
             <ImageThemePicker
               selected={settingsLoading ? null : (userSettings?.imageTheme ?? null)}
-              disabled={settingsLoading || updateSettings.isPending}
-              onSelect={(imageTheme) =>
-                updateSettings.mutate({
-                  imageTheme,
-                  pdsSyncEnabled: Boolean(userSettings?.pdsSyncEnabled),
-                })
-              }
+              disabled={settingsLoading || updateSettings.isSaving("imageTheme")}
+              onSelect={(imageTheme) => updateSettings.save({ imageTheme })}
             />
           </SimpleGrid>
 
