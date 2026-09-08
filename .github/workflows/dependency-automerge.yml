@@ -1,0 +1,54 @@
+name: Dependency auto-merge
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened, edited]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  automerge:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.base.repo.full_name == github.repository
+    steps:
+      - name: Dependabot metadata
+        if: github.event.pull_request.user.login == 'dependabot[bot]'
+        id: dependabot-metadata
+        uses: dependabot/fetch-metadata@v2
+        with:
+          github-token: "${{ secrets.GITHUB_TOKEN }}"
+
+      - name: Decide eligibility
+        id: decide
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+          BODY: ${{ github.event.pull_request.body }}
+          ACTOR: ${{ github.event.pull_request.user.login }}
+          DEPENDABOT_UPDATE_TYPE: ${{ steps.dependabot-metadata.outputs.update-type }}
+        run: |
+          safe=false
+          if [ "$ACTOR" = "dependabot[bot]" ]; then
+            # Only semver patch/minor bumps auto-merge; majors always wait for review.
+            case "$DEPENDABOT_UPDATE_TYPE" in
+              version-update:semver-patch|version-update:semver-minor) safe=true ;;
+            esac
+          elif [ "$ACTOR" = "karanshukla" ]; then
+            # The Claude dependency-update routine commits under this account rather
+            # than a bot identity, so it's identified by title shape instead of actor.
+            # Anything mentioning "major"/"breaking" is left for manual merge.
+            if printf '%s' "$TITLE" | grep -Eiq '^(chore|fix)\(deps|^chore:.*(bump|dependenc)|^fix:.*(dependenc|advisory|CVE|vulnerab)'; then
+              if ! printf '%s %s' "$TITLE" "$BODY" | grep -Eiq '\b(major|breaking)\b'; then
+                safe=true
+              fi
+            fi
+          fi
+          echo "safe=$safe" >> "$GITHUB_OUTPUT"
+
+      - name: Enable auto-merge
+        if: steps.decide.outputs.safe == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: gh pr merge --auto --squash "$PR_URL"
