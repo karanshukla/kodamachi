@@ -2,7 +2,7 @@ name: Dependency auto-merge
 
 on:
   pull_request_target:
-    types: [opened, synchronize, reopened, edited]
+    types: [opened, synchronize, reopened, edited, labeled]
 
 permissions:
   contents: write
@@ -26,6 +26,7 @@ jobs:
           TITLE: ${{ github.event.pull_request.title }}
           BODY: ${{ github.event.pull_request.body }}
           ACTOR: ${{ github.event.pull_request.user.login }}
+          LABELS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
           DEPENDABOT_UPDATE_TYPE: ${{ steps.dependabot-metadata.outputs.update-type }}
         run: |
           safe=false
@@ -35,10 +36,20 @@ jobs:
               version-update:semver-patch|version-update:semver-minor) safe=true ;;
             esac
           elif [ "$ACTOR" = "karanshukla" ]; then
-            # The Claude dependency-update routine commits under this account rather
-            # than a bot identity, so it's identified by title shape instead of actor.
-            # Anything mentioning "major"/"breaking" is left for manual merge.
-            if printf '%s' "$TITLE" | grep -Eiq '^(chore|fix)(\([a-z0-9/_-]+\))?:.*(dependenc|advisory|CVE|vulnerab|bump)'; then
+            # The dependency-update routine commits under this account rather than a
+            # bot identity. The `dependencies` label is the reliable signal; the title
+            # pattern is a fallback for when it is missing. Either way, anything
+            # mentioning "major"/"breaking" is left for manual merge.
+            matched=false
+            case ",$LABELS," in
+              *,dependencies,*) matched=true ;;
+            esac
+            if [ "$matched" = false ]; then
+              if printf '%s' "$TITLE" | grep -Eiq '^(chore|fix)(\([a-z0-9/_-]+\))?:.*(dependenc|advisory|CVE|vulnerab|bump)'; then
+                matched=true
+              fi
+            fi
+            if [ "$matched" = true ]; then
               if ! printf '%s %s' "$TITLE" "$BODY" | grep -Eiq '\b(major|breaking)\b'; then
                 safe=true
               fi
