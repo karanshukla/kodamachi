@@ -24,7 +24,7 @@ SOFTWARE.
 
 The MIT license above applies strictly to the source code and logic files of this project. 
 All rights to visual design elements, custom artwork, sprites, 3D models, audio, and logos 
-located in the `/assets` directory (or listed below) are strictly reserved by the copyright owner.
+located in within the source code directories are strictly reserved by the copyright owner.
 
 Forks and derivative works of this software:
 - MUST remove or replace these visual assets before redistribution.
