@@ -26,7 +26,7 @@
       "version": "1.0.0",
       "dependencies": {
         "@atcute/bluesky-richtext-parser": "^2.1.2",
-        "@aturi.to/waypoints-react": "^0.1.3",
+        "@aturi.to/waypoints-react": "^0.1.4",
         "@mantine/core": "^9.6.1",
         "@mantine/hooks": "^9.6.1",
         "@mantine/notifications": "^9.6.1",
@@ -206,7 +206,7 @@
 
     "@aturi.to/waypoints": ["@aturi.to/waypoints@0.1.3", "", {}, "sha512-WZ2BcBkQCMrKSsMrC+HpbMkAsvmQohOqe+hU5IdKdnqYhpM6SDipHsaMu6MYeZUKDsKS7a16yP+ztCXS1GeuSA=="],
 
-    "@aturi.to/waypoints-react": ["@aturi.to/waypoints-react@0.1.3", "", { "dependencies": { "@aturi.to/waypoints": "^0.1.0" }, "peerDependencies": { "lucide-react": ">=0.300.0", "react": ">=18", "react-dom": ">=18" } }, "sha512-VMk9clh+2HR2wYvpTrV34UCGdv09E6jAnwX81nns1F5E2b6pcGBmngbhdkHO6BGyWVUHw77lgzorAS5iBhfZxQ=="],
+    "@aturi.to/waypoints-react": ["@aturi.to/waypoints-react@0.1.4", "", { "dependencies": { "@aturi.to/waypoints": "^0.1.0" }, "peerDependencies": { "lucide-react": ">=0.300.0", "react": ">=18", "react-dom": ">=18" } }, "sha512-5pHFJ5jLrx1cf+AcK//UOQp7QRBSVSfecXvojg0cI0E7ftEi/UpKbr7RrEuU73O1P5DgJq3mBKA5IwVcLqkgzQ=="],
 
     "@axiomhq/js": ["@axiomhq/js@2.0.0", "", { "dependencies": { "fetch-retry": "^6.0.0" } }, "sha512-mhDH0KLFkDko9ytoltgmch2gOiwE6kY6VWhCmTux9lzL9hmjTej68JeQKwq9GGqOY7xwDsya88bNiTnp/zc8+Q=="],
 
