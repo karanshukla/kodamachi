@@ -55,7 +55,7 @@
   },
   "devDependencies": {
     "@atproto/lex-cli": "^0.10.11",
-    "@types/bun": "1.4.0",
+    "@types/bun": "1.4.2",
     "@types/node": "^26.2.0",
     "@types/pg": "^8.23.1",
     "oxlint": "^1.81.0",
