@@ -20,7 +20,7 @@
     "test:bot-policy": "bun test scripts/bot-policy.test.ts"
   },
   "devDependencies": {
-    "@playwright/test": "^1.62.1",
+    "@playwright/test": "^1.63.0",
     "@types/bun": "1.4.2",
     "@types/node": "^26.2.0",
     "concurrently": "^10.0.5",
