@@ -8,6 +8,7 @@ import { type Database } from "../database/db";
 import { imageGenerator } from "../lib/image-generator";
 import type { ImageGenerationResult } from "../lib/image-generator";
 import { getServerMessages } from "../lib/i18n";
+import type { InboxStore } from "../services/inbox-store";
 import { MessageService, type Message, type ProfileResolver } from "../services/message-service";
 
 describe("MessageService", () => {
@@ -127,9 +128,9 @@ describe("MessageService", () => {
       }),
       insertInto: mock(() => mockInsertBuilder),
       deleteFrom: mock(() => mockDeleteBuilder),
-      // deleteUserData wraps its three deletes in db.transaction().execute(cb).
-      // Run the callback synchronously against mockDb so the three deleteFrom
-      // calls register exactly as they did before the transaction wrap.
+      // deleteUserData wraps its profile and settings deletes in
+      // db.transaction().execute(cb). Run the callback synchronously against
+      // mockDb so those deleteFrom calls register alongside the inbox clear.
       transaction: mock(() => ({ execute: (cb: any) => cb(mockDb) })),
     };
     Object.values(mockDb).forEach((fn: any) => fn.mockClear?.());
@@ -508,6 +509,47 @@ describe("MessageService", () => {
     assert.deepStrictEqual(result, { success: true });
     assert.strictEqual(mockAgent.com.atproto.repo.deleteRecord.mock.calls.length, 2);
     assert.strictEqual(mockDb.deleteFrom.mock.calls.length, 3);
+  });
+
+  test("deleteUserData clears the inbox before the profile", async () => {
+    mockSelectBuilder.execute.mockImplementationOnce(async () => []);
+    mockDeleteBuilder.execute.mockImplementation(async () => ({}));
+    await messageService.deleteUserData("did:foo", mockAgent);
+    const tables = mockDb.deleteFrom.mock.calls.map(([table]: [string]) => table);
+    assert.deepStrictEqual(tables, ["message", "user_profile", "user_settings"]);
+  });
+
+  test("deleteUserData keeps the profile when clearing the inbox fails", async () => {
+    mockSelectBuilder.execute.mockImplementationOnce(async () => []);
+    mockDeleteBuilder.execute.mockImplementationOnce(async () => {
+      throw new Error("clear failed");
+    });
+    await assert.rejects(
+      () => messageService.deleteUserData("did:foo", mockAgent),
+      /Failed to delete user data/
+    );
+    assert.strictEqual(mockDb.transaction.mock.calls.length, 0);
+  });
+
+  test("reaches inbox messages only through the injected store", async () => {
+    const stored: Message[] = [{ tid: "t", message: "hi", createdAt: "now", recipient: "did:foo" }];
+    const store = {
+      list: mock(async () => stored),
+      find: mock(async () => undefined),
+      putIgnoringDuplicates: mock(async () => {}),
+      remove: mock(async () => {}),
+      clear: mock(async () => {}),
+    } satisfies InboxStore;
+    const service = new MessageService(mockDb, mockResolver, mockLogger, store);
+    mockSelectBuilder.executeTakeFirst.mockImplementation(async () => ({ did: "did:foo" }));
+
+    assert.deepStrictEqual(await service.getMessages("did:foo"), stored);
+    await service.sendMessage("did:foo", "hello");
+
+    assert.strictEqual(store.putIgnoringDuplicates.mock.calls.length, 1);
+    const tables = mockDb.selectFrom.mock.calls.map(([table]: [string]) => table);
+    assert.ok(!tables.includes("message"));
+    assert.strictEqual(mockDb.insertInto.mock.calls.length, 0);
   });
 
   test("syncMessages: pushes DB-only records to PDS when PDS is empty", async () => {

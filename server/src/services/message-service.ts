@@ -12,17 +12,13 @@ import { ids } from "../lexicon/lexicons";
 import { type Record as MessageSchemaRecord } from "../lexicon/types/app/navyfragen/message";
 import { imageGenerator } from "../lib/image-generator";
 import { readImageTheme } from "./image-theme";
+import { KyselyInboxStore, type InboxStore, type Message } from "./inbox-store";
 import type { RenderedQuestionImage } from "./render-service";
+
+export type { Message } from "./inbox-store";
 
 export interface ProfileResolver {
   resolveDidToHandle(did: string): Promise<string | undefined>;
-}
-
-export interface Message {
-  tid: string;
-  message: string;
-  createdAt: string;
-  recipient: string;
 }
 
 /** What `com.atproto.repo.listRecords` accepts as its per-page maximum. */
@@ -52,7 +48,8 @@ export class MessageService {
   constructor(
     private db: Database,
     private resolver: ProfileResolver,
-    private logger: Logger
+    private logger: Logger,
+    private inbox: InboxStore = new KyselyInboxStore(db)
   ) {}
   /* v8 ignore stop */
 
@@ -63,23 +60,6 @@ export class MessageService {
       .where("did", "=", did)
       .executeTakeFirst();
     return Boolean(row);
-  }
-
-  private async readInboxMessages(recipient: string): Promise<Message[]> {
-    return await this.db
-      .selectFrom("message")
-      .selectAll()
-      .where("recipient", "=", recipient)
-      .orderBy("createdAt desc")
-      .execute();
-  }
-
-  private async insertMessagesIgnoringDuplicates(messages: Message[]): Promise<void> {
-    await this.db
-      .insertInto("message")
-      .values(messages)
-      .onConflict((oc) => oc.column("tid").doNothing())
-      .execute();
   }
 
   private async readIntakeSettings(recipient: string) {
@@ -95,7 +75,7 @@ export class MessageService {
       if (!(await this.userProfileExists(recipient))) {
         throw new Error("User profile does not exist");
       }
-      return await this.readInboxMessages(recipient);
+      return await this.inbox.list(recipient);
     } catch (err) {
       this.logger.error({ err, recipient }, "Failed to fetch messages");
       throw new Error("Failed to fetch messages", { cause: err });
@@ -120,7 +100,7 @@ export class MessageService {
         recipient,
       }));
 
-      await this.insertMessagesIgnoringDuplicates(examples);
+      await this.inbox.putIgnoringDuplicates(examples);
 
       return await this.getMessages(recipient);
     } catch (err) {
@@ -147,7 +127,7 @@ export class MessageService {
       }
 
       const tid = `anon-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
-      await this.insertMessagesIgnoringDuplicates([
+      await this.inbox.putIgnoringDuplicates([
         { tid, message, createdAt: new Date().toISOString(), recipient },
       ]);
 
@@ -177,11 +157,7 @@ export class MessageService {
 
   async deleteMessage(tid: string, userDid: string, agent: Agent): Promise<{ success: boolean }> {
     try {
-      const message = await this.db
-        .selectFrom("message")
-        .selectAll()
-        .where("tid", "=", tid)
-        .executeTakeFirst();
+      const message = await this.inbox.find(tid);
 
       if (!message) {
         throw new Error(MESSAGE_NOT_FOUND);
@@ -191,7 +167,7 @@ export class MessageService {
         throw new Error(NOT_AUTHORIZED_TO_DELETE);
       }
 
-      await this.db.deleteFrom("message").where("tid", "=", tid).execute();
+      await this.inbox.remove(tid);
       this.deletePdsRecordInBackground(tid, userDid, agent);
 
       return { success: true };
@@ -347,11 +323,7 @@ export class MessageService {
 
   private async deleteAllPdsMessages(userDid: string, agent: Agent): Promise<void> {
     try {
-      const messageRows = await this.db
-        .selectFrom("message")
-        .select(["tid"])
-        .where("recipient", "=", userDid)
-        .execute();
+      const messageRows = await this.inbox.list(userDid);
 
       if (messageRows.length === 0) {
         this.logger.info({ did: userDid }, "No messages found for deletion in PDS");
@@ -374,20 +346,27 @@ export class MessageService {
     }
   }
 
-  private async deleteAllUserRowsAtomically(userDid: string): Promise<void> {
+  private async deleteProfileAndSettingsAtomically(userDid: string): Promise<void> {
     await this.db.transaction().execute(async (trx) => {
-      await trx.deleteFrom("message").where("recipient", "=", userDid).execute();
       await trx.deleteFrom("user_profile").where("did", "=", userDid).execute();
       await trx.deleteFrom("user_settings").where("did", "=", userDid).execute();
     });
   }
 
+  /**
+   * The inbox is cleared before the profile goes, so a failure part-way leaves
+   * an account that can retry deletion rather than questions with no owner.
+   * @see [message-service.test.ts](../tests/message-service.test.ts) — "deleteUserData
+   * clears the inbox before the profile" and "deleteUserData keeps the profile
+   * when clearing the inbox fails".
+   */
   async deleteUserData(userDid: string, agent: Agent): Promise<{ success: boolean }> {
     try {
       // PDS deletion runs before (and outside) the transaction so network calls
       // never hold a DB connection open.
       await this.deleteAllPdsMessages(userDid, agent);
-      await this.deleteAllUserRowsAtomically(userDid);
+      await this.inbox.clear(userDid);
+      await this.deleteProfileAndSettingsAtomically(userDid);
 
       return { success: true };
     } catch (err) {
@@ -469,7 +448,7 @@ export class MessageService {
       if (localTids.has(pdsRecord.rkey)) continue;
 
       try {
-        await this.insertMessagesIgnoringDuplicates([
+        await this.inbox.putIgnoringDuplicates([
           {
             tid: pdsRecord.rkey,
             message: pdsRecord.value.message,
@@ -501,7 +480,7 @@ export class MessageService {
   }> {
     try {
       const pdsRecords = await this.listAllPdsMessages(userDid, agent);
-      const localMessages = await this.readInboxMessages(userDid);
+      const localMessages = await this.inbox.list(userDid);
 
       const pushOutcome = await this.pushMissingToPds(localMessages, pdsRecords, agent);
       const importOutcome = await this.importMissingFromPds(pdsRecords, localMessages);
