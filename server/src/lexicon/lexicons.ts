@@ -182,6 +182,33 @@ export const schemaDict = {
       },
     },
   },
+  AppKodamachiInboxQuestion: {
+    lexicon: 1,
+    id: "app.kodamachi.inbox.question",
+    description:
+      "An anonymous question in a recipient's inbox space. The recipient is implied by the space.",
+    defs: {
+      main: {
+        type: "record",
+        key: "any",
+        record: {
+          type: "object",
+          required: ["message", "createdAt"],
+          properties: {
+            message: {
+              type: "string",
+              minLength: 1,
+              maxLength: 500,
+            },
+            createdAt: {
+              type: "string",
+              format: "datetime",
+            },
+          },
+        },
+      },
+    },
+  },
   AppNavyfragenMessage: {
     lexicon: 1,
     id: "app.navyfragen.message",
@@ -321,6 +348,7 @@ export function validate(
 
 export const ids = {
   ComAtprotoLabelDefs: "com.atproto.label.defs",
+  AppKodamachiInboxQuestion: "app.kodamachi.inbox.question",
   AppNavyfragenMessage: "app.navyfragen.message",
   AppBskyActorProfile: "app.bsky.actor.profile",
   ComAtprotoRepoStrongRef: "com.atproto.repo.strongRef",
