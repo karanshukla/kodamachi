@@ -547,6 +547,43 @@ describe("MessageService", () => {
     assert.strictEqual(mockDb.insertInto.mock.calls.length, 1);
   });
 
+  describe("syncMessages files imports under the syncing user", () => {
+    const pdsRecordNaming = (recipient: string) => ({
+      success: true,
+      data: {
+        records: [
+          {
+            uri: "at://did:foo/app.navyfragen.message/pds-only",
+            value: { message: "from pds", createdAt: "now", recipient },
+          },
+        ],
+        cursor: undefined,
+      },
+    });
+
+    test("syncMessages files a record naming the syncing user under that user", async () => {
+      mockAgent.com.atproto.repo.listRecords.mockImplementationOnce(async () =>
+        pdsRecordNaming("did:foo")
+      );
+      mockSelectBuilder.execute.mockImplementationOnce(async () => []);
+
+      await messageService.syncMessages("did:foo", mockAgent);
+
+      assert.strictEqual(lastInsertValues[0].recipient, "did:foo");
+    });
+
+    test("syncMessages files a record naming another recipient under the syncing user", async () => {
+      mockAgent.com.atproto.repo.listRecords.mockImplementationOnce(async () =>
+        pdsRecordNaming("did:victim")
+      );
+      mockSelectBuilder.execute.mockImplementationOnce(async () => []);
+
+      await messageService.syncMessages("did:foo", mockAgent);
+
+      assert.strictEqual(lastInsertValues[0].recipient, "did:foo");
+    });
+  });
+
   test("syncMessages: skips records present in both DB and PDS", async () => {
     mockAgent.com.atproto.repo.listRecords.mockImplementationOnce(async () => ({
       success: true,

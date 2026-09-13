@@ -458,7 +458,14 @@ export class MessageService {
     return outcome;
   }
 
+  /**
+   * Anyone can write any record into their own repo, so an imported record is
+   * filed under the user syncing it, never under the recipient it names.
+   * @see [message-service.test.ts](../tests/message-service.test.ts) — "syncMessages
+   * files a record naming another recipient under the syncing user".
+   */
   private async importMissingFromPds(
+    userDid: string,
     pdsRecords: { rkey: string; value: MessageSchemaRecord }[],
     localMessages: Message[]
   ): Promise<SyncOutcome> {
@@ -474,7 +481,7 @@ export class MessageService {
             tid: pdsRecord.rkey,
             message: pdsRecord.value.message,
             createdAt: pdsRecord.value.createdAt,
-            recipient: pdsRecord.value.recipient,
+            recipient: userDid,
           },
         ]);
         outcome.count++;
@@ -504,7 +511,7 @@ export class MessageService {
       const localMessages = await this.readInboxMessages(userDid);
 
       const pushOutcome = await this.pushMissingToPds(localMessages, pdsRecords, agent);
-      const importOutcome = await this.importMissingFromPds(pdsRecords, localMessages);
+      const importOutcome = await this.importMissingFromPds(userDid, pdsRecords, localMessages);
 
       const syncedCount = pushOutcome.count;
       const importedCount = importOutcome.count;
