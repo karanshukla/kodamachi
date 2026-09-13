@@ -1,6 +1,6 @@
 module github.com/karanshukla/navyfragen-app/opengraph-service
 
-go 1.26
+go 1.26.0
 
 // Indigo has no semver release tags (see bluesky-social/indigo#1409); pin by
 // commit SHA so the API surface is reproducible. Interfaces may break between
@@ -13,7 +13,7 @@ require github.com/bluesky-social/indigo v0.0.0-20260629160527-dfe5578fd537
 
 require (
 	github.com/caddyserver/caddy/v2 v2.11.4
-	golang.org/x/sync v0.22.0
+	golang.org/x/sync v0.23.0
 )
 
 require (
