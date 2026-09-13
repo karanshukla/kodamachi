@@ -1,27 +1,31 @@
 /**
  * GENERATED CODE - DO NOT MODIFY
  */
-import { ValidationResult, BlobRef } from "@atproto/lexicon";
+import { type ValidationResult, BlobRef } from "@atproto/lexicon";
 import { CID } from "multiformats/cid";
+import { validate as _validate } from "../../../lexicons.js";
+import { type $Typed, is$typed as _is$typed, type OmitKey } from "../../../util.js";
 
-import { lexicons } from "../../../lexicons";
-import { isObj, hasProp } from "../../../util";
+const is$typed = _is$typed,
+  validate = _validate;
+const id = "app.navyfragen.message";
 
-export interface Record {
+export interface Main {
+  $type: "app.navyfragen.message";
   message: string;
   createdAt: string;
   recipient: string;
   [k: string]: unknown;
 }
 
-export function isRecord(v: unknown): v is Record {
-  return (
-    isObj(v) &&
-    hasProp(v, "$type") &&
-    (v.$type === "app.navyfragen.message#main" || v.$type === "app.navyfragen.message")
-  );
+const hashMain = "main";
+
+export function isMain<V>(v: V) {
+  return is$typed(v, id, hashMain);
 }
 
-export function validateRecord(v: unknown): ValidationResult {
-  return lexicons.validate("app.navyfragen.message#main", v);
+export function validateMain<V>(v: V) {
+  return validate<Main & V>(v, id, hashMain, true);
 }
+
+export { type Main as Record, isMain as isRecord, validateMain as validateRecord };
