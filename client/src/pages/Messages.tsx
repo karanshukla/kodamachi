@@ -272,19 +272,18 @@ export default function Messages() {
           <Text c="dimmed" fz={14} mt={6} maw={340} mx="auto" style={styles.emptyBody}>
             {messages.messagesPage.noMessagesBody}
           </Text>
-          <Group justify="center" gap={8} mt={22}>
-            <Button
-              onClick={() => {
-                triggerHaptic();
-                handleAddExampleMessages();
-              }}
-              loading={examplesLoading}
-              radius="md"
-              variant="outline"
-            >
-              {messages.messagesPage.addExampleMessages}
-            </Button>
-          </Group>
+          <Button
+            mt={22}
+            onClick={() => {
+              triggerHaptic();
+              handleAddExampleMessages();
+            }}
+            loading={examplesLoading}
+            radius="md"
+            variant="outline"
+          >
+            {messages.messagesPage.addExampleMessages}
+          </Button>
         </Paper>
       )}
 

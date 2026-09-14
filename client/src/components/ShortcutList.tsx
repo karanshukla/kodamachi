@@ -21,7 +21,7 @@ interface ShortcutListProps {
 export function ShortcutList({ title, shortcuts }: ShortcutListProps) {
   return (
     <>
-      <Title order={2} style={styles.heading}>
+      <Title order={2} tt="uppercase" style={styles.heading}>
         {title}
       </Title>
       <Stack gap={6}>

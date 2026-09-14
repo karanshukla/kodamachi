@@ -22,7 +22,7 @@ export const infoCard: CSSProperties = {
   background: surface,
 };
 
-/** Small-caps eyebrow, not a display heading. */
+/** Uppercase eyebrow, not a display heading. */
 export const infoHeading: CSSProperties = {
   fontSize: 11,
   fontWeight: 600,

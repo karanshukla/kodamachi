@@ -107,7 +107,10 @@ before it ships.
 ## Fill usage
 
 - `--ds-fill-ink` — the navy fill; the welcome card, the inbox link, the ask card's
-  default, "ink" question cards and the profile banner fallback.
+  default and "ink" question cards.
+- `--ds-banner` — a profile banner with no image. It is the navy fill in light
+  mode and the darker midnight fill in dark mode, where the navy fill is already
+  the card's own colour.
 - `--ds-fill-midnight` / `--ds-fill-steel` / `--ds-fill-paper` — the other three
   ask-card presets. Paper is the one light fill and paints its contents with the
   on-paper tokens.

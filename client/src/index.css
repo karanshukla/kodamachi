@@ -229,6 +229,10 @@ body {
   --ds-mark-bg: var(--ds-navy);
   --ds-mark-fg: var(--ds-paper);
 
+  /* A profile banner with no image: the navy fill here, and the darker
+     midnight fill in the dark, where the navy fill is the card's own blue. */
+  --ds-banner: var(--ds-fill-ink);
+
   /* The danger title on alerts and toasts; every other tone titles in navy. */
   --ds-tone-red: #7a2727;
 
@@ -276,6 +280,8 @@ body {
 
   --ds-mark-bg: var(--ds-ink-dark);
   --ds-mark-fg: var(--ds-midnight);
+
+  --ds-banner: var(--ds-fill-midnight);
 
   --ds-tone-red: #f0b3b3;
 

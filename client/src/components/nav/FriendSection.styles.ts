@@ -19,7 +19,7 @@ export const header: CSSProperties = {
   paddingTop: "var(--mantine-spacing-lg)",
 };
 
-/** Section label: small caps, faint, tracked. */
+/** Section label: uppercase, faint, tracked. */
 export const label: CSSProperties = {
   flex: 1,
   letterSpacing: "0.1em",

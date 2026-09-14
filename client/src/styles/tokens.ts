@@ -42,6 +42,8 @@ export const onPaperMuted = "var(--ds-on-paper-muted)";
 /** The navy fill behind every hero surface. */
 export const fillInk = "var(--ds-fill-ink)";
 export const fillMidnight = "var(--ds-fill-midnight)";
+/** A profile banner with no image. */
+export const bannerFallback = "var(--ds-banner)";
 
 /** Avatar with no picture: tint fill, navy initials — never a hashed hue. */
 export const avatarFallback = {
