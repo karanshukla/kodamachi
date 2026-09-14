@@ -2,11 +2,12 @@ import { Avatar, Box, Button, Group, Paper, Text } from "@mantine/core";
 import { IconExternalLink } from "@tabler/icons-react";
 
 import { useTranslations } from "../../lib/i18n";
+import { initialsOf } from "../../lib/initials";
 import { mentionLinkFor } from "../../lib/mentionLink";
 import { clientDestinationFor } from "../../lib/waypointClients";
 import { profileWaypointTargetFor } from "../../lib/waypointTarget";
+import { avatarFallback } from "../../styles/tokens";
 import { parseRichText } from "../../utils/parseRichText";
-import { WinkMark } from "../WinkMark";
 
 import * as styles from "./ProfileCard.styles";
 
@@ -51,8 +52,9 @@ export function ProfileCard({ profile, clientId, openProfilesInApp }: ProfileCar
           size={84}
           radius="xl"
           style={styles.avatar}
+          styles={avatarFallback}
         >
-          <WinkMark size={60} sparkle={false} aria-hidden />
+          {initialsOf(profile.displayName || profile.handle)}
         </Avatar>
 
         <Group justify="space-between" align="flex-start" pt={48}>

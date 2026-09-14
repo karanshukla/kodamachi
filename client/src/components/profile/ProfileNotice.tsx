@@ -8,7 +8,7 @@ interface ProfileNoticeProps {
 
 /**
  * Terminal state for a profile that cannot be shown — bad handle, no Bluesky
- * account, no Navyfragen inbox, load failure. One shape for all four, and an
+ * account, no kodamachi inbox, load failure. One shape for all four, and an
  * `Alert` rather than a bare `Paper` so the title picks up the tone colours the
  * theme already tunes for contrast.
  */

@@ -7,13 +7,11 @@
  * take an `isDark` argument — the browser picks.
  */
 
-/** Card surface sitting on the page background. */
+/** Paper card sitting on the canvas. */
 export const surface = "var(--ds-surface)";
-/** One step above transparent; for inset rows and secondary chrome. */
+/** One step below paper — the canvas — for inset rows and inputs on a card. */
 export const surfaceGhost = "var(--ds-surface-ghost)";
-/** Radial halo behind the login / OAuth panels. */
-export const surfaceGlow = "var(--ds-surface-glow)";
-/** Keyboard-focus wash on a list row. */
+/** Keyboard-focus wash on a list row, and the selected swatch. */
 export const surfaceHighlight = "var(--ds-surface-highlight)";
 
 export const textDimmed = "var(--mantine-color-dimmed)";
@@ -26,42 +24,48 @@ export const accentText = "var(--ds-accent-text)";
 export const border = "1px solid var(--mantine-color-default-border)";
 export const borderColor = "var(--mantine-color-default-border)";
 
-export const dangerFg = "var(--ds-danger-fg)";
-/** Error headings and failure text, tuned to clear AA on page and card surfaces. */
+/** Error headings and failure text, tuned to clear AA on paper. */
 export const dangerText = "var(--ds-tone-red)";
 export const selectedBg = "var(--ds-selected-bg)";
 export const selectedBorder = "var(--ds-selected-border)";
 
-/** Foreground colours valid only on top of a brand gradient. */
-export const onGrad = "var(--ds-on-grad)";
-export const onGradMuted = "var(--ds-on-grad-muted)";
-export const onGradAccent = "var(--ds-on-grad-accent)";
-export const onGradFaint = "var(--ds-on-grad-faint)";
-export const onGradFill = "var(--ds-on-grad-fill)";
-export const onGradBorder = "var(--ds-on-grad-border)";
+/** Foreground colours valid only on top of a dark brand fill. */
+export const onFill = "var(--ds-on-fill)";
+export const onFillMuted = "var(--ds-on-fill-muted)";
+export const onFillFaint = "var(--ds-on-fill-faint)";
+export const onFillBorder = "var(--ds-on-fill-border)";
 
-/**
- * The primary brand gradient. Per docs/design-tokens.md this is the background for
- * every interactive card — login, ask, inbox hero, gradient question cards.
- */
-export const gradMark = "var(--ds-grad-mark)";
-/** Reserved for the "default" image-export theme preview. Not a UI surface. */
-export const gradDark = "var(--ds-grad-dark)";
+/** Foreground colours valid only on top of the paper fill, in either scheme. */
+export const onPaper = "var(--ds-on-paper)";
+export const onPaperMuted = "var(--ds-on-paper-muted)";
+
+/** The navy fill behind every hero surface. */
+export const fillInk = "var(--ds-fill-ink)";
+export const fillMidnight = "var(--ds-fill-midnight)";
+
+/** Avatar with no picture: tint fill, navy initials — never a hashed hue. */
+export const avatarFallback = {
+  placeholder: { background: surfaceHighlight, color: accentText, fontWeight: 600 },
+} as const;
+
+/** The mark tile; it inverts with the scheme. */
+export const markBg = "var(--ds-mark-bg)";
+export const markFg = "var(--ds-mark-fg)";
 
 export const radiusCard = "var(--ds-radius-card)";
-export const radiusPanel = "var(--ds-radius-panel)";
 export const radiusControl = "var(--ds-radius-control)";
 export const radiusPill = "var(--ds-radius-pill)";
 
-/**
- * The one gradient pairing for Mantine's `variant="gradient"`. Both shades are
- * pinned a step deeper than the palette default so white button labels clear AA
- * at the accent end, where plain `accent` lands at 4.0:1.
- */
-export const BRAND_GRADIENT = { from: "primary.6", to: "accent.7", deg: 135 } as const;
+/** A white button with navy text: the primary action on a navy surface. */
+export const onFillButton = {
+  background: onFill,
+  border: "none",
+  "--button-color": "var(--ds-on-fill-button-fg)",
+} as const;
 
-/** Highlight call-to-action: the bright fill demands the dark brand ink, not white. */
-export const highlightButton = {
-  color: "var(--ds-attention-fg)",
-  fontWeight: 700,
+/** The secondary action on a navy surface: a translucent outline in the fill's own ink. */
+export const onFillOutlineButton = {
+  background: "transparent",
+  border: `1px solid ${onFillBorder}`,
+  "--button-color": onFill,
 } as const;

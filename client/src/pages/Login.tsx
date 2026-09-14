@@ -8,15 +8,13 @@ import * as z from "zod";
 
 import { useLogin } from "../api/authService";
 import { AuthPanel } from "../components/AuthPanel";
-import * as panelStyles from "../components/AuthPanel.styles";
 import { E2ELoginPanel } from "../components/login/E2ELoginPanel";
 import { HandleSuggestions } from "../components/login/HandleSuggestions";
-import { WinkMark } from "../components/WinkMark";
+import { BrandMark } from "../components/BrandMark";
 import { APP_DOMAIN, APP_NAME } from "../lib/brand";
 import { useTranslations } from "../lib/i18n";
 import { resolveApiErrorMessage } from "../lib/i18n/apiErrors";
 import { useHandleSearch } from "../lib/useHandleSearch";
-import { BRAND_GRADIENT } from "../styles/tokens";
 
 function LoginForm() {
   const location = useLocation();
@@ -70,10 +68,10 @@ function LoginForm() {
     <Box maw={480} mx="auto">
       <AuthPanel>
         <Center>
-          <WinkMark size={60} sparkle style={panelStyles.mark} />
+          <BrandMark size={56} />
         </Center>
         <Box ta="center">
-          <Title order={1} fw={800} fz={24}>
+          <Title order={1} fw={600} fz={22}>
             {messages.loginPage.logInToPrefix}
             {APP_NAME}
           </Title>
@@ -121,8 +119,7 @@ function LoginForm() {
             mt="xs"
             fullWidth
             loading={isPending || isRedirecting}
-            variant="gradient"
-            gradient={BRAND_GRADIENT}
+            variant="filled"
             size="md"
             radius="md"
             style={{

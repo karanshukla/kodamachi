@@ -53,9 +53,8 @@ export const en = {
     heading: "Messages",
     noMessagesCount: "no messages",
     newMessagesCount: (count: number) => `${numberFormat.format(count)} new`,
-    noMessagesTitle: "No messages",
-    noMessagesBody:
-      "You don't have any messages yet. Share your profile link to receive anonymous questions.",
+    noMessagesTitle: "No questions yet",
+    noMessagesBody: "Share your link and the first anonymous question will land here.",
     addExampleMessages: "Add example messages",
     deleteConfirmTitle: "Confirm Deletion",
     deleteConfirmMessage:
@@ -66,7 +65,7 @@ export const en = {
     welcomeBackMessage: "You have successfully logged in.",
   },
   inboxLinkCard: {
-    eyebrow: "Your inbox link · publicly accessible",
+    eyebrow: "Your inbox link · public",
   },
   postingPreferences: {
     title: "Posting preferences",
@@ -75,8 +74,8 @@ export const en = {
       description: "Appends your link to every post. Reduces character budget.",
     },
     useGradients: {
-      label: "Gradient backgrounds",
-      description: "Pretty for screenshots. Turn off for higher contrast.",
+      label: "Ink backgrounds",
+      description: "Navy question cards with white text. Turn off for paper cards.",
     },
     includeQuestionAsImage: {
       label: "Question as image",
@@ -139,15 +138,15 @@ export const en = {
   },
   themes: {
     image: {
-      default: "Default",
-      compressed: "Compressed",
-      twitter: "Twitter Style",
+      default: "Quote",
+      compressed: "Compact",
+      twitter: "Post",
     },
     profileCard: {
-      royal: "Royal",
-      aurora: "Aurora",
-      ember: "Ember",
-      verdant: "Verdant",
+      royal: "Ink",
+      aurora: "Steel",
+      ember: "Midnight",
+      verdant: "Paper",
     },
   },
   nav: {
@@ -217,6 +216,7 @@ export const en = {
     recipientNotFoundMessage: "Cannot send message: User DID not found.",
     messageSentTitle: "Message sent!",
     messageSentBody: "Your anonymous message is on its way.",
+    sendAnother: "Send another",
     sendFailedTitle: "Failed to send",
     noBlueskyAccountTitle: "No Bluesky account found",
     noBlueskyAccountBody: "doesn't exist on Bluesky. Check the handle and try again.",
@@ -323,20 +323,21 @@ export const en = {
     logOut: (handle: string | undefined) => `Log out @${handle}`,
   },
   home: {
-    titleSuffix: " - Anonymous questions and answers on Bluesky",
-    subtitle: "Receive questions from the web and post the answers directly on Bluesky.",
+    title: "Anonymous questions, answered on Bluesky.",
+    subtitle:
+      "Share one link, collect questions from anyone, and post your answers straight to your feed.",
     sellingPoints: {
       fastAndFree: {
         title: "Fast and free",
-        body: "No downloads required, just log in with your Bluesky credentials and share your inbox link",
+        body: "No downloads. Log in with Bluesky and share your inbox link.",
       },
       spamProtection: {
-        title: "Spam protection, without captchas",
-        body: "Protected by Anubis, a powerful bot detection service",
+        title: "Spam protection, no captchas",
+        body: "Protected by Anubis bot detection, so visitors never solve a puzzle.",
       },
       openSource: {
         title: "Open source",
-        body: "Contribute directly to the project, or host your own version if you want!",
+        body: "Contribute to the project, or host your own copy.",
       },
     },
     questionsFeedback: "Questions? Feedback?",
@@ -434,7 +435,9 @@ export const en = {
     generic: "Something went wrong. Please try again.",
   },
   notFoundPage: {
-    title: "404 - Not Found",
-    message: "The requested resource was not found.",
+    title: "404 — not found",
+    message: "That page doesn't exist. The link may be old, or the handle may have changed.",
+    goHome: "Go home",
+    yourMessages: "Your messages",
   },
 } satisfies Messages;

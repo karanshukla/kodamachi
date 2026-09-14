@@ -9,20 +9,19 @@ import {
 } from "../lib/bounceLogos";
 
 import { useBounceLogos } from "./BounceLogosContext";
-import { WinkMark } from "./WinkMark";
+import { BrandMark } from "./BrandMark";
 
 interface LogoVariant {
   size: number;
-  sparkle: boolean;
   opacity: number;
-  spin: boolean;
   speedScale: number;
 }
 
+/** Marks drift in the side gutters: one glyph at three opacities, no spin. */
 const VARIANTS: LogoVariant[] = [
-  { size: 48, sparkle: false, opacity: 0.55, spin: false, speedScale: 1 },
-  { size: 30, sparkle: true, opacity: 0.4, spin: true, speedScale: 1.3 },
-  { size: 64, sparkle: false, opacity: 0.32, spin: false, speedScale: 0.7 },
+  { size: 48, opacity: 0.5, speedScale: 1 },
+  { size: 30, opacity: 0.35, speedScale: 1.3 },
+  { size: 64, opacity: 0.22, speedScale: 0.7 },
 ];
 
 const SIDES = ["left", "right"] as const;
@@ -139,9 +138,7 @@ function BouncingLogo({
         transform: `translate(${initialState.x}px, ${initialState.y}px)`,
       }}
     >
-      <div className={variant.spin ? "ds-bounce-spin" : undefined}>
-        <WinkMark size={variant.size} sparkle={variant.sparkle} aria-hidden />
-      </div>
+      <BrandMark size={variant.size} aria-hidden />
     </div>
   );
 }

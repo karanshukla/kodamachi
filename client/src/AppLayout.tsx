@@ -1,9 +1,9 @@
-import { AppShell, Container, Paper, Text, Title } from "@mantine/core";
+import { AppShell, Button, Container, Group, Paper, Text, Title } from "@mantine/core";
 import { showNotification } from "@mantine/notifications";
 import React, { useEffect, useRef } from "react";
-import { Route, Routes } from "react-router";
+import { Link, Route, Routes } from "react-router";
 
-import { useSwitchAccount } from "./api/authService";
+import { useSession, useSwitchAccount } from "./api/authService";
 import { AppHeader } from "./components/AppHeader";
 import { BouncingLogos } from "./components/BouncingLogos";
 import { buildAccountSwitchUrl, consumeAccountSwitchToast } from "./lib/accountSwitchToast";
@@ -17,7 +17,8 @@ import Messages from "./pages/Messages";
 import OAuthCallback from "./pages/OAuthCallback";
 import PublicProfile from "./pages/PublicProfile";
 import Settings from "./pages/Settings";
-import { dangerText } from "./styles/tokens";
+
+import * as styles from "./AppLayout.styles";
 
 export function AppLayout() {
   const [navOpen, setNavOpen] = React.useState(false);
@@ -117,15 +118,26 @@ export function AppLayout() {
 
 function NotFoundPage() {
   const messages = useTranslations();
+  const { data: session } = useSession();
   return (
     <Container>
-      <Paper p="xl" radius="md" withBorder shadow="xs">
-        <Title order={2} style={{ color: dangerText }}>
+      <Paper p={40} radius="xl" withBorder ta="center" style={styles.notFoundCard}>
+        <Title order={2} fz={26} style={styles.notFoundTitle}>
           {messages.notFoundPage.title}
         </Title>
-        <Text c="dimmed" mt="md">
+        <Text c="dimmed" mt={8} maw={300} mx="auto">
           {messages.notFoundPage.message}
         </Text>
+        <Group justify="center" gap={8} mt={24}>
+          <Button component={Link} to="/" variant="filled">
+            {messages.notFoundPage.goHome}
+          </Button>
+          {session?.isLoggedIn && (
+            <Button component={Link} to="/messages" variant="outline">
+              {messages.notFoundPage.yourMessages}
+            </Button>
+          )}
+        </Group>
       </Paper>
     </Container>
   );

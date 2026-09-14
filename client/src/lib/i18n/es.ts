@@ -60,9 +60,8 @@ export const es = {
     noMessagesCount: "sin mensajes",
     newMessagesCount: (count: number) =>
       `${numberFormat.format(count)} ${pluralize(count, "nuevo", "nuevos")}`,
-    noMessagesTitle: "Sin mensajes",
-    noMessagesBody:
-      "Todavía no tienes mensajes. Comparte el enlace de tu bandeja para recibir preguntas anónimas.",
+    noMessagesTitle: "Todavía no hay preguntas",
+    noMessagesBody: "Comparte tu enlace y la primera pregunta anónima llegará aquí.",
     addExampleMessages: "Añadir mensajes de ejemplo",
     deleteConfirmTitle: "Confirmar eliminación",
     deleteConfirmMessage:
@@ -73,7 +72,7 @@ export const es = {
     welcomeBackMessage: "Has iniciado sesión correctamente.",
   },
   inboxLinkCard: {
-    eyebrow: "Enlace de tu bandeja · acceso público",
+    eyebrow: "Enlace de tu bandeja · público",
   },
   postingPreferences: {
     title: "Preferencias de publicación",
@@ -82,8 +81,8 @@ export const es = {
       description: "Añade tu enlace a cada publicación. Reduce el límite de caracteres.",
     },
     useGradients: {
-      label: "Fondos degradados",
-      description: "Bonitos para capturas de pantalla. Desactívalo para más contraste.",
+      label: "Fondos de tinta",
+      description: "Tarjetas azul marino con texto blanco. Desactívalo para tarjetas de papel.",
     },
     includeQuestionAsImage: {
       label: "Pregunta como imagen",
@@ -146,15 +145,15 @@ export const es = {
   },
   themes: {
     image: {
-      default: "Predeterminado",
-      compressed: "Comprimido",
-      twitter: "Estilo Twitter",
+      default: "Cita",
+      compressed: "Compacto",
+      twitter: "Publicación",
     },
     profileCard: {
-      royal: "Real",
-      aurora: "Aurora",
-      ember: "Ascua",
-      verdant: "Frondoso",
+      royal: "Tinta",
+      aurora: "Acero",
+      ember: "Medianoche",
+      verdant: "Papel",
     },
   },
   nav: {
@@ -226,6 +225,7 @@ export const es = {
     recipientNotFoundMessage: "No se puede enviar el mensaje: no se encontró el DID del usuario.",
     messageSentTitle: "¡Mensaje enviado!",
     messageSentBody: "Tu mensaje anónimo está en camino.",
+    sendAnother: "Enviar otro",
     sendFailedTitle: "Error al enviar",
     noBlueskyAccountTitle: "No se encontró ninguna cuenta de Bluesky",
     noBlueskyAccountBody: "no existe en Bluesky. Verifica el usuario e inténtalo de nuevo.",
@@ -332,20 +332,21 @@ export const es = {
     logOut: (handle: string | undefined) => `Cerrar sesión @${handle}`,
   },
   home: {
-    titleSuffix: " - Preguntas y respuestas anónimas en Bluesky",
-    subtitle: "Recibe preguntas desde la web y publica las respuestas directamente en Bluesky.",
+    title: "Preguntas anónimas, respondidas en Bluesky.",
+    subtitle:
+      "Comparte un enlace, recibe preguntas de cualquiera y publica tus respuestas directamente en tu feed.",
     sellingPoints: {
       fastAndFree: {
         title: "Rápido y gratis",
-        body: "No necesitas descargar nada, solo inicia sesión con tus credenciales de Bluesky y comparte el enlace de tu bandeja",
+        body: "Sin descargas. Inicia sesión con Bluesky y comparte el enlace de tu bandeja.",
       },
       spamProtection: {
         title: "Protección contra spam, sin captchas",
-        body: "Protegido por Anubis, un potente servicio de detección de bots",
+        body: "Protegido por la detección de bots de Anubis, sin acertijos para los visitantes.",
       },
       openSource: {
         title: "Código abierto",
-        body: "Contribuye directamente al proyecto, ¡o aloja tu propia versión si quieres!",
+        body: "Contribuye al proyecto o aloja tu propia instancia.",
       },
     },
     questionsFeedback: "¿Preguntas? ¿Comentarios?",
@@ -444,7 +445,10 @@ export const es = {
     generic: "Algo salió mal. Inténtalo de nuevo.",
   },
   notFoundPage: {
-    title: "404 - No encontrado",
-    message: "No se encontró el recurso solicitado.",
+    title: "404 — no encontrado",
+    message:
+      "Esa página no existe. Puede que el enlace sea antiguo o que el usuario haya cambiado.",
+    goHome: "Ir al inicio",
+    yourMessages: "Tus mensajes",
   },
 } satisfies Messages;

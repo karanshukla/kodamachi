@@ -499,14 +499,30 @@ describe("Messages page", () => {
     // `.style`/`getAttribute("style")`, even though the underlying JS ternary re-evaluates
     // correctly on every render. The Switch's `checked` DOM property isn't subject to that
     // shorthand-specific bug, and it reflects the exact same `useGradients` value read in the
-    // same render pass as the card's `background: useGradients ? ... : surfaceBg(isDark)` line.
+    // same render pass as the card's `ink` flag.
     localStorage.setItem("useGradients", JSON.stringify(false));
     setupMocks();
     renderWithProviders(<Messages />);
 
     await waitFor(() => {
-      const gradientSwitch = screen.getByLabelText(/gradient backgrounds/i) as HTMLInputElement;
+      const gradientSwitch = screen.getByLabelText(
+        new RegExp(en.postingPreferences.useGradients.label, "i")
+      ) as HTMLInputElement;
       expect(gradientSwitch.checked).toBe(false);
+    });
+  });
+
+  it("useGradients=true paints ink cards, whose reply button becomes the on-fill outline", async () => {
+    localStorage.setItem("useGradients", JSON.stringify(true));
+    setupMocks();
+    renderWithProviders(<Messages />);
+
+    await waitFor(() => {
+      const replies = screen.getAllByRole("button", { name: en.questionCard.reply });
+      expect(replies.length).toBeGreaterThan(0);
+      // Navy on navy would vanish, so an ink card's reply is the white outline
+      // (Mantine's `default` variant carrying the on-fill style).
+      for (const button of replies) expect(button.getAttribute("data-variant")).toBe("default");
     });
   });
 

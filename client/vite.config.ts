@@ -13,7 +13,9 @@ function brandHtmlPlugin(): Plugin {
   return {
     name: "brand-html-vars",
     transformIndexHtml(html) {
-      return html.replaceAll("%APP_NAME%", brand.appName).replaceAll("%APP_DOMAIN%", brand.appDomain);
+      return html
+        .replaceAll("%APP_NAME%", brand.appName)
+        .replaceAll("%APP_DOMAIN%", brand.appDomain);
     },
   };
 }
@@ -39,10 +41,10 @@ export default defineConfig({
       // Port of client/public/site.webmanifest. vite-plugin-pwa generates and
       // injects the manifest link, so the static file is no longer needed.
       manifest: {
-        name: `${brand.appName} - Anonymous question inbox for Bluesky`,
+        name: `${brand.appName} — anonymous questions`,
         short_name: brand.appName,
-        theme_color: "#1E1B4B",
-        background_color: "#FDF8FF",
+        theme_color: "#FFFFFF",
+        background_color: "#FFFFFF",
         display: "standalone",
         display_override: ["window-controls-overlay", "standalone"],
         start_url: "/",

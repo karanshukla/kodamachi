@@ -7,7 +7,7 @@ import { describe, it, expect } from "vitest";
 
 import appTheme, { ALERT_TONES } from "../../Theme";
 
-import { contrast, flatten, parseColor, worstOnGradient, type Rgb } from "./colorMath";
+import { contrast, flatten, parseColor, type Rgb } from "./colorMath";
 import { declaredTokens, paletteTokens, referencedTokens, token, type Scheme } from "./readTokens";
 
 /**
@@ -58,9 +58,13 @@ describe("body text", () => {
     expect(ratio("--mantine-color-dimmed", ghost, scheme)).toBeGreaterThanOrEqual(AA);
   });
 
-  it("brand-accented body text clears AA on the light card surface", () => {
-    // The plain `primary` fill is 4.4:1 here, which is why text gets its own token.
-    expect(ratio("--ds-accent-text", surface("light"), "light")).toBeGreaterThanOrEqual(AA);
+  it.each(SCHEMES)("dimmed text clears AA on the page column (%s)", (scheme) => {
+    const page = flatten(token("--ds-page", scheme), BODY[scheme]);
+    expect(ratio("--mantine-color-dimmed", page, scheme)).toBeGreaterThanOrEqual(AA);
+  });
+
+  it.each(SCHEMES)("brand-accented body text clears AA on the card surface (%s)", (scheme) => {
+    expect(ratio("--ds-accent-text", surface(scheme), scheme)).toBeGreaterThanOrEqual(AA);
   });
 
   it.each(SCHEMES)("link colour clears AA on the card surface (%s)", (scheme) => {
@@ -68,50 +72,46 @@ describe("body text", () => {
   });
 });
 
-describe("text on brand gradients", () => {
-  const GRADIENTS = ["--ds-grad-mark", "--ds-grad-dark"];
-  const FOREGROUNDS = ["--ds-on-grad", "--ds-on-grad-muted", "--ds-on-grad-accent"];
+describe("text on brand fills", () => {
+  const DARK_FILLS = ["--ds-fill-ink", "--ds-fill-midnight", "--ds-fill-steel"];
+  const FOREGROUNDS = ["--ds-on-fill", "--ds-on-fill-muted"];
 
-  it.each(GRADIENTS.flatMap((g) => FOREGROUNDS.map((f) => [g, f])))(
-    "%s carries %s at AA across the whole ramp",
-    (gradient, fg) => {
-      // Alpha-carrying foregrounds are flattened against the gradient's own
-      // lightest stop, the point where they are hardest to read.
-      const grad = token(gradient);
-      const lightest = worstStop(grad);
-      expect(worstOnGradient(flatten(token(fg), lightest), grad)).toBeGreaterThanOrEqual(AA);
+  it.each(
+    SCHEMES.flatMap((scheme) =>
+      DARK_FILLS.flatMap((fill) => FOREGROUNDS.map((fg) => [scheme, fill, fg] as const))
+    )
+  )("%s: %s carries %s at AA", (scheme, fill, fg) => {
+    // Alpha-carrying foregrounds are flattened against the fill itself.
+    const bg = flatten(token(fill, scheme), BODY[scheme]);
+    expect(contrast(flatten(token(fg), bg), bg)).toBeGreaterThanOrEqual(AA);
+  });
+
+  it.each(SCHEMES)(
+    "the paper fill carries the on-paper ink and muted text at AA (%s)",
+    (scheme) => {
+      const bg = flatten(token("--ds-fill-paper", scheme), BODY[scheme]);
+      expect(ratio("--ds-on-paper", bg, scheme)).toBeGreaterThanOrEqual(AA);
+      expect(ratio("--ds-on-paper-muted", bg, scheme)).toBeGreaterThanOrEqual(AA);
     }
   );
 
-  it.each(["--ds-grad-aurora", "--ds-grad-ember", "--ds-grad-verdant", "--ds-grad-mark"])(
-    "ask-card preset %s carries white text at AA across the whole ramp",
-    (preset) => {
-      expect(
-        worstOnGradient(parseColor(token("--ds-on-grad")), token(preset))
-      ).toBeGreaterThanOrEqual(AA);
-    }
-  );
+  it("the faint on-fill token is not strong enough for text", () => {
+    // Pinned so nobody promotes it to a Text colour: it exists for dashed rules
+    // and progress-ring tracks, where contrast is not a legibility requirement.
+    const bg = parseColor(token("--ds-fill-ink"));
+    expect(contrast(flatten(token("--ds-on-fill-faint"), bg), bg)).toBeLessThan(AA_LARGE);
+  });
 
-  it("the faint on-gradient token is not strong enough for text", () => {
-    // Pinned so nobody promotes it to a Text colour: it exists for rules and
-    // progress-ring tracks, where contrast is not a legibility requirement.
-    const grad = token("--ds-grad-dark");
-    const fg = flatten(token("--ds-on-grad-faint"), worstStop(grad));
-    expect(worstOnGradient(fg, grad)).toBeLessThan(AA_LARGE);
+  it("the white button on a fill carries its navy label at AA", () => {
+    const bg = parseColor(token("--ds-on-fill"));
+    expect(ratio("--ds-on-fill-button-fg", bg, "light")).toBeGreaterThanOrEqual(AA);
   });
 });
 
 describe("controls", () => {
-  it("the highlight call-to-action carries its dark ink at AA", () => {
-    expect(
-      contrast(parseColor(token("--ds-ink")), parseColor(token("--ds-highlight")))
-    ).toBeGreaterThanOrEqual(AA);
-  });
-
-  it.each(SCHEMES)("filled primary buttons carry white labels at AA (%s)", (scheme) => {
+  it("filled primary buttons carry white labels at AA", () => {
     const fill = appTheme.colors!.primary![appTheme.primaryShade as number];
     expect(contrast(parseColor(appTheme.white!), parseColor(fill))).toBeGreaterThanOrEqual(AA);
-    expect(scheme).toBeTruthy();
   });
 
   it("destructive buttons carry white labels at AA", () => {
@@ -124,6 +124,16 @@ describe("controls", () => {
     const bg = flatten(token("--ds-nav-active-bg", scheme), BODY[scheme]);
     expect(ratio("--ds-nav-active-color", bg, scheme)).toBeGreaterThanOrEqual(AA);
   });
+
+  it.each(SCHEMES)("the unread badge carries its numeral at AA (%s)", (scheme) => {
+    const bg = flatten(token("--ds-attention-bg", scheme), BODY[scheme]);
+    expect(ratio("--ds-attention-fg", bg, scheme)).toBeGreaterThanOrEqual(AA);
+  });
+
+  it.each(SCHEMES)("the mark tile carries its glyph at AA (%s)", (scheme) => {
+    const bg = flatten(token("--ds-mark-bg", scheme), BODY[scheme]);
+    expect(ratio("--ds-mark-fg", bg, scheme)).toBeGreaterThanOrEqual(AA);
+  });
 });
 
 describe("alert tones", () => {
@@ -131,9 +141,13 @@ describe("alert tones", () => {
     Object.entries(ALERT_TONES).map(([name, tone]) => [scheme, name, tone] as const)
   );
 
-  it.each(cases)("%s: the %s title is legible on its own tint", (scheme, _name, tone) => {
-    const tint = flatten(`rgba(${tone.rgb},0.09)`, BODY[scheme]);
-    expect(ratio(tone.title, tint, scheme)).toBeGreaterThanOrEqual(AA);
+  /** Every alert is a paper card with a coloured rule, so titles read on paper. */
+  it.each(cases)("%s: the %s title is legible on the card surface", (scheme, _name, tone) => {
+    expect(ratio(tone.title, surface(scheme), scheme)).toBeGreaterThanOrEqual(AA);
+  });
+
+  it.each(cases)("%s: the %s rule is visible against the card surface", (scheme, _name, tone) => {
+    expect(ratio(tone.rule, surface(scheme), scheme)).toBeGreaterThanOrEqual(AA_LARGE);
   });
 });
 
@@ -147,30 +161,29 @@ describe("alert tones", () => {
  */
 describe("the Mantine palette and the stylesheet agree", () => {
   const SHADES: [string, string][] = [
-    ["--ds-primary", appTheme.colors!.primary![6]],
-    ["--ds-primary-deep", appTheme.colors!.primary![7]],
-    ["--ds-accent", appTheme.colors!.accent![6]],
-    ["--ds-accent-deep", appTheme.colors!.accent![7]],
+    ["--ds-navy", appTheme.colors!.primary![6]],
+    ["--ds-steel", appTheme.colors!.primary![5]],
+    ["--ds-steel", appTheme.colors!.accent![6]],
+    ["--ds-tint", appTheme.colors!.primary![0]],
+    ["--ds-tint-deep", appTheme.colors!.primary![1]],
     ["--ds-ink", appTheme.colors!.ink![7]],
-    ["--ds-highlight", appTheme.colors!.highlight![5]],
+    ["--ds-muted", appTheme.colors!.ink![5]],
+    ["--ds-midnight", appTheme.colors!.dark![7]],
+    ["--ds-line", appTheme.colors!.ink![1]],
     ["--ds-danger", appTheme.colors!.danger![6]],
+    ["--ds-danger-border", appTheme.colors!.danger![2]],
+    ["--ds-tone-red", appTheme.colors!.danger![8]],
     ["--ds-paper", appTheme.white!],
     ["--ds-ink", appTheme.black!],
+    ["--ds-ink-dark", appTheme.colors!.dark![0]],
+    ["--ds-muted-dark", appTheme.colors!.dark![2]],
+    ["--ds-line-dark", appTheme.colors!.dark![4]],
+    ["--ds-midnight-hover", appTheme.colors!.dark![5]],
+    ["--ds-midnight-card", appTheme.colors!.dark![6]],
   ];
 
   it.each(SHADES)("%s is the same colour as its Mantine shade", (name, shade) => {
     expect(parseColor(shade)).toEqual(parseColor(token(name)));
-  });
-
-  /** The Alert tints are built from raw channel triplets, a third copy again. */
-  const TONES: [string, string][] = [
-    ["--ds-primary", ALERT_TONES.primary.rgb],
-    ["--ds-accent", ALERT_TONES.accent.rgb],
-    ["--ds-danger", ALERT_TONES.danger.rgb],
-  ];
-
-  it.each(TONES)("%s is the same colour as its alert tone", (name, rgb) => {
-    expect(parseColor(`rgb(${rgb})`)).toEqual(parseColor(token(name)));
   });
 });
 
@@ -209,17 +222,12 @@ describe("token hygiene", () => {
       );
     expect(leaks).toEqual([]);
   });
-});
 
-/** The gradient stop where a translucent foreground has the least to work with. */
-function worstStop(gradient: string): Rgb {
-  const stops = [...gradient.matchAll(/#[0-9a-f]{3,6}/gi)].map((m) => parseColor(m[0]));
-  return stops.reduce((lightest, stop) =>
-    contrast(parseColor("#FFFFFF"), stop) < contrast(parseColor("#FFFFFF"), lightest)
-      ? stop
-      : lightest
-  );
-}
+  it("declares no gradient anywhere in the stylesheet", () => {
+    const css = readFileSync(join(SRC, "index.css"), "utf8");
+    expect(css).not.toMatch(/gradient\(/);
+  });
+});
 
 interface Source {
   path: string;

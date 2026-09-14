@@ -4,7 +4,8 @@ import { useHaptic } from "use-haptic";
 
 import { useTranslations } from "../../lib/i18n";
 import { warmOgCard } from "../../lib/ogWarm";
-import ShareButton, { onGradientButton } from "../ShareButton";
+import { onFillOutlineButton } from "../../styles/tokens";
+import ShareButton from "../ShareButton";
 
 import * as styles from "./InboxLinkCard.styles";
 
@@ -26,10 +27,10 @@ export function InboxLinkCard({ shortUrl, fullUrl, handle, shareData }: InboxLin
     <Paper mb="md" p="lg" style={styles.card}>
       <Group align="center" gap="md" wrap="wrap">
         <Box style={{ flex: 1, minWidth: 200 }}>
-          <Text size="xs" fw={500} mb={6} style={styles.eyebrow}>
+          <Text fz={11} fw={600} tt="uppercase" mb={7} style={styles.eyebrow}>
             {messages.inboxLinkCard.eyebrow}
           </Text>
-          <Text fw={700} fz={17} style={styles.url}>
+          <Text fw={600} fz={18} style={styles.url}>
             {shortUrl}
           </Text>
         </Box>
@@ -44,17 +45,17 @@ export function InboxLinkCard({ shortUrl, fullUrl, handle, shareData }: InboxLin
                     warmShareTarget();
                   }}
                   size="sm"
-                  radius="xl"
-                  variant="transparent"
-                  leftSection={<IconClipboard size={14} />}
-                  style={onGradientButton}
+                  radius="md"
+                  variant="default"
+                  leftSection={<IconClipboard size={16} />}
+                  style={onFillOutlineButton}
                 >
                   {copied ? messages.common.copied : messages.common.copy}
                 </Button>
               </Tooltip>
             )}
           </CopyButton>
-          <ShareButton shareData={shareData} onSuccess={warmShareTarget} />
+          <ShareButton shareData={shareData} onSuccess={warmShareTarget} solid />
         </Group>
       </Group>
     </Paper>

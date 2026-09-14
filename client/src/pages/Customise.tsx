@@ -83,9 +83,7 @@ export default function Customise() {
   return (
     <>
       <Group gap="sm" align="center" mb="xs">
-        <Title order={1} style={{ letterSpacing: "-0.03em" }}>
-          {messages.customisePage.heading}
-        </Title>
+        <Title order={1}>{messages.customisePage.heading}</Title>
         <Badge color="accent" variant="light" radius="sm">
           {messages.customisePage.beta}
         </Badge>

@@ -1,6 +1,11 @@
 import type { CSSProperties } from "react";
 
-/** Sticky so the group label stays put while its list scrolls under it. */
+import { surface } from "../../styles/tokens";
+
+/**
+ * Sticky so the group label stays put while its list scrolls under it, and
+ * painted the sidebar's own surface so the list does not show through.
+ */
 export const header: CSSProperties = {
   display: "flex",
   alignItems: "center",
@@ -10,8 +15,14 @@ export const header: CSSProperties = {
   position: "sticky",
   top: 0,
   zIndex: 1,
-  background: "var(--mantine-color-body)",
+  background: surface,
   paddingTop: "var(--mantine-spacing-lg)",
+};
+
+/** Section label: small caps, faint, tracked. */
+export const label: CSSProperties = {
+  flex: 1,
+  letterSpacing: "0.1em",
 };
 
 export const chevron = (open: boolean): CSSProperties => ({

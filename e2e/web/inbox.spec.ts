@@ -132,16 +132,16 @@ async function ensureExampleMessages(page: Page): Promise<boolean> {
 
   // Neither is present while loading, so this waits for the query to settle.
   const cards = page.locator('[id^="message-card-"]');
-  const emptyAlert = page.getByRole("alert").filter({ hasText: en.messagesPage.noMessagesTitle });
+  const addExamples = page.getByRole("button", { name: en.messagesPage.addExampleMessages });
   await expect(async () => {
     const hasCards = (await cards.count()) > 0;
-    const hasEmpty = await emptyAlert.isVisible().catch(() => false);
+    const hasEmpty = await addExamples.isVisible().catch(() => false);
     expect(hasCards || hasEmpty).toBeTruthy();
   }).toPass({ timeout: 15_000 });
 
   if ((await cards.count()) > 0) return false; // already populated — don't touch it
 
-  await page.getByRole("button", { name: en.messagesPage.addExampleMessages }).click();
+  await addExamples.click();
   await expect(cards.first()).toBeVisible({ timeout: 15_000 });
   return true;
 }

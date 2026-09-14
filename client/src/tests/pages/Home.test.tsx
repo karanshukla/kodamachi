@@ -32,9 +32,7 @@ describe("Home page", () => {
   it("shows skeleton while session is loading", () => {
     mockUseSession.mockReturnValue({ data: undefined, isLoading: true } as any);
     renderWithProviders(<Home />);
-    expect(
-      screen.getByRole("heading", { level: 1, name: `${APP_NAME}${en.home.titleSuffix}` })
-    ).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1, name: en.home.title })).toBeInTheDocument();
     expect(screen.queryByText(en.home.getStarted)).toBeNull();
     expect(screen.queryByText(en.home.viewYourMessages)).toBeNull();
   });
@@ -61,7 +59,7 @@ describe("Home page", () => {
     } as any);
     renderWithProviders(<Home />);
     // Name appears inside a styled div (not a heading element)
-    expect(screen.getByText("Karan")).toBeInTheDocument();
+    expect(screen.getByText(/Karan$/)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: en.home.viewYourMessages })).toBeInTheDocument();
   });
 
@@ -89,10 +87,10 @@ describe("Home page", () => {
       isLoading: false,
     } as any);
     renderWithProviders(<Home />);
-    expect(screen.getByText("karan.bsky.social")).toBeInTheDocument();
+    expect(screen.getByText(/karan\.bsky\.social$/)).toBeInTheDocument();
   });
 
-  it("renders avatar image when profile has an avatar URL", () => {
+  it("greets a returning user by name, without their avatar", () => {
     mockUseSession.mockReturnValue({
       data: {
         isLoggedIn: true,
@@ -106,8 +104,8 @@ describe("Home page", () => {
       isLoading: false,
     } as any);
     renderWithProviders(<Home />);
-    const img = screen.getByRole("img", { name: /karan/i });
-    expect(img).toHaveAttribute("src", "https://cdn.bsky.app/avatar.jpg");
+    expect(screen.getByText(/Karan$/)).toBeInTheDocument();
+    expect(screen.queryByRole("img", { name: /karan/i })).toBeNull();
   });
 
   it("shows Copy Link and Share buttons when logged in", () => {
@@ -180,7 +178,7 @@ describe("Home page", () => {
       isLoading: false,
     } as any);
     renderWithProviders(<Home />, { colorScheme: "dark" });
-    expect(screen.getByText("Karan")).toBeInTheDocument();
+    expect(screen.getByText(/Karan$/)).toBeInTheDocument();
   });
 
   it("clicking Copy Link changes button text to Copied!", async () => {

@@ -1,11 +1,12 @@
 import type { CSSProperties } from "react";
 
-import { accentText, surface } from "../../styles/tokens";
+import { accentText, border, radiusCard, surface } from "../../styles/tokens";
 
 export const panel: CSSProperties = {
-  borderRadius: 14,
+  borderRadius: radiusCard,
   padding: 24,
   background: surface,
+  border,
 };
 
 export const value = (fontSize: number): CSSProperties => ({

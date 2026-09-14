@@ -79,6 +79,20 @@ describe("AppLayout", () => {
     expect(screen.getByText(/404/)).toBeInTheDocument();
   });
 
+  it("offers no inbox link on the 404 page to a signed-out visitor", () => {
+    renderWithProviders(<AppLayout />, { route: "/this-does-not-exist" });
+    expect(screen.queryByText(en.notFoundPage.yourMessages)).toBeNull();
+  });
+
+  it("offers the inbox link on the 404 page to a signed-in user", () => {
+    mockUseSession.mockReturnValue({
+      data: { isLoggedIn: true, profile: { handle: "user.bsky.social" }, did: "did:example:123" },
+      isLoading: false,
+    } as any);
+    renderWithProviders(<AppLayout />, { route: "/this-does-not-exist" });
+    expect(screen.getByText(en.notFoundPage.yourMessages)).toBeInTheDocument();
+  });
+
   it("adds mousedown listener when nav is opened via burger click", async () => {
     const addListenerSpy = vi.spyOn(document, "addEventListener");
     renderWithProviders(<AppLayout />);

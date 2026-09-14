@@ -1,5 +1,17 @@
-import { Alert, Box, Button, Center, Group, Loader, SimpleGrid, Text, Title } from "@mantine/core";
+import {
+  Alert,
+  Box,
+  Button,
+  Center,
+  Group,
+  Loader,
+  Paper,
+  SimpleGrid,
+  Text,
+  Title,
+} from "@mantine/core";
 import { notifications } from "@mantine/notifications";
+import { IconMailOpened } from "@tabler/icons-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useHaptic } from "use-haptic";
 
@@ -25,7 +37,7 @@ import { getTouchpointTranslations } from "../lib/touchpointTranslations";
 import { useMessagePreferences } from "../lib/useMessagePreferences";
 import { useReplyComposer } from "../lib/useReplyComposer";
 import { useThreadRoot } from "../lib/useThreadRoot";
-import { highlightButton } from "../styles/tokens";
+import * as styles from "./Messages.styles";
 
 const SHORTLINK_URL = import.meta.env.VITE_SHORTLINK_URL || "localhost:5173/profile";
 
@@ -189,9 +201,7 @@ export default function Messages() {
     <Box maw={1080}>
       <Group justify="space-between" align="flex-end" mb="lg" wrap="wrap" gap="sm">
         <Box>
-          <Title order={1} style={{ letterSpacing: "-0.03em" }}>
-            {messages.messagesPage.heading}
-          </Title>
+          <Title order={1}>{messages.messagesPage.heading}</Title>
           {!messagesLoading && <MessageCount count={messageCount} />}
         </Box>
       </Group>
@@ -230,7 +240,7 @@ export default function Messages() {
           <QuestionGrid
             messages={thread.ordered}
             thread={thread}
-            gradient={useGradients}
+            ink={useGradients}
             respondingTid={composer.respondingTid}
             onExpand={composer.open}
             onCollapse={composer.close}
@@ -252,25 +262,30 @@ export default function Messages() {
           />
         </>
       ) : (
-        <Alert color="primary" title={messages.messagesPage.noMessagesTitle}>
-          <Text fz="sm" mb="sm">
+        <Paper withBorder p={40} radius="lg" ta="center" style={styles.emptyState}>
+          <div style={styles.emptyIcon}>
+            <IconMailOpened size={26} stroke={1.5} />
+          </div>
+          <Text fw={600} fz={18}>
+            {messages.messagesPage.noMessagesTitle}
+          </Text>
+          <Text c="dimmed" fz={14} mt={6} maw={340} mx="auto" style={styles.emptyBody}>
             {messages.messagesPage.noMessagesBody}
           </Text>
-          <Button
-            onClick={() => {
-              triggerHaptic();
-              handleAddExampleMessages();
-            }}
-            loading={examplesLoading}
-            size="xs"
-            radius="md"
-            color="highlight"
-            variant="filled"
-            style={highlightButton}
-          >
-            {messages.messagesPage.addExampleMessages}
-          </Button>
-        </Alert>
+          <Group justify="center" gap={8} mt={22}>
+            <Button
+              onClick={() => {
+                triggerHaptic();
+                handleAddExampleMessages();
+              }}
+              loading={examplesLoading}
+              radius="md"
+              variant="outline"
+            >
+              {messages.messagesPage.addExampleMessages}
+            </Button>
+          </Group>
+        </Paper>
       )}
 
       <ConfirmationModal

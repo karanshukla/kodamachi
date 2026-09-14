@@ -15,14 +15,14 @@ import { useLocale, useTranslations } from "../../lib/i18n";
 import type { ThreadLink } from "../../lib/useThreadRoot";
 import { postedAnswerLink } from "../../lib/waypointClients";
 import { postWaypointTargetFor } from "../../lib/waypointTarget";
-import { highlightButton } from "../../styles/tokens";
 
 import { OpenInModal } from "./OpenInModal";
 import * as styles from "./QuestionCard.styles";
 
 interface QuestionCardProps {
   message: Message;
-  gradient: boolean;
+  /** Painted with the navy fill; the "ink backgrounds" preference. */
+  ink: boolean;
   pinned: boolean;
   focused: boolean;
   expanded: boolean;
@@ -51,7 +51,7 @@ interface QuestionCardProps {
 
 export function QuestionCard({
   message,
-  gradient,
+  ink,
   pinned,
   focused,
   expanded,
@@ -104,7 +104,7 @@ export function QuestionCard({
         }
       }}
       className={justPinned ? "ds-pinned-card-enter" : undefined}
-      style={styles.card({ gradient, pinned, focused })}
+      style={styles.card({ ink, pinned, focused })}
       onClick={() => {
         triggerHaptic();
         onToggleExpanded();
@@ -233,10 +233,9 @@ export function QuestionCard({
                 }}
                 fullWidth
                 radius="md"
-                color="highlight"
-                variant="filled"
-                fw={700}
-                style={{ ...highlightButton, ...styles.replyButton(blocked) }}
+                variant={styles.replyButtonVariant(ink, inThread)}
+                fw={600}
+                style={styles.replyButton(blocked, ink)}
               >
                 {inThread ? messages.questionCard.replyToThread : messages.questionCard.reply}
               </Button>

@@ -36,6 +36,17 @@ body {
   padding-bottom: env(safe-area-inset-bottom) !important;
 }
 
+/* Paper chrome on a canvas page: the header and sidebar stay white with a
+   hairline, the main column is the canvas, and dark mode inverts both. */
+.mantine-AppShell-header,
+.mantine-AppShell-navbar {
+  background: var(--ds-surface);
+  border-color: var(--ds-boundary-border);
+}
+.mantine-AppShell-main {
+  background: var(--ds-page);
+}
+
 /* Constrain the mobile navbar to 60% of the viewport width */
 .mantine-AppShell-navbar {
   max-width: 60vw !important;
@@ -103,7 +114,7 @@ body {
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
-   DESIGN TOKENS
+   DESIGN TOKENS — kodamachi: white paper, dark-blue ink, no gradients.
 
    Three layers, and components may only read from the second and third:
 
@@ -111,17 +122,18 @@ body {
       *brand palette* is the set of hues a repaint replaces, and nothing outside
       this file may reference one: it exists so the semantic layer has a single
       place to read a hue from, and `contrast.test.ts` fails the build on any
-      component that reaches past it. The *brand gradients* and the *structural
+      component that reaches past it. The *brand fills* and the *structural
       primitives* (type, motion, radius) carry no such restriction — components
       read those directly.
    2. Semantic tokens — named for the job rather than the colour (`--ds-surface`,
-      not `--ds-accent-soft-ish`). Light values live on `:root` and dark values
+      not `--ds-navy-ish`). Light values live on `:root` and dark values
       override them under [data-mantine-color-scheme="dark"], so a component
       writes `var(--ds-surface)` once and both schemes follow. This is why no
       component needs `useComputedColorScheme` to pick a background.
-   3. On-gradient tokens — the one family that is deliberately scheme-independent,
-      because the brand gradients are dark in both schemes, so text painted on
-      one has a single correct colour either way.
+   3. Fixed foregrounds (`--ds-on-fill*`, `--ds-on-paper*`) — the one family
+      that is deliberately scheme-independent, because the brand fills keep
+      their colour in both schemes, so text painted on one has a single correct
+      colour either way.
 
    Contrast is not a matter of taste here: src/tests/theme/contrast.test.ts
    parses this file and fails the build if any documented text/background pair
@@ -130,96 +142,95 @@ body {
 
 /* ── Layer 1a: brand palette — repaint here, and only here ── */
 :root {
-  --ds-ink: #1e1b4b;
-  --ds-primary: #3b5bff;
-  --ds-primary-deep: #2a47e6;
-  --ds-accent: #8b5cf6;
-  --ds-accent-deep: #7847e0;
-  --ds-accent-soft: #c4b5fd;
-  --ds-paper: #fdf8ff;
-  --ds-highlight: #facc15;
-  --ds-danger: #c92a2a;
+  --ds-ink: #111c36;
+  --ds-navy: #10224a;
+  --ds-midnight: #0b1428;
+  --ds-steel: #234b94;
+  --ds-paper: #ffffff;
+  --ds-canvas: #f7f9fc;
+  --ds-line: #e3e8f0;
+  --ds-tint: #edf2fb;
+  --ds-tint-deep: #c9d5ea;
+  --ds-muted: #63708c;
+  --ds-danger: #a93636;
+
+  --ds-ink-dark: #f4f7fc;
+  --ds-muted-dark: #9ba9c4;
+  --ds-link-dark: #9bb4e6;
+  --ds-line-dark: #1b2a4d;
+  --ds-midnight-card: #101e3c;
+  --ds-midnight-hover: #16264a;
 }
 
-/* ── Layer 1b: brand gradients ── */
+/* ── Layer 1b: brand fills ── */
+/* The ask-card presets and every other navy surface. Paper is the one light
+   fill; anything painted on it reads the on-paper tokens in layer 3. */
 :root {
-  --ds-grad-mark: linear-gradient(135deg, #3349e0 0%, #5322c5 55%, #4f1fa6 100%);
-  --ds-grad-dark: linear-gradient(135deg, #1e1b4b 0%, #3b2e78 50%, #6b3fd4 100%);
-
-  /* Curated ask-card colour presets (#275). Every stop is dark enough that the
-     white headline / Send button clear AA across the whole ramp — the earlier
-     mid-tone cyan, emerald and orange stops did not. */
-  --ds-grad-aurora: linear-gradient(135deg, #1d4ed8 0%, #0369a1 55%, #0e7490 100%);
-  --ds-grad-ember: linear-gradient(135deg, #c2410c 0%, #be123c 55%, #9f1239 100%);
-  --ds-grad-verdant: linear-gradient(135deg, #0f766e 0%, #047857 55%, #065f46 100%);
+  --ds-fill-ink: var(--ds-navy);
+  --ds-fill-midnight: var(--ds-midnight);
+  --ds-fill-steel: var(--ds-steel);
+  --ds-fill-paper: var(--ds-paper);
 }
 
 /* ── Layer 1c: structural primitives — type, motion, radius ── */
 :root {
   --ds-font-sans:
-    system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial,
-    sans-serif;
-
+    "Schibsted Grotesk", "Noto Sans JP", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, "Helvetica Neue", Arial, sans-serif;
   --ds-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
   --ds-dur-fast: 120ms;
   --ds-dur-base: 200ms;
 
-  --ds-radius-card: 18px;
-  --ds-radius-panel: 16px;
-  --ds-radius-control: 12px;
+  --ds-radius-card: 12px;
+  --ds-radius-control: 10px;
   --ds-radius-pill: 999px;
 }
 
 /* ── Layer 2: semantic tokens — light ── */
 :root {
-  /* Card sitting on the page background, and the barely-there step above it. */
-  --ds-surface: #f2ebff;
-  --ds-surface-ghost: #faf7ff;
-  /* Halo behind the login / OAuth panels. */
-  --ds-surface-glow: radial-gradient(
-    ellipse 60% 100% at 50% 0%,
-    rgba(196, 181, 253, 0.4),
-    transparent 70%
-  );
-  /* Keyboard-focus wash on a suggestion row. */
-  --ds-surface-highlight: rgba(51, 73, 224, 0.08);
+  /* Cards are paper on the canvas; the ghost step is the canvas itself, for
+     inset rows and inputs sitting on a paper card. */
+  --ds-surface: var(--ds-paper);
+  --ds-surface-ghost: var(--ds-canvas);
+  /* The main column behind every card. */
+  --ds-page: var(--ds-canvas);
+  /* Keyboard-focus wash on a suggestion row, and the selected swatch. */
+  --ds-surface-highlight: var(--ds-tint);
 
-  --ds-link: var(--ds-accent-deep);
-  --ds-accent-text: var(--ds-primary-deep);
+  --ds-link: var(--ds-steel);
+  --ds-accent-text: var(--ds-navy);
 
-  --ds-nav-active-bg: #ede9ff;
-  --ds-nav-active-color: var(--ds-ink);
+  --ds-nav-active-bg: var(--ds-tint);
+  --ds-nav-active-color: var(--ds-navy);
 
-  /* Sits between two areas of identical background, so it needs to read
-     stronger than an ordinary card border. */
-  --ds-boundary-border: rgba(30, 27, 75, 0.14);
+  /* Sits between two areas of identical background; on paper a hairline is
+     enough. */
+  --ds-boundary-border: var(--ds-line);
 
   --ds-danger-fg: var(--ds-danger);
-  --ds-danger-bg: rgba(201, 42, 42, 0.12);
-  --ds-selected-bg: rgba(59, 91, 255, 0.12);
-  --ds-selected-border: var(--ds-primary);
+  --ds-danger-bg: rgba(169, 54, 54, 0.1);
+  --ds-danger-border: #e1c9c9;
+  --ds-selected-bg: var(--ds-tint);
+  --ds-selected-border: var(--ds-navy);
 
-  /* Keyboard focus, and the border marking a pinned card. Two separate jobs
-     that happen to share a hue today; keeping them apart means a repaint can
-     pull them apart without hunting through components. */
-  --ds-focus-ring: var(--ds-accent);
-  --ds-pinned-border: var(--ds-primary);
+  /* One focus ring everywhere: Link navy, 2px, 2px offset. The pinned card
+     takes the ink border, the expanded (composing) card the link border. */
+  --ds-focus-ring: var(--ds-steel);
+  --ds-pinned-border: var(--ds-navy);
+  --ds-expanded-border: var(--ds-steel);
   /* An icon button on a card, in its "on" state; off is --ds-card-fg-muted. */
-  --ds-card-action-active: var(--ds-primary);
+  --ds-card-action-active: var(--ds-navy);
 
-  /* Unread counts, the new-message dot and the reply call-to-action: one fill
-     with one legible ink, so the pair cannot drift apart. */
-  --ds-attention-bg: var(--ds-highlight);
-  --ds-attention-fg: var(--ds-ink);
+  /* Unread counts and the new-message dot: navy pill, white numeral. */
+  --ds-attention-bg: var(--ds-navy);
+  --ds-attention-fg: var(--ds-paper);
 
-  /* Alert title colours. The alert's own background is an alpha tint of the
-     tone, so these are read against a very pale wash and have to be far darker
-     than the tone itself. */
-  --ds-tone-red: #b02525;
-  --ds-tone-green: #166534;
-  --ds-tone-yellow: #7a6105;
-  --ds-tone-primary: #2a47e6;
-  --ds-tone-accent: #522ba3;
+  /* The mark tile: navy with a white glyph on paper, inverted in the dark. */
+  --ds-mark-bg: var(--ds-navy);
+  --ds-mark-fg: var(--ds-paper);
+
+  /* The danger title on alerts and toasts; every other tone titles in navy. */
+  --ds-tone-red: #7a2727;
 
   /* Fallbacks for the card-local foreground pair below. A question card
      overrides both on its own root; anything using the classes outside one still
@@ -229,37 +240,50 @@ body {
   --ds-card-fg-faint: var(--mantine-color-dimmed);
   --ds-card-accent: var(--ds-link);
   --ds-card-edge: var(--mantine-color-default-border);
+  --ds-card-input-bg: var(--ds-surface-ghost);
 }
 
 /* ── Layer 2: semantic tokens — dark ── */
+/* Dark mode is the same design, inverted: white ink on dark blue, no new hues.
+   Shadows vanish, so elevation becomes the dark line. */
 :root[data-mantine-color-scheme="dark"] {
-  --ds-surface: rgba(255, 255, 255, 0.06);
-  --ds-surface-ghost: rgba(255, 255, 255, 0.03);
-  --ds-surface-glow: radial-gradient(
-    ellipse 60% 100% at 50% 0%,
-    rgba(139, 92, 246, 0.15),
-    transparent 70%
-  );
-  --ds-surface-highlight: rgba(107, 63, 212, 0.2);
+  --ds-surface: var(--ds-midnight-card);
+  --ds-surface-ghost: #0e1a34;
+  --ds-page: var(--ds-midnight);
+  --ds-surface-highlight: var(--ds-midnight-hover);
 
-  --ds-link: var(--ds-accent-soft);
-  --ds-accent-text: var(--ds-accent-soft);
+  --ds-link: var(--ds-link-dark);
+  --ds-accent-text: var(--ds-ink-dark);
 
-  --ds-nav-active-bg: rgba(107, 63, 212, 0.22);
-  --ds-nav-active-color: var(--ds-paper);
+  --ds-nav-active-bg: var(--ds-midnight-hover);
+  --ds-nav-active-color: var(--ds-ink-dark);
 
-  --ds-boundary-border: rgba(255, 255, 255, 0.14);
+  --ds-boundary-border: var(--ds-line-dark);
 
-  --ds-danger-fg: #fca5a5;
-  --ds-danger-bg: rgba(220, 38, 38, 0.18);
-  --ds-selected-bg: rgba(59, 91, 255, 0.18);
-  --ds-selected-border: #6178ff;
+  --ds-danger-fg: #e08a8a;
+  --ds-danger-bg: rgba(169, 54, 54, 0.2);
+  --ds-danger-border: #4a2a2a;
+  --ds-selected-bg: var(--ds-midnight-hover);
+  --ds-selected-border: var(--ds-ink-dark);
 
-  --ds-tone-red: #ff8787;
-  --ds-tone-green: #69db7c;
-  --ds-tone-yellow: #ffe57a;
-  --ds-tone-primary: #849bff;
-  --ds-tone-accent: #ac8afd;
+  --ds-focus-ring: var(--ds-link-dark);
+  --ds-pinned-border: var(--ds-ink-dark);
+  --ds-expanded-border: var(--ds-link-dark);
+  --ds-card-action-active: var(--ds-ink-dark);
+
+  --ds-attention-bg: var(--ds-ink-dark);
+  --ds-attention-fg: var(--ds-midnight);
+
+  --ds-mark-bg: var(--ds-ink-dark);
+  --ds-mark-fg: var(--ds-midnight);
+
+  --ds-tone-red: #f0b3b3;
+
+  /* Navy surfaces on a midnight page become the card blue with a border; the
+     paper preset stays paper so its owner's choice survives the scheme. */
+  --ds-fill-ink: var(--ds-midnight-card);
+  --ds-fill-midnight: #08101f;
+  --ds-fill-steel: #1b3a73;
 }
 
 /* ── Mantine bridges ── */
@@ -270,47 +294,61 @@ body {
    `theme.white` / `dark[7]` instead, and brand text uses the `--ds-*` tokens
    above rather than fighting the provider's `-text` variables. */
 :root[data-mantine-color-scheme="light"] {
-  --mantine-color-default-border: #e6ddff;
-  /* Mantine's default (gray-6) reads 2.9:1 on --ds-surface, which had every
-     card description in the app below AA. */
-  --mantine-color-dimmed: #5b5680;
+  --mantine-color-default-border: var(--ds-line);
+  /* Mantine's default (gray-6) reads 2.9:1 on a pale surface; the design's
+     "muted" step clears AA on paper and canvas alike. */
+  --mantine-color-dimmed: var(--ds-muted);
+  --mantine-color-placeholder: #9aa6bc;
 }
 
 :root[data-mantine-color-scheme="dark"] {
-  --mantine-color-default-border: rgba(255, 255, 255, 0.08);
-  --mantine-color-dimmed: #8b87b5;
+  --mantine-color-default-border: var(--ds-line-dark);
+  --mantine-color-dimmed: var(--ds-muted-dark);
+  --mantine-color-placeholder: #8798b8;
 }
 
-/* ── Layer 3: on-gradient tokens ── */
-/* The brand gradients are dark in both schemes, so these do not flip. -muted is
-   the lightest alpha that still clears AA over the lightest gradient stop;
-   -faint is for rules and progress tracks only, never text. */
+/* Inputs are a canvas well with a hairline. Mantine keeps both colours in
+   variables on the wrapper; overriding those rather than the properties leaves
+   its focus (set on the input) and error states in charge. */
+:root[data-mantine-color-scheme] .mantine-Input-wrapper[data-variant="default"] {
+  --input-bg: var(--ds-surface-ghost);
+}
+:root[data-mantine-color-scheme] .mantine-Input-wrapper[data-variant="default"]:not([data-error]) {
+  --input-bd: var(--mantine-color-default-border);
+}
+
+/* ── Layer 3: fixed foregrounds ── */
+/* The brand fills keep their colour in both schemes, so these do not flip.
+   -muted is the lightest alpha that still clears AA over the lightest dark
+   fill; -faint is for dashed rules and progress tracks only, never text. */
 :root {
-  --ds-on-grad: var(--ds-paper);
-  --ds-on-grad-muted: rgba(253, 248, 255, 0.85);
-  --ds-on-grad-accent: #e9ddff;
-  --ds-on-grad-faint: rgba(253, 248, 255, 0.4);
-  --ds-on-grad-fill: rgba(253, 248, 255, 0.15);
-  --ds-on-grad-border: rgba(253, 248, 255, 0.25);
+  --ds-on-fill: #ffffff;
+  --ds-on-fill-muted: rgba(255, 255, 255, 0.72);
+  --ds-on-fill-faint: rgba(255, 255, 255, 0.32);
+  --ds-on-fill-fill: rgba(255, 255, 255, 0.06);
+  --ds-on-fill-border: rgba(255, 255, 255, 0.28);
+  /* The primary action on a navy surface is a white button with navy text. */
+  --ds-on-fill-button-fg: var(--ds-navy);
+
+  --ds-on-paper: var(--ds-ink);
+  --ds-on-paper-muted: var(--ds-muted);
 }
 
 /* ── Reply composer ── */
-/* The composer is a paper affordance: it stays light on top of whichever card
-   surface it lands on, in both schemes, because it stands for the post being
-   written rather than for the app around it. Its accents therefore have to be
-   read against white, not against the page. */
+/* The composer is a canvas well inside a paper card in both schemes, because it
+   stands for the post being written rather than for the app around it. */
 :root {
-  --ds-compose-bg: #ffffff;
-  --ds-compose-fg: var(--ds-ink);
-  --ds-compose-fg-muted: #5b5680;
-  --ds-compose-border: var(--ds-primary);
-  --ds-compose-accent: var(--ds-primary);
-  --ds-compose-warn: #8f7206;
-  --ds-compose-track: rgba(30, 27, 75, 0.15);
+  --ds-compose-bg: var(--ds-canvas);
+  --ds-compose-fg: var(--ds-on-paper);
+  --ds-compose-fg-muted: var(--ds-on-paper-muted);
+  --ds-compose-border: var(--ds-tint-deep);
+  --ds-compose-accent: var(--ds-navy);
+  --ds-compose-warn: var(--ds-danger);
+  --ds-compose-track: #dde4ef;
 }
 
 /* ── Card-local foreground ── */
-/* A question card is painted either with a brand gradient or with the ordinary
+/* A question card is painted either with the navy fill or with the ordinary
    surface, and its contents have to follow. The card sets these two on its own
    root (see QuestionCard.styles.ts) and every descendant reads them, so the
    choice is made once instead of at each Text. */
@@ -350,15 +388,15 @@ body {
 
 .ds-pin-btn:hover,
 .ds-pin-btn:focus-visible {
-  color: var(--ds-primary) !important;
+  color: var(--ds-card-action-active) !important;
   background: var(--ds-selected-bg) !important;
 }
 
 /* Already pinned, so the hover affordance is "unpin" rather than "pin". */
 .ds-pin-btn--active:hover,
 .ds-pin-btn--active:focus-visible {
-  color: var(--ds-on-grad-accent) !important;
-  background: rgba(196, 181, 253, 0.15) !important;
+  color: var(--ds-on-fill) !important;
+  background: var(--ds-on-fill-fill) !important;
 }
 
 /* ── Animation ── */
@@ -377,28 +415,46 @@ body {
   animation: ds-pin-settle 0.38s cubic-bezier(0.34, 1.45, 0.64, 1) both;
 }
 
-/* Bouncing logo easter egg — slow spin variant */
-@keyframes ds-bounce-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.ds-bounce-spin {
-  animation: ds-bounce-spin 6s linear infinite;
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .ds-pinned-card-enter,
-  .ds-bounce-spin {
+  .ds-pinned-card-enter {
     animation: none;
   }
 }
 
-/* Alert / notification brand radius */
-.mantine-Alert-root {
-  border-radius: var(--ds-radius-control);
+/* ── Chrome details ── */
+/* Selection is tint-deep on navy so highlighted Japanese stays legible. */
+:focus-visible {
+  outline: 2px solid var(--ds-focus-ring);
+  outline-offset: 2px;
+}
+::selection {
+  background: var(--ds-tint-deep);
+  color: var(--ds-navy);
+}
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--ds-tint-deep) transparent;
+}
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--ds-tint-deep);
+  border-radius: 6px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+/* Mixed-script rhythm: Noto Sans JP sits taller than Schibsted Grotesk, so one
+   line-height scale is enforced globally, and proportional kana is on. */
+body {
+  line-height: 1.5;
+  font-feature-settings: "palt" 1;
+  text-wrap: pretty;
+}
+[lang="ja"] {
+  letter-spacing: 0.02em;
 }

@@ -60,9 +60,8 @@ export const de = {
     noMessagesCount: "keine Nachrichten",
     newMessagesCount: (count: number) =>
       `${numberFormat.format(count)} ${pluralize(count, "neu", "neu")}`,
-    noMessagesTitle: "Keine Nachrichten",
-    noMessagesBody:
-      "Du hast noch keine Nachrichten. Teile deinen Posteingangslink, um anonyme Fragen zu erhalten.",
+    noMessagesTitle: "Noch keine Fragen",
+    noMessagesBody: "Teile deinen Link, und die erste anonyme Frage landet hier.",
     addExampleMessages: "Beispielnachrichten hinzufügen",
     deleteConfirmTitle: "Löschen bestätigen",
     deleteConfirmMessage:
@@ -73,7 +72,7 @@ export const de = {
     welcomeBackMessage: "Du hast dich erfolgreich angemeldet.",
   },
   inboxLinkCard: {
-    eyebrow: "Dein Posteingangslink · öffentlich zugänglich",
+    eyebrow: "Dein Posteingangslink · öffentlich",
   },
   postingPreferences: {
     title: "Veröffentlichungseinstellungen",
@@ -82,8 +81,8 @@ export const de = {
       description: "Fügt deinen Link an jeden Beitrag an. Verringert das Zeichenbudget.",
     },
     useGradients: {
-      label: "Farbverlauf-Hintergründe",
-      description: "Hübsch für Screenshots. Für mehr Kontrast deaktivieren.",
+      label: "Tinten-Hintergründe",
+      description: "Dunkelblaue Fragekarten mit weißem Text. Ausschalten für Papierkarten.",
     },
     includeQuestionAsImage: {
       label: "Frage als Bild",
@@ -146,15 +145,15 @@ export const de = {
   },
   themes: {
     image: {
-      default: "Standard",
-      compressed: "Komprimiert",
-      twitter: "Twitter-Stil",
+      default: "Zitat",
+      compressed: "Kompakt",
+      twitter: "Beitrag",
     },
     profileCard: {
-      royal: "Königlich",
-      aurora: "Aurora",
-      ember: "Glut",
-      verdant: "Sattgrün",
+      royal: "Tinte",
+      aurora: "Stahl",
+      ember: "Mitternacht",
+      verdant: "Papier",
     },
   },
   nav: {
@@ -225,6 +224,7 @@ export const de = {
     recipientNotFoundMessage: "Nachricht kann nicht gesendet werden: Nutzer-DID nicht gefunden.",
     messageSentTitle: "Nachricht gesendet!",
     messageSentBody: "Deine anonyme Nachricht ist unterwegs.",
+    sendAnother: "Noch eine senden",
     sendFailedTitle: "Senden fehlgeschlagen",
     noBlueskyAccountTitle: "Kein Bluesky-Konto gefunden",
     noBlueskyAccountBody:
@@ -334,20 +334,21 @@ export const de = {
     logOut: (handle: string | undefined) => `@${handle} abmelden`,
   },
   home: {
-    titleSuffix: " - Anonyme Fragen und Antworten auf Bluesky",
-    subtitle: "Empfange Fragen aus dem Web und veröffentliche die Antworten direkt auf Bluesky.",
+    title: "Anonyme Fragen, beantwortet auf Bluesky.",
+    subtitle:
+      "Teile einen Link, sammle Fragen von allen und veröffentliche deine Antworten direkt in deinem Feed.",
     sellingPoints: {
       fastAndFree: {
         title: "Schnell und kostenlos",
-        body: "Kein Download nötig – melde dich einfach mit deinen Bluesky-Zugangsdaten an und teile deinen Posteingangslink",
+        body: "Kein Download. Melde dich mit Bluesky an und teile deinen Posteingangslink.",
       },
       spamProtection: {
         title: "Spam-Schutz ohne Captchas",
-        body: "Geschützt durch Anubis, einen leistungsstarken Bot-Erkennungsdienst",
+        body: "Geschützt durch Anubis-Bot-Erkennung – Besucher müssen nie ein Rätsel lösen.",
       },
       openSource: {
         title: "Open Source",
-        body: "Trage direkt zum Projekt bei, oder hoste deine eigene Version, wenn du möchtest!",
+        body: "Trage zum Projekt bei oder hoste deine eigene Instanz.",
       },
     },
     questionsFeedback: "Fragen? Feedback?",
@@ -457,7 +458,10 @@ export const de = {
     generic: "Etwas ist schiefgelaufen. Bitte versuche es erneut.",
   },
   notFoundPage: {
-    title: "404 - Nicht gefunden",
-    message: "Die angeforderte Ressource wurde nicht gefunden.",
+    title: "404 — nicht gefunden",
+    message:
+      "Diese Seite existiert nicht. Der Link ist vielleicht veraltet, oder der Nutzername hat sich geändert.",
+    goHome: "Zur Startseite",
+    yourMessages: "Deine Nachrichten",
   },
 } satisfies Messages;

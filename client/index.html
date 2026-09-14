@@ -3,13 +3,20 @@
 
 <head>
   <meta charset="UTF-8" />
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=2" />
-  <link rel="icon" type="image/x-icon" href="/favicon.ico?v=2" />
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=2" />
-  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=2" />
-  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=2" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=3" />
+  <link rel="icon" type="image/x-icon" href="/favicon.ico?v=3" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=3" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=3" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=3" />
+  <!-- Schibsted Grotesk carries the UI, Noto Sans JP the Japanese copy. The
+       mark (木) is an SVG outline, so no serif webfont is loaded for it. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap"
+    rel="stylesheet" />
   <meta property="og:title" content="%APP_NAME% App" />
-  <meta property="og:description" content="%APP_NAME% - Anonymous questions and answers on Bluesky" />
+  <meta property="og:description" content="Anonymous questions, answered on Bluesky. Share one link, collect questions from anyone, and post your answers straight to your feed." />
   <meta property="og:url" content="https://%APP_DOMAIN%" />
   <meta property="og:image" content="https://%APP_DOMAIN%/og.png" />
   <meta name="viewport"
@@ -23,9 +30,9 @@
        always-white status-bar text, unreadable against the light header. -->
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <!-- Chrome address bar matches light/dark scheme -->
-  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#FDF8FF" />
-  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0B0A24" />
-  <title>%APP_NAME% - Anonymous Messages</title>
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#FFFFFF" />
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0B1428" />
+  <title>%APP_NAME% — anonymous questions</title>
   <!-- The <link rel="manifest"> is injected by vite-plugin-pwa, which generates
        manifest.webmanifest from the VitePWA({ manifest }) config in vite.config.ts. -->
   <script type="application/ld+json">
@@ -33,7 +40,7 @@
         "@context": "https://schema.org",
         "@type": "WebApplication",
         "name": "%APP_NAME%",
-        "description": "Anonymous questions and answers on Bluesky",
+        "description": "Anonymous questions, answered on Bluesky.",
         "url": "https://%APP_DOMAIN%",
         "applicationCategory": "SocialNetworking",
         "offers": {

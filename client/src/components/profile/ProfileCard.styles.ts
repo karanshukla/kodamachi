@@ -1,18 +1,19 @@
 import type { CSSProperties } from "react";
 
-import { borderColor, gradMark, radiusPanel, surfaceGhost, textDefault } from "../../styles/tokens";
+import { borderColor, fillInk, radiusCard, surface, textDefault } from "../../styles/tokens";
 
 const BANNER_HEIGHT = 160;
 const AVATAR_SIZE = 84;
 
 export const card: CSSProperties = {
-  borderRadius: radiusPanel,
+  borderRadius: radiusCard,
   overflow: "hidden",
+  background: surface,
 };
 
 export const banner = (url?: string): CSSProperties => ({
   height: BANNER_HEIGHT,
-  background: url ? `url(${url}) center/cover no-repeat` : gradMark,
+  background: url ? `url(${url}) center/cover no-repeat` : fillInk,
   position: "relative",
 });
 
@@ -26,11 +27,17 @@ export const bannerScrim: CSSProperties = {
 export const body: CSSProperties = {
   padding: "0 24px 18px",
   position: "relative",
-  background: surfaceGhost,
+  background: surface,
 };
 
+/**
+ * The ring is the card colour, and so is the fill behind the picture: a rounded
+ * border's inner edge is tighter than the picture's own corners, and without the
+ * fill the banner shows through the gap.
+ */
 export const avatar: CSSProperties = {
-  border: "4px solid var(--mantine-color-body)",
+  border: `4px solid ${surface}`,
+  background: surface,
   position: "absolute",
   top: -AVATAR_SIZE / 2,
   left: 16,

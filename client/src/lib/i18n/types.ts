@@ -163,7 +163,7 @@ export interface AppHeaderMessages {
 }
 
 export interface HomeMessages {
-  titleSuffix: string;
+  title: string;
   subtitle: string;
   sellingPoints: {
     fastAndFree: { title: string; body: string };
@@ -244,6 +244,7 @@ export interface PublicProfilePageMessages {
   recipientNotFoundMessage: string;
   messageSentTitle: string;
   messageSentBody: string;
+  sendAnother: string;
   sendFailedTitle: string;
   noBlueskyAccountTitle: string;
   noBlueskyAccountBody: string;
@@ -396,4 +397,6 @@ export interface Messages {
 export interface NotFoundPageMessages {
   title: string;
   message: string;
+  goHome: string;
+  yourMessages: string;
 }

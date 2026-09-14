@@ -6,6 +6,8 @@ import { useHaptic } from "use-haptic";
 import { useTranslations } from "../lib/i18n";
 import { applyUpdate, isUpdateReady, subscribeToUpdate } from "../lib/swUpdate";
 
+import * as styles from "./UpdateAvailableButton.styles";
+
 export function UpdateAvailableButton() {
   const updateReady = useSyncExternalStore(subscribeToUpdate, isUpdateReady, isUpdateReady);
   // Applying swaps the waiting worker in and reloads the page, which takes long
@@ -29,7 +31,8 @@ export function UpdateAvailableButton() {
       size="xs"
       radius="xl"
       variant="light"
-      color="primary"
+      color="accent"
+      style={styles.chip}
       leftSection={<IconRefresh size={14} />}
       aria-label={
         applying

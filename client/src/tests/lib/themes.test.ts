@@ -5,7 +5,7 @@ import {
   imageThemeIds,
   imageThemeLabels,
   profileCardThemes,
-  profileCardGradient,
+  profileCardFill,
 } from "../../lib/themes";
 
 describe("imageThemeLabels", () => {
@@ -34,35 +34,36 @@ describe("profileCardThemes (#275)", () => {
     ]);
   });
 
-  it("each preset has a label and a gradient token (no raw hex)", () => {
+  it("each preset has a label and a fill token (no raw hex)", () => {
     for (const theme of Object.values(profileCardThemes(en))) {
       expect(typeof theme.label).toBe("string");
       expect(theme.label.length).toBeGreaterThan(0);
-      // Gradients reference --ds-grad-* tokens, never inline colours.
-      expect(theme.gradient).toMatch(/^var\(--ds-grad-/);
+      // Fills reference --ds-fill-* tokens, never inline colours.
+      expect(theme.background).toMatch(/^var\(--ds-fill-/);
     }
   });
 
-  it("royal reuses the default --ds-grad-mark gradient", () => {
-    expect(profileCardThemes(en).royal.gradient).toBe("var(--ds-grad-mark)");
+  it("royal is the navy ink fill, the app's default", () => {
+    expect(profileCardThemes(en).royal.background).toBe("var(--ds-fill-ink)");
+  });
+
+  it("verdant is the one light fill", () => {
+    const themes = profileCardThemes(en);
+    expect(Object.keys(themes).filter((id) => themes[id].paper)).toEqual(["verdant"]);
   });
 });
 
-describe("profileCardGradient", () => {
-  it("resolves a known theme key to its gradient", () => {
-    expect(profileCardGradient("ember")).toBe("var(--ds-grad-ember)");
-    expect(profileCardGradient("aurora")).toBe("var(--ds-grad-aurora)");
+describe("profileCardFill", () => {
+  it("resolves a known theme key to its fill", () => {
+    expect(profileCardFill("ember").background).toBe("var(--ds-fill-midnight)");
+    expect(profileCardFill("aurora").background).toBe("var(--ds-fill-steel)");
   });
 
-  it("falls back to the default gradient when unset (null)", () => {
-    expect(profileCardGradient(null)).toBe("var(--ds-grad-mark)");
+  it("falls back to the navy fill when unset (null)", () => {
+    expect(profileCardFill(null).background).toBe("var(--ds-fill-ink)");
   });
 
-  it("falls back to the default gradient for an unknown theme key", () => {
-    expect(profileCardGradient("nonexistent")).toBe("var(--ds-grad-mark)");
-  });
-
-  it("falls back to the default gradient when undefined", () => {
-    expect(profileCardGradient(undefined)).toBe("var(--ds-grad-mark)");
+  it("falls back to the navy fill for an unknown key", () => {
+    expect(profileCardFill("neon").background).toBe("var(--ds-fill-ink)");
   });
 });

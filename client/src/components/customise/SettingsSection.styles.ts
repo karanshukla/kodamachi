@@ -7,5 +7,5 @@ export const section = (last?: boolean): CSSProperties => ({
 });
 
 export const eyebrow: CSSProperties = {
-  letterSpacing: "0.05em",
+  letterSpacing: "0.1em",
 };

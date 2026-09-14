@@ -1,18 +1,21 @@
 import type { CSSProperties } from "react";
 
-import { gradMark, onGradAccent, onGradMuted, radiusCard } from "../../styles/tokens";
+import { fillInk, onFill, onFillMuted, radiusCard } from "../../styles/tokens";
 
 export const card: CSSProperties = {
   borderRadius: radiusCard,
-  background: gradMark,
+  background: fillInk,
   overflow: "hidden",
+  padding: "22px 24px",
 };
 
 export const eyebrow: CSSProperties = {
-  color: onGradMuted,
+  color: onFillMuted,
+  letterSpacing: "0.1em",
 };
 
 export const url: CSSProperties = {
-  color: onGradAccent,
+  color: onFill,
+  letterSpacing: "-0.01em",
   wordBreak: "break-all",
 };

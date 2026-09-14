@@ -5,20 +5,12 @@ import React from "react";
 import { useHaptic } from "use-haptic";
 
 import { useTranslations } from "../lib/i18n";
-import { onGrad, onGradBorder, onGradFill } from "../styles/tokens";
 
-/**
- * Chrome for a button that sits directly on a brand gradient — a translucent
- * wash of the gradient's own foreground rather than a surface colour, which
- * would fight it. Exported because the inbox hero pairs Copy with this Share.
- */
-export const onGradientButton = {
-  background: onGradFill,
-  border: `1px solid ${onGradBorder}`,
-  "--button-color": onGrad,
-} as React.CSSProperties;
+import * as styles from "./ShareButton.styles";
 
 interface ShareButtonProps {
+  /** Solid white on the fill (the primary action) rather than the outline. */
+  solid?: boolean;
   shareData: {
     title?: string;
     text?: string;
@@ -29,7 +21,7 @@ interface ShareButtonProps {
   onError?: (error: unknown) => void;
 }
 
-const ShareButton = ({ shareData, onSuccess, onError }: ShareButtonProps) => {
+const ShareButton = ({ shareData, onSuccess, onError, solid = false }: ShareButtonProps) => {
   const { triggerHaptic } = useHaptic(1);
   const messages = useTranslations();
   const handleClick = async () => {
@@ -77,7 +69,7 @@ const ShareButton = ({ shareData, onSuccess, onError }: ShareButtonProps) => {
       radius="xl"
       variant="transparent"
       leftSection={<IconShare size={14} />}
-      style={onGradientButton}
+      style={styles.button(solid)}
     >
       {messages.shareButton.button}
     </Button>

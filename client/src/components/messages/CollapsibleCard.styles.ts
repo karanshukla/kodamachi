@@ -1,16 +1,17 @@
 import type { CSSProperties } from "react";
 
-import { border, radiusPanel, surface } from "../../styles/tokens";
+import { border, radiusCard, surface } from "../../styles/tokens";
 
 export const card: CSSProperties = {
-  borderRadius: radiusPanel,
+  borderRadius: radiusCard,
   overflow: "hidden",
   background: surface,
+  border,
 };
 
 export const header: CSSProperties = {
   width: "100%",
-  padding: "14px 20px",
+  padding: "14px 18px",
   display: "flex",
   justifyContent: "space-between",
   alignItems: "center",

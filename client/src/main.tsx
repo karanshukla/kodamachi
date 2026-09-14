@@ -12,7 +12,7 @@ import { AppLayout } from "./AppLayout";
 import { BounceLogosProvider } from "./components/BounceLogosContext";
 import { I18nProvider } from "./lib/i18n";
 import { markUpdateReady, setUpdateApplier } from "./lib/swUpdate";
-import navyfragenTheme from "./Theme";
+import appTheme from "./Theme";
 
 import "@mantine/core/styles.css";
 import "@mantine/notifications/styles.css";
@@ -20,7 +20,7 @@ import "./index.css";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <MantineProvider defaultColorScheme="auto" theme={navyfragenTheme}>
+    <MantineProvider defaultColorScheme="auto" theme={appTheme}>
       <BrowserRouter>
         <QueryClientProvider client={queryClient}>
           <I18nProvider>

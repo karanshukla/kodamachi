@@ -8,37 +8,46 @@ export function imageThemeLabels(messages: Messages): Record<ImageThemeId, strin
 }
 
 /**
- * Gradient tokens rather than arbitrary hexes, so white headline/textarea/Send
- * stay legible on every option and `--ds-*` remains the single source of truth
- * for colour. Deliberately separate from the image-export themes above: a live
- * card and an exported image have different legibility constraints.
+ * Fill tokens rather than arbitrary hexes, so the send button and headline
+ * stay legible on every option. The keys are persisted in
+ * `user_settings.profileCardTheme` and predate the redesign, so they cannot
+ * follow the labels: `royal` is ink, `aurora` steel, `ember` midnight and
+ * `verdant` paper.
  *
- * @see [themes.test.ts](../tests/lib/themes.test.ts) — pins the fallback.
+ * @see [themes.test.ts](../tests/lib/themes.test.ts) — pins the fallback and
+ * the paper preset.
  */
-export interface ProfileCardTheme {
-  label: string;
-  gradient: string;
+export interface ProfileCardFill {
+  background: string;
+  /** The one light fill; every other fill carries the on-fill white. */
+  paper: boolean;
 }
 
-const PROFILE_CARD_GRADIENTS: Record<string, string> = {
-  royal: "var(--ds-grad-mark)",
-  aurora: "var(--ds-grad-aurora)",
-  ember: "var(--ds-grad-ember)",
-  verdant: "var(--ds-grad-verdant)",
+export interface ProfileCardTheme extends ProfileCardFill {
+  label: string;
+}
+
+const PROFILE_CARD_FILLS: Record<string, ProfileCardFill> = {
+  royal: { background: "var(--ds-fill-ink)", paper: false },
+  aurora: { background: "var(--ds-fill-steel)", paper: false },
+  ember: { background: "var(--ds-fill-midnight)", paper: false },
+  verdant: { background: "var(--ds-fill-paper)", paper: true },
 };
+
+export const DEFAULT_PROFILE_CARD_THEME = "royal";
 
 export function profileCardThemes(messages: Messages): Record<string, ProfileCardTheme> {
   return Object.fromEntries(
-    Object.entries(PROFILE_CARD_GRADIENTS).map(([id, gradient]) => [
+    Object.entries(PROFILE_CARD_FILLS).map(([id, fill]) => [
       id,
       {
         label: messages.themes.profileCard[id as keyof Messages["themes"]["profileCard"]],
-        gradient,
+        ...fill,
       },
     ])
   );
 }
 
-export function profileCardGradient(theme: string | null | undefined): string {
-  return (theme && PROFILE_CARD_GRADIENTS[theme]) || PROFILE_CARD_GRADIENTS.royal;
+export function profileCardFill(theme: string | null | undefined): ProfileCardFill {
+  return (theme && PROFILE_CARD_FILLS[theme]) || PROFILE_CARD_FILLS[DEFAULT_PROFILE_CARD_THEME];
 }

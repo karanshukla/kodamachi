@@ -7,7 +7,7 @@
 A `.tsx` describes structure and behaviour; the CSS objects it needs live in a
 sibling `*.styles.ts`, imported as `import * as styles from "./Thing.styles"`.
 Anything computed from props is a small named function there
-(`card({ gradient, pinned, focused })`), not a ternary inline in JSX. Style modules
+(`card({ ink, pinned, focused })`), not a ternary inline in JSX. Style modules
 are excluded from coverage — they are constants and the pure functions that pick
 between them, with no behaviour an assertion could pin. Do not let logic drift into
 one: if a "style" function needs to know a business rule, the rule belongs in the
@@ -19,72 +19,101 @@ component or a hook.
 components may only read from the last two layers:
 
 1. **Brand primitives** — scheme-independent raw values, in three groups.
-   - _1a, the brand palette_ (`--ds-primary`, `--ds-ink`, `--ds-highlight`, …) — the
-     hues a repaint replaces. **Nothing outside `index.css` may reference one**, and
-     `contrast.test.ts` fails on any file that does. Reaching for `var(--ds-primary)`
-     in a component means the colour needs a semantic token; add one here.
-   - _1b, the brand gradients_ (`--ds-grad-mark`, the ask-card presets) — components
-     read these directly; a gradient is a single design decision, not a hue.
+   - _1a, the brand palette_ (`--ds-navy`, `--ds-ink`, `--ds-steel`, `--ds-paper`,
+     `--ds-canvas`, `--ds-line`, `--ds-tint`, `--ds-muted`, `--ds-danger`, and the
+     dark scheme's steps `--ds-ink-dark`, `--ds-line-dark`, `--ds-midnight-card`, …)
+     — the hues a repaint replaces. **Nothing outside `index.css` may reference
+     one**, and `contrast.test.ts` fails on any file that does. Reaching for
+     `var(--ds-navy)` in a component means the colour needs a semantic token; add
+     one here.
+   - _1b, the brand fills_ (`--ds-fill-ink`, `--ds-fill-midnight`, `--ds-fill-steel`,
+     `--ds-fill-paper`) — the ask-card presets and every other navy surface.
+     Components read these directly; a fill is a single design decision, not a hue.
+     They are solid: the redesign has two hues plus danger and no ramps, and a
+     test fails on any `gradient(` in the stylesheet.
    - _1c, structural primitives_ (`--ds-font-sans`, `--ds-ease`, `--ds-dur-*`,
      `--ds-radius-*`) — carry no colour and no restriction.
-2. **Semantic tokens** (`--ds-surface`, `--ds-link`, `--ds-nav-active-bg`, …) — named
-   for the job. Light values on `:root`, dark overrides under
-   `:root[data-mantine-color-scheme="dark"]`. **This is why no component calls
+2. **Semantic tokens** (`--ds-surface`, `--ds-page`, `--ds-link`, `--ds-nav-active-bg`,
+   `--ds-mark-bg`, …) — named for the job. Light values on `:root`, dark overrides
+   under `:root[data-mantine-color-scheme="dark"]`. **This is why no component calls
    `useComputedColorScheme` to choose a colour** — the browser picks. If you find
    yourself adding an `isDark` prop, add a token instead.
-3. **On-gradient tokens** (`--ds-on-grad`, `--ds-on-grad-muted`,
-   `--ds-on-grad-accent`) — deliberately _not_ scheme-aware, because the brand
-   gradients are dark in both schemes. `--ds-on-grad-faint` is for rules and progress
-   tracks; it is not strong enough for text and a test pins that.
+3. **Fixed foregrounds** (`--ds-on-fill`, `--ds-on-fill-muted`, `--ds-on-fill-border`,
+   `--ds-on-fill-button-fg`, `--ds-on-paper`, `--ds-on-paper-muted`) — deliberately
+   _not_ scheme-aware, because a brand fill keeps its colour in both schemes, so the
+   text on it has one correct colour. The paper preset stays white in dark mode,
+   which is why its contents read `--ds-on-paper` and not the scheme's text colour.
+   `--ds-on-fill-faint` is for dashed rules and progress tracks; it is not strong
+   enough for text and a test pins that.
 
 `src/styles/tokens.ts` gives these TypeScript handles so a renamed token is a compile
 error rather than a colour that silently resolves to nothing.
 
+## The design source
+
+The redesign is the Claude Design handoff vendored at `docs/design/kodamachi-handoff/`
+(`Kodamachi Foundations.dc.html` holds the palette, type and chrome rules; `github.md`
+maps each screen to the files under `client/src`). The handoff reserves mascot slots
+but supplies no artwork, so the app ships no mascot until there is a real drawing.
+The rules that matter for code:
+
+- **Two hues plus danger.** Navy (`#10224A`) and Link (`#234B94`) carry every state;
+  success and warning are an icon plus navy text, never green or amber.
+- **Hover is a fill, never a lift.** Inline cards carry a hairline and no shadow;
+  shadows exist only for things that float (menus, modals, toasts). In dark mode
+  elevation becomes the `--ds-line-dark` border.
+- **One focus ring**: 2px Link with a 2px offset, set globally on `:focus-visible`.
+- **The mark is 木**, Noto Serif JP weight 600, drawn as an SVG outline so no serif
+  webfont ships. The path lives once, in `brand.json` (`markGlyphPath`), and every
+  renderer reads it from there: `BrandMark.tsx`, the generated `favicon.svg` and
+  `mark.svg`, the OG template and the question-image templates. The wordmark is
+  lowercase, one tone.
+- **Type** is Schibsted Grotesk with Noto Sans JP behind it for Japanese questions,
+  600 for headings, page titles at −0.03em (the `Title` override in `Theme.tsx`), a
+  1.5 body line-height set globally, `palt` on.
+
 ## Repainting the brand
 
-Colour lives in three places. The first two are checked against each other; the
-third is a separate service and cannot be, so it is the one to remember:
+Colour lives in four places. The first two are checked against each other; the
+last two are separate services and cannot be, so they are the ones to remember:
 
-1. `client/src/index.css`, layer 1a — the `--ds-*` palette. The layer-1b gradients
-   and the `rgba()` tints in layer 2 spell their channels out rather than
-   referencing a palette token, so they need editing too; they are at least all in
-   this one file, and `grep -n 'rgba(' client/src/index.css` lists them.
+1. `client/src/index.css`, layer 1a — the `--ds-*` palette. The `rgba()` tints in
+   layers 2 and 3 spell their channels out rather than referencing a palette token,
+   so they need editing too; `grep -n 'rgba(' client/src/index.css` lists them.
 2. `client/src/Theme.tsx` — Mantine's `MantineColorsTuple`s, which cannot be CSS
    variables because Mantine derives hover, light and outline variants from literal
-   values, along with `white`, `black` and the `ALERT_TONES` channel triplets.
+   values, along with `white` and `black`.
 3. `opengraph-service/internal/shim/template.go` — the share-card renderer mirrors
-   the palette in Go constants (`ogGradMark`, `ogText`, …). It is a different
-   language in a different service, so nothing can pin it against the stylesheet;
-   its own tests check that the card stays legible, not that it still matches the
-   app. A repaint that skips it leaves every shared link wearing the old brand.
+   the palette in Go constants (`ogFillNavy`, `ogText`, …). Its own tests check that
+   the card stays legible, not that it still matches the app.
+4. `server/src/lib/question-image/themes/*.ts` — the three question-image themes
+   carry their hexes inline for the same reason.
 
-The second is a copy of the first, so `contrast.test.ts` pins every shared shade:
-change a hex in one and the suite names the token that no longer agrees. Work
-outward from layer 1a — semantic tokens resolve through it, and no component names
-a hue at all, so nothing below the palette should need editing.
+The second is a copy of the first, so `contrast.test.ts` pins every shared shade,
+the dark steps included: change a hex in one and the suite names the token that no
+longer agrees. Work outward from layer 1a — semantic tokens resolve through it, and
+no component names a hue at all, so nothing below the palette should need editing.
 
-Palette entries are named for the job they do (`primary`, `accent`, `ink`,
-`highlight`, `danger`), not the hue they currently hold, so a repaint changes
-values and leaves every name and call site alone. Two things intentionally keep a
-hue name: `PROFILE_CARD_GRADIENTS.royal` is a persisted user setting rather than a
-palette entry, and the comment on the `danger` tuple quotes the old
-`color="crimson"` because it records why that spelling was a bug.
+Palette entries are named for the job they do (`primary`, `accent`, `ink`, `danger`
+in Mantine; `navy`, `steel`, `ink`, `paper`, … in CSS), so a repaint changes values
+and leaves every name and call site alone. The ask-card preset keys
+(`royal`/`aurora`/`ember`/`verdant`) are persisted user settings and keep their old
+names under new labels — `client/src/lib/themes.ts` says which fill each maps to.
 
 The suite is the acceptance test for a repaint: contrast pairs are re-checked at
 WCAG AA, so a hue that reads well on white and badly on the dark surface fails
 before it ships.
 
-## Gradient usage
+## Fill usage
 
-- `--ds-grad-mark` — the primary brand gradient; use it for every interactive card
-  background (login, ask, inbox hero, gradient question cards)
-- `--ds-grad-dark` — reserved for the "default" image-export theme preview; not a UI
-  surface
-- ask-card presets (`aurora`/`ember`/`verdant`) are curated so white text clears AA
-  across the whole ramp — check `contrast.test.ts` before changing a stop
+- `--ds-fill-ink` — the navy fill; the welcome card, the inbox link, the ask card's
+  default, "ink" question cards and the profile banner fallback.
+- `--ds-fill-midnight` / `--ds-fill-steel` / `--ds-fill-paper` — the other three
+  ask-card presets. Paper is the one light fill and paints its contents with the
+  on-paper tokens.
 
-Nav active state uses a solid tint (`--ds-nav-active-bg`) — no gradients on nav
-items. Gradient text (`background-clip: text`) is used only in the `Wordmark`.
+Nav active state uses the tint (`--ds-nav-active-bg`), the unread badge the navy
+pill (`--ds-attention-bg`). Nothing anywhere is a gradient.
 
 ## Overriding a Mantine variable
 
@@ -97,11 +126,15 @@ selector exactly, and only for variables the provider does not re-emit at runtim
 come from `--ds-accent-text` / `--ds-link` rather than fighting the provider's
 `--mantine-color-*-text`.
 
+The same goes for component colours Mantine keeps in variables. Inputs read
+`--input-bg` and `--input-bd` from their wrapper, and the focus and error states
+work by swapping those variables; setting `background` or `border-color` on the
+input instead would pin one colour over all three states.
+
 ## Contrast is enforced, not reviewed
 
 `src/tests/theme/contrast.test.ts` parses `index.css`, resolves the tokens, and fails
-if any documented text/background pair drops below WCAG AA — including across the full
-ramp of every gradient, both colour schemes, and every `Alert` tone against its own
-tint. It also fails on a declared `--ds-*` token nothing references and on a
-referenced token nothing declares, so the palette cannot accumulate dead entries or
-typos.
+if any documented text/background pair drops below WCAG AA — on every fill, in both
+colour schemes, and for every `Alert` tone against the paper it sits on. It also
+fails on a declared `--ds-*` token nothing references and on a referenced token
+nothing declares, so the palette cannot accumulate dead entries or typos.

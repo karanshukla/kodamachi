@@ -6,7 +6,9 @@ import { useHaptic } from "use-haptic";
 
 import type { Friend } from "../../api/profileService";
 import { isSectionOpen, setSectionOpen } from "../../lib/navSectionStorage";
-import { WinkMark } from "../WinkMark";
+
+import { initialsOf } from "../../lib/initials";
+import { avatarFallback } from "../../styles/tokens";
 
 import * as styles from "./FriendSection.styles";
 
@@ -19,7 +21,7 @@ interface FriendSectionProps {
   did: string;
 }
 
-/** One collapsible group of Navyfragen users in the sidebar. */
+/** One collapsible group of kodamachi users in the sidebar. */
 export function FriendSection({ label, friends, emptyText, onLinkClick, did }: FriendSectionProps) {
   const [opened, { toggle }] = useDisclosure(isSectionOpen(label, did));
   const { triggerHaptic } = useHaptic(1);
@@ -38,7 +40,7 @@ export function FriendSection({ label, friends, emptyText, onLinkClick, did }: F
         aria-label={`${label} — ${opened ? "collapse" : "expand"}`}
         style={styles.header}
       >
-        <Text size="xs" fw={600} c="dimmed" style={{ flex: 1 }}>
+        <Text fz={11} fw={600} tt="uppercase" c="dimmed" style={styles.label}>
           {label}
         </Text>
         <IconChevronDown size={12} style={styles.chevron(opened)} />
@@ -78,8 +80,9 @@ function FriendIdentity({ friend }: { friend: Friend }) {
         src={friend.avatar || undefined}
         alt={friend.displayName || friend.handle}
         style={{ flexShrink: 0 }}
+        styles={avatarFallback}
       >
-        <WinkMark size={22} sparkle={false} aria-hidden />
+        {initialsOf(friend.displayName || friend.handle)}
       </Avatar>
       <Box style={{ flex: 1, minWidth: 0 }}>
         <Text fz={13} fw={600} truncate style={{ lineHeight: 1.3 }}>

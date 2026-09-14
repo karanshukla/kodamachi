@@ -196,7 +196,7 @@ describe("PublicProfile page", () => {
     expect(screen.getByText(/fragen\.navy\//i)).toBeInTheDocument();
   });
 
-  it("shows a toast notification on successful message send", async () => {
+  it("replaces the composer with a confirmation after a successful send", async () => {
     let capturedCallbacks: any;
     setupProfile();
     const mockMutate = vi.fn((_data: any, callbacks: any) => {
@@ -223,11 +223,17 @@ describe("PublicProfile page", () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText(en.publicProfilePage.messageSentTitle)).toBeInTheDocument();
+      expect(screen.getByRole("status")).toHaveTextContent(en.publicProfilePage.messageSentTitle);
     });
+    expect(screen.queryByRole("textbox")).toBeNull();
+
+    // "Send another" brings the composer back, empty.
+    fireEvent.click(screen.getByRole("button", { name: en.publicProfilePage.sendAnother }));
+    expect(screen.getByRole("textbox")).toHaveValue("");
+    expect(screen.queryByRole("status")).toBeNull();
   });
 
-  it("shows a toast notification when message send fails", async () => {
+  it("shows an error alert when message send fails", async () => {
     let capturedCallbacks: any;
     setupProfile();
     const mockMutate = vi.fn((_data: any, callbacks: any) => {
@@ -889,17 +895,17 @@ describe("PublicProfile page", () => {
     expect(screen.queryByRole("button", { name: t.sendLabel })).toBeNull();
   });
 
-  it("renders the default ask-card gradient when no theme is set (#275)", () => {
+  it("renders the default ask-card fill when no theme is set (#275)", () => {
     setupWithSettings({ profileCardTheme: null });
     const { container } = renderWithProviders(<PublicProfile />);
-    const askCard = container.querySelector("[style*='ds-grad-mark']") as HTMLElement | null;
+    const askCard = container.querySelector("[style*='ds-fill-ink']") as HTMLElement | null;
     expect(askCard).not.toBeNull();
   });
 
-  it("applies the owner's selected profile card theme gradient (#275)", () => {
+  it("applies the owner's selected profile card fill (#275)", () => {
     setupWithSettings({ profileCardTheme: "ember" });
     const { container } = renderWithProviders(<PublicProfile />);
-    const askCard = container.querySelector("[style*='ds-grad-ember']") as HTMLElement | null;
+    const askCard = container.querySelector("[style*='ds-fill-midnight']") as HTMLElement | null;
     expect(askCard).not.toBeNull();
   });
   it("links the other Atmosphere apps the owner publishes to", () => {

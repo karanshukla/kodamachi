@@ -6,7 +6,7 @@ import { surfaceHighlight } from "../../styles/tokens";
 const ROW_HEIGHT = 64;
 
 export const box: CSSProperties = {
-  background: "var(--ds-surface-ghost)",
+  background: "var(--ds-surface)",
   overflow: "hidden",
 };
 

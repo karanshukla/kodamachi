@@ -114,7 +114,7 @@ export default function Settings() {
 
   return (
     <>
-      <Title order={1} mb="xl" style={{ letterSpacing: "-0.03em" }}>
+      <Title order={1} mb="xl">
         {messages.settingsPage.heading}
       </Title>
 
