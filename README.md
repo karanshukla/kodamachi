@@ -1,14 +1,16 @@
-# Navyfragen
+# kodamachi
 
 > FOSS, AT Protocol-native anonymous Q&A. Receive questions anonymously and answer directly to your Bluesky feed.
 
-<img width="1791" height="590" alt="Navyfragen lockup" src="https://github.com/user-attachments/assets/3ae9833a-6dbe-4b5b-bfca-b3f7455ad8bc" />
+<img width="1200" height="630" alt="kodamachi link card: 木 mark, the wordmark, and “Ask me anything, anonymously”" src="client/public/og.png" />
+
+> **Formerly Navyfragen.** The brand changed with the redesign in `docs/design/kodamachi-handoff/`; the repository name, the `navyfragen.app` / `fragen.navy` domains and the `app.navyfragen.message` lexicon are unchanged until the cutover tracked in [#388](https://github.com/karanshukla/navyfragen-app/issues/388).
 
 [![Tests](https://github.com/karanshukla/navyfragen-app/actions/workflows/Tests.yml/badge.svg)](https://github.com/karanshukla/navyfragen-app/actions/workflows/Tests.yml)
 [![Coverage Status](https://coveralls.io/repos/github/karanshukla/navyfragen-app/badge.svg?branch=main)](https://coveralls.io/github/karanshukla/navyfragen-app?branch=main)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Bun](https://img.shields.io/badge/bun-1.3-f9f1e1?logo=bun&logoColor=white)](https://bun.sh)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178c6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+[![Bun](https://img.shields.io/badge/bun-1.4-f9f1e1?logo=bun&logoColor=white)](https://bun.sh)
+[![TypeScript](https://img.shields.io/badge/TypeScript-7.x-3178c6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 [![AT Protocol](https://img.shields.io/badge/AT%20Protocol-native-0085ff?logo=bluesky&logoColor=white)](https://atproto.com)
 
 ---
@@ -23,7 +25,7 @@
 
 ## What It Does
 
-Navyfragen lets Bluesky users receive anonymous questions via a public inbox link and post answers (optionally with a styled image card) directly to their Bluesky feed. Bluesky (AT Protocol) serves as both the identity provider (OAuth) and a secondary data store via PDS sync.
+kodamachi lets Bluesky users receive anonymous questions via a public inbox link and post answers (optionally with a styled image card) directly to their Bluesky feed. Bluesky (AT Protocol) serves as both the identity provider (OAuth) and a secondary data store via PDS sync.
 
 The companion [navyfragen-feed](https://github.com/karanshukla/navyfragen-feed) repo is a Bluesky custom feed generator that surfaces answered questions on the network.
 
@@ -35,25 +37,33 @@ The companion [navyfragen-feed](https://github.com/karanshukla/navyfragen-feed) 
 |---|---|
 | **Client** | React 19, Vite, TypeScript, Mantine UI v9, React Query v5, React Router v8 |
 | **Server** | Bun.serve + Hono, TypeScript, Kysely ORM, AT Protocol SDK, Pino |
+| **Image rendering** | `html-to-image`: Bun + headless Chromium, renders question cards to PNG |
+| **Link cards** | `opengraph-service`: Go, serves OpenGraph tags and preview images for shared links |
 | **Database** | SQLite (development) · PostgreSQL (production) |
 | **Auth** | AT Protocol OAuth (Bluesky as identity provider) |
-| **Testing** | Vitest + Testing Library (client) · `bun test` (server) — both on the Bun runtime |
+| **Testing** | Vitest + Testing Library (client) · `bun test` (server) · `go test` (opengraph-service) · Playwright (E2E) |
 | **Observability** | Pino structured logging, optional Axiom transport |
 
 ---
 
 ## Monorepo Structure
 
-npm workspaces with two packages:
+Bun workspaces (`client`, `server`, `html-to-image`) plus one Go module:
 
 ```
 navyfragen-app/
-├── client/        # React + Vite SPA
-├── server/        # Bun.serve + Hono API
-├── anubis/        # Anubis WAF config
-├── caddy/         # Caddy reverse proxy config
-└── docs/          # Developer notes
+├── client/             # React + Vite SPA
+├── server/             # Bun.serve + Hono API
+├── html-to-image/      # Headless Chromium renderer for question images
+├── opengraph-service/  # Go service for link previews
+├── e2e/                # Playwright specs
+├── anubis/             # Anubis WAF config
+├── caddy/              # Caddy reverse proxy config
+├── docker/             # Dockerfiles and compose overlays
+└── docs/               # Developer notes and the design handoff
 ```
+
+`brand.json` at the root holds the app name, domains and the 木 mark; the client, server and Go service all read it.
 
 ---
 
@@ -87,31 +97,30 @@ navyfragen-app/
 
 3. **Configure the server:**
 
-   Copy the template and fill in your values:
    ```bash
    cp server/.env.template server/.env
    ```
 
-   The only required secret with no default is `OAUTH_TOKEN_SECRET`, a 32-byte hex string used for AES-256 encryption:
+   The template works for local development as it is, except for `OAUTH_TOKEN_SECRET`, a 32-byte hex string used for AES-256 encryption that has no default. Generate one and set it in `server/.env`:
    ```bash
-   # Generate one with:
    bun -e "console.log(crypto.getRandomValues(new Uint8Array(32)).toHex())"
    ```
 
-4. **Start the development servers:**
+4. **Point the client at the server:**
+   ```bash
+   echo "VITE_API_URL=http://127.0.0.1:8080" > client/.env.development.local
+   ```
+
+   Use `.env.development.local` rather than `client/.env`: the test runner loads `.env` too, and a value there changes what the client tests see.
+
+5. **Start the development servers:**
    ```bash
    bun run dev
    ```
 
-   This starts both the client (port `5173`) and the server (port `3000`) concurrently.
+   This starts the client (port `5173`), the server (port `8080`, from the template's `PORT`) and the `html-to-image` service (port `3033`).
 
-5. **Open the app:**
-
-   Navigate to `http://localhost:5173`.
-
-   > **Windows users:** Use `http://127.0.0.1:5173`. Cookies may not work correctly with `localhost` on Windows.
-
-   > **Logging in fails?** See [Local Development: 127.0.0.1 vs localhost](#local-development-127001-vs-localhost) below — the AT Protocol OAuth flow requires `127.0.0.1`, not `localhost`, and this affects every platform, not just Windows.
+6. **Open the app** at `http://127.0.0.1:5173`, not `http://localhost:5173` — the AT Protocol OAuth flow and the session cookie both need `127.0.0.1`. See [Local Development: 127.0.0.1 vs localhost](#local-development-127001-vs-localhost) below.
 
 ---
 
@@ -139,11 +148,11 @@ Three themes are available when responding to a message:
 
 | Theme | Description |
 |---|---|
-| `default` | NGL-style purple gradient card |
-| `compressed` | Dark, compact card |
-| `twitter` | X/Twitter-style post card |
+| `default` | **Quote** — white card on the navy fill (the design's default) |
+| `compressed` | **Compact** — white-ruled block on midnight, for feeds read in the dark |
+| `twitter` | **Post** — a paper post from the app's own account, with the 木 mark as avatar |
 
-Users set their preferred theme in Settings; it is stored per-user in the database.
+Users pick a theme in the Image theme card on the Messages page; it is stored per-user in the database.
 
 ---
 
@@ -166,7 +175,7 @@ CloudFront can also be used in place of Caddy.
 
 Users share a short link to their public inbox (e.g. `fragen.navy/user123` -> `navyfragen.app/profile/user123`). Any URL-prefix-preserving redirect service works, for example [`docker-redirector`](https://github.com/Intellection/docker-redirector).
 
-Set the shortlink base URL in the frontend environment config.
+Set the shortlink base in the client's `VITE_SHORTLINK_URL` (e.g. `fragen.navy`).
 
 ---
 
@@ -184,9 +193,14 @@ cd server && bun run test
 # With coverage
 cd client && bun run test:coverage
 cd server && bun run test:coverage
+
+# Link-preview service
+cd opengraph-service && go test ./...
 ```
 
-Coverage target is **100%** across all four metrics (statements, lines, branches, functions). The client measures them with Vitest's istanbul provider; the server uses Bun's built-in reporter, which carries lines and functions only.
+The client is gated at **100%** on all four metrics (statements, lines, branches, functions) with Vitest's istanbul provider. The server is gated at 97% lines through Coveralls, because Bun's built-in reporter carries lines and functions only.
+
+The Playwright suite runs against the full Docker stack with a real Bluesky test account; setup is in [`docs/e2e-testing.md`](docs/e2e-testing.md).
 
 ### AT Protocol Lexicons
 
@@ -207,7 +221,7 @@ The repo uses [Husky](https://typicode.github.io/husky/) to run checks automatic
 | Step | Tool | Effect |
 |---|---|---|
 | Format staged files | Prettier | Auto-fixes formatting (quotes, indentation, trailing commas) |
-| Lint staged files | ESLint | Auto-fixes import order, unused vars, etc. |
+| Lint staged files | oxlint | Auto-fixes import order, unused vars, etc. |
 | Type check client | `tsc --noEmit` | Blocks commit if there are TypeScript errors |
 | Type check server | `tsc --noEmit` | Blocks commit if there are TypeScript errors |
 
@@ -225,12 +239,12 @@ AT Protocol's OAuth implementation follows [RFC 8252](https://www.rfc-editor.org
 
 Cookies are also host-specific: a session cookie set for `127.0.0.1` will not be sent by the browser to `localhost`, even though both point at the same machine. So every layer needs to agree on `127.0.0.1`:
 
-1. **`server/.env`:**
+1. **`server/.env`** (the template's defaults):
    ```bash
    HOST="127.0.0.1"
    CLIENT_URL="http://127.0.0.1:5173"
    ```
-2. **`client/.env`** (create if it doesn't exist):
+2. **`client/.env.development.local`** (create if it doesn't exist):
    ```bash
    VITE_API_URL=http://127.0.0.1:8080
    ```

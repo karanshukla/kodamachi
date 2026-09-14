@@ -4,11 +4,6 @@
 > half that #273 deliberately deferred. Nothing here is built into the app yet —
 > it's a decision aid so we can pick a layout before the five dependent issues
 > start dropping cards onto the page.
->
-> **Interactive mockups:** open [`customise-mockups/index.html`](./customise-mockups/index.html)
-> in a browser. It reproduces the real app chrome (header + nav) and lets you
-> flip between the three designs and light/dark, using the actual `--ds-*`
-> tokens from `client/src/index.css`.
 
 ## The constraint
 
@@ -132,8 +127,8 @@ but the page earns its separate existence and won't sprawl as issues land.
 Design B's grouped controls in a left column; a **sticky live preview of the
 public-profile ask-card** in a right column. Because #199 (prompt), #266
 (language) and #177 (inbox on/off) all change *exactly what a visitor sees*, the
-preview renders the real ask-card (reusing `PublicProfile.tsx`'s gradient
-`--ds-grad-mark` card) and updates as you type the prompt, pick a language, or
+preview renders the real ask-card (reusing `PublicProfile.tsx`'s `--ds-fill-ink`
+card) and updates as you type the prompt, pick a language, or
 toggle the inbox closed — turning three abstract settings into "this is what a
 stranger will actually see."
 

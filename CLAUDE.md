@@ -29,11 +29,20 @@ relative markdown link in JSDoc for TS, a `[TestName]` doc link for Go — sayin
 rule it pins. `bun run check:doc-links` (CI job `Doc Links`) fails on broken ones.
 Exempt from the ladder: Go doc comments on exported identifiers, and coverage pragmas.
 
+## Brand
+
+The product is **kodamachi**: white paper, dark-blue ink, no gradients, 木 as the
+mark. The source of truth is the Claude Design handoff vendored at
+`docs/design/kodamachi-handoff/` (read `Kodamachi Foundations.dc.html` first);
+`docs/design-tokens.md` says how it maps onto the token layers. Brand strings and the
+木 outline come from the root `brand.json`; the domains in it are deployment-tier and
+still point at the current host until the cutover in #388.
+
 ## What this app does
 
-Navyfragen lets Bluesky users receive anonymous questions and post answers to their
-feed. Bluesky (AT Protocol) is both the identity provider (OAuth) and a secondary
-data store (PDS sync).
+kodamachi (formerly Navyfragen) lets Bluesky users receive anonymous questions and
+post answers to their feed. Bluesky (AT Protocol) is both the identity provider
+(OAuth) and a secondary data store (PDS sync).
 
 **NF messages are deliberately not linked to Bluesky posts** — no foreign key, no
 causal link at the data layer. NF messages are ephemeral (centralised storage only
@@ -73,7 +82,8 @@ cd server && bun run lexgen
 
 Responding with `includeQuestionAsImage: true` calls the in-house `html-to-image`
 service (`EXPORT_HTML_URL`, default `http://localhost:3033/`). Themes live in
-`src/lib/themes.ts`, stored per-user in `user_settings.imageTheme`.
+`server/src/lib/question-image/themes/` (quote / compact / post), stored per-user in
+`user_settings.imageTheme`.
 
 - **Failure is never silently downgraded to a text-only reply.** `fetchWithRetry`
   (`server/src/lib/image-generator.ts`) throws when retries are exhausted and the whole
