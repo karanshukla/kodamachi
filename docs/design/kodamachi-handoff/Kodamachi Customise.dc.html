@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- support.js (the Claude Design runtime) is not vendored; see ../README.md -->
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@500;600&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,300,0,0&display=swap" rel="stylesheet" />
+<style>
+  body { margin: 0; background: #EDF0F5; font-family: "Schibsted Grotesk", "Noto Sans JP", sans-serif; -webkit-font-smoothing: antialiased; line-height: 1.5; font-feature-settings: "palt" 1; text-wrap: pretty; }
+  a { color: #234B94; text-decoration: none; }
+  a:hover { color: #10224A; }
+  h1, h2, h3, h4 { line-height: 1.25; }
+  :focus-visible { outline: 2px solid #234B94; outline-offset: 2px; border-radius: 4px; }
+  ::selection { background: #C9D5EA; color: #10224A; }
+  * { scrollbar-width: thin; scrollbar-color: #C9D5EA transparent; }
+  *::-webkit-scrollbar { width: 10px; height: 10px; }
+  *::-webkit-scrollbar-thumb { background: #C9D5EA; border-radius: 6px; border: 3px solid transparent; background-clip: content-box; }
+  *::-webkit-scrollbar-thumb:hover { background: #A9B9D6; background-clip: content-box; }
+  *::-webkit-scrollbar-track { background: transparent; }
+  [lang="ja"], .jp { letter-spacing: 0.02em; font-feature-settings: "palt" 1; }
+  .ms { font-family: "Material Symbols Outlined"; font-weight: normal; font-style: normal; line-height: 1; letter-spacing: normal; text-transform: none; display: inline-block; white-space: nowrap; direction: ltr; -webkit-font-feature-settings: "liga"; -webkit-font-smoothing: antialiased; }
+</style>
+</helmet>
+
+<div style="padding: 48px 40px 80px; display: flex; flex-direction: column; gap: 40px; align-items: flex-start;">
+  <div style="display: flex; flex-direction: column; gap: 6px;">
+    <div style="font-size: 11px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: #7684A0;">Kodamachi · redesign</div>
+    <div style="font-size: 26px; font-weight: 600; letter-spacing: -0.02em; color: #111C36;">Customise</div>
+  </div>
+
+  <div data-screen-label="Customise · desktop" style="width: 1280px; background: #FFFFFF; border: 1px solid #E3E8F0; border-radius: 14px; overflow: hidden; box-shadow: 0 18px 40px -28px rgba(16,34,74,0.35);">
+    <div style="height: 60px; border-bottom: 1px solid #E3E8F0; display: flex; align-items: center; justify-content: space-between; padding: 0 20px;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <div style="width: 30px; height: 30px; border-radius: 9px; background: #10224A; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: 'Noto Serif JP', serif; font-weight: 600; font-size: 18px;">木</div>
+        <div style="font-size: 17px; font-weight: 600; letter-spacing: -0.02em; color: #111C36;">kodamachi</div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <div style="width: 34px; height: 34px; border-radius: 10px; border: 1px solid #E3E8F0; display: flex; align-items: center; justify-content: center;"><span class="ms" style="font-size: 18px; color: #63708C;">dark_mode</span></div>
+        <div style="display: flex; align-items: center; gap: 9px; height: 34px; padding: 0 12px 0 5px; border: 1px solid #E3E8F0; border-radius: 999px;">
+          <div style="width: 24px; height: 24px; border-radius: 999px; background: #EDF2FB; color: #234B94; font-size: 11px; font-weight: 600; display: flex; align-items: center; justify-content: center;">KS</div>
+          <div style="font-size: 13px; font-weight: 500; color: #111C36;">Karan</div>
+          <span class="ms" style="font-size: 16px; color: #8C99B2;">expand_more</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="display: flex; align-items: stretch;">
+      <div style="width: 244px; border-right: 1px solid #E3E8F0; padding: 16px 14px; display: flex; flex-direction: column; gap: 4px; flex-shrink: 0;">
+        <div style="display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 10px; color: #46536E; font-size: 14px; font-weight: 500;"><span class="ms" style="font-size: 20px; color: #7684A0;">home</span>Home</div>
+        <div style="display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 10px; color: #46536E; font-size: 14px; font-weight: 500;"><span class="ms" style="font-size: 20px; color: #7684A0;">mail</span>Messages<span style="margin-left: auto; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: #10224A; color: #FFFFFF; font-size: 11px; font-weight: 600; display: flex; align-items: center; justify-content: center;">3</span></div>
+        <div style="display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 10px; background: #EDF2FB; color: #10224A; font-size: 14px; font-weight: 600;"><span class="ms" style="font-size: 20px;">tune</span>Customise</div>
+        <div style="display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 10px; color: #46536E; font-size: 14px; font-weight: 500;"><span class="ms" style="font-size: 20px; color: #7684A0;">settings</span>Settings</div>
+      </div>
+
+      <div style="flex: 1; min-width: 0; background: #F7F9FC; padding: 32px 36px 48px;">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 30px;">
+          <h1 style="margin: 0; font-size: 30px; font-weight: 600; letter-spacing: -0.03em; color: #111C36;">Customise</h1>
+          <div style="height: 22px; padding: 0 9px; border-radius: 6px; background: #EDF2FB; border: 1px solid #C9D5EA; color: #234B94; font-size: 11px; font-weight: 600; display: flex; align-items: center;">Beta</div>
+        </div>
+
+        <div style="margin-bottom: 34px;">
+          <div style="font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #7684A0;">Your public profile</div>
+          <div style="font-size: 13px; color: #63708C; margin: 4px 0 16px;">What visitors see before they send you an anonymous message.</div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 18px; align-items: stretch;">
+            <div style="background: #FFFFFF; border: 1px solid #E3E8F0; border-radius: 12px; padding: 20px; display: flex; flex-direction: column;">
+              <div style="font-size: 16px; font-weight: 600; color: #111C36; margin-bottom: 10px;">Profile prompt</div>
+              <p style="margin: 0 0 16px; flex: 1; font-size: 13px; line-height: 1.55; color: #63708C;">The headline above your message box. Leave blank to fall back to “Send [you] an anonymous message”.</p>
+              <div style="font-size: 11px; color: #94A1B8; text-align: right; margin-bottom: 6px;">28/100</div>
+              <div style="height: 40px; background: #F7F9FC; border: 1px solid #E3E8F0; border-radius: 10px; display: flex; align-items: center; padding: 0 12px; font-size: 14px; color: #111C36;">ask me anything, be nice</div>
+            </div>
+
+            <div style="background: #FFFFFF; border: 1px solid #E3E8F0; border-radius: 12px; padding: 20px; display: flex; flex-direction: column;">
+              <div style="font-size: 16px; font-weight: 600; color: #111C36; margin-bottom: 10px;">Message language</div>
+              <p style="margin: 0 0 16px; flex: 1; font-size: 13px; line-height: 1.55; color: #63708C;">Language of the prompt, share text and anonymity disclaimer shown to visitors. Your custom prompt overrides this.</p>
+              <div style="height: 40px; background: #F7F9FC; border: 1px solid #E3E8F0; border-radius: 10px; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; font-size: 14px; color: #111C36;">English<span class="ms" style="font-size: 18px; color: #8C99B2;">expand_more</span></div>
+            </div>
+
+            <div style="grid-column: span 2; background: #FFFFFF; border: 1px solid #E3E8F0; border-radius: 12px; padding: 20px;">
+              <div style="font-size: 16px; font-weight: 600; color: #111C36; margin-bottom: 10px;">Ask card colour</div>
+              <p style="margin: 0 0 16px; font-size: 13px; line-height: 1.55; color: #63708C;">The treatment of your ask card. Four curated options, all legible with white text and the send button.</p>
+              <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 150px)); gap: 12px;">
+                <div style="border: 1.5px solid #10224A; background: #EDF2FB; border-radius: 10px; padding: 8px; display: flex; flex-direction: column; gap: 7px;">
+                  <div style="aspect-ratio: 4/3; border-radius: 6px; background: #10224A;"></div>
+                  <div style="font-size: 12px; font-weight: 600; text-align: center; color: #111C36;">Ink</div>
+                </div>
+                <div style="border: 1px solid #E3E8F0; border-radius: 10px; padding: 8px; display: flex; flex-direction: column; gap: 7px;">
+                  <div style="aspect-ratio: 4/3; border-radius: 6px; background: #0B1428;"></div>
+                  <div style="font-size: 12px; font-weight: 600; text-align: center; color: #111C36;">Midnight</div>
+                </div>
+                <div style="border: 1px solid #E3E8F0; border-radius: 10px; padding: 8px; display: flex; flex-direction: column; gap: 7px;">
+                  <div style="aspect-ratio: 4/3; border-radius: 6px; background: #234B94;"></div>
+                  <div style="font-size: 12px; font-weight: 600; text-align: center; color: #111C36;">Steel</div>
+                </div>
+                <div style="border: 1px solid #E3E8F0; border-radius: 10px; padding: 8px; display: flex; flex-direction: column; gap: 7px;">
+                  <div style="aspect-ratio: 4/3; border-radius: 6px; background: #FFFFFF; border: 1px solid #D8E0EC; display: flex; align-items: center; justify-content: center; color: #10224A; font-family: 'Noto Serif JP', serif; font-size: 20px;">木</div>
+                  <div style="font-size: 12px; font-weight: 600; text-align: center; color: #111C36;">Paper</div>
+                </div>
+              </div>
+
+              <div style="margin-top: 22px; padding-top: 20px; border-top: 1px solid #E3E8F0;">
+                <div style="font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #7684A0; margin-bottom: 12px;">Preview</div>
+                <div style="max-width: 460px; background: #10224A; border-radius: 12px; padding: 24px;">
+                  <div style="font-size: 18px; font-weight: 600; text-align: center; color: #FFFFFF; margin-bottom: 16px;">ask me anything, be nice</div>
+                  <div style="background: #FFFFFF; border-radius: 10px; padding: 12px 14px; min-height: 56px; font-size: 14px; color: #9AA6BC;">Ask something…</div>
+                  <div style="display: flex; justify-content: flex-end; margin-top: 12px;">
+                    <div style="height: 38px; padding: 0 18px; border-radius: 10px; background: #FFFFFF; color: #10224A; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 7px;"><span class="ms" style="font-size: 16px;">send</span>Send</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div style="font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #7684A0;">Message intake</div>
+          <div style="font-size: 13px; color: #63708C; margin: 4px 0 16px;">Who can reach your inbox, and what gets through.</div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 18px; align-items: stretch;">
+            <div style="background: #FFFFFF; border: 1px solid #E3E8F0; border-radius: 12px; padding: 20px; display: flex; flex-direction: column;">
+              <div style="min-height: 32px; display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px;">
+                <div style="font-size: 16px; font-weight: 600; color: #111C36;">Inbox</div>
+                <div style="width: 40px; height: 22px; border-radius: 999px; background: #10224A; padding: 2px; display: flex; justify-content: flex-end; flex-shrink: 0;"><div style="width: 18px; height: 18px; border-radius: 999px; background: #FFFFFF;"></div></div>
+              </div>
+              <p style="margin: 0; font-size: 13px; line-height: 1.55; color: #63708C;">Turn off to stop receiving new messages while keeping your account, history and settings. Visitors see a “not accepting messages” state.</p>
+            </div>
+            <div style="background: #FFFFFF; border: 1px solid #E3E8F0; border-radius: 12px; padding: 20px; display: flex; flex-direction: column;">
+              <div style="min-height: 32px; display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px;">
+                <div style="font-size: 16px; font-weight: 600; color: #111C36;">Profanity filter</div>
+                <div style="width: 40px; height: 22px; border-radius: 999px; background: #DDE3ED; padding: 2px; display: flex; flex-shrink: 0;"><div style="width: 18px; height: 18px; border-radius: 999px; background: #FFFFFF;"></div></div>
+              </div>
+              <p style="margin: 0; font-size: 13px; line-height: 1.55; color: #63708C;">Screens incoming messages against a wordlist. Flagged messages are dropped silently — the sender sees success, but it never reaches your inbox.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div data-screen-label="Customise · mobile" style="width: 390px; height: 844px; background: #F7F9FC; border: 1px solid #E3E8F0; border-radius: 22px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 18px 40px -28px rgba(16,34,74,0.35);">
+    <div style="height: 56px; background: #FFFFFF; border-bottom: 1px solid #E3E8F0; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; flex-shrink: 0;">
+      <div style="display: flex; align-items: center; gap: 9px;">
+        <div style="width: 28px; height: 28px; border-radius: 8px; background: #10224A; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: 'Noto Serif JP', serif; font-weight: 600; font-size: 16px;">木</div>
+        <div style="font-size: 16px; font-weight: 600; letter-spacing: -0.02em; color: #111C36;">kodamachi</div>
+      </div>
+      <div style="width: 28px; height: 28px; border-radius: 999px; background: #EDF2FB; color: #234B94; font-size: 11px; font-weight: 600; display: flex; align-items: center; justify-content: center;">KS</div>
+    </div>
+    <div style="flex: 1; overflow: hidden; padding: 18px 16px; display: flex; flex-direction: column; gap: 14px;">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <h1 style="margin: 0; font-size: 26px; font-weight: 600; letter-spacing: -0.03em; color: #111C36;">Customise</h1>
+        <div style="height: 20px; padding: 0 8px; border-radius: 6px; background: #EDF2FB; border: 1px solid #C9D5EA; color: #234B94; font-size: 10px; font-weight: 600; display: flex; align-items: center;">Beta</div>
+      </div>
+      <div style="background: #FFFFFF; border: 1px solid #E3E8F0; border-radius: 12px; padding: 18px;">
+        <div style="font-size: 15px; font-weight: 600; color: #111C36; margin-bottom: 8px;">Profile prompt</div>
+        <div style="height: 44px; background: #F7F9FC; border: 1px solid #E3E8F0; border-radius: 10px; display: flex; align-items: center; padding: 0 12px; font-size: 14px; color: #111C36;">ask me anything, be nice</div>
+      </div>
+      <div style="background: #FFFFFF; border: 1px solid #E3E8F0; border-radius: 12px; padding: 18px;">
+        <div style="font-size: 15px; font-weight: 600; color: #111C36; margin-bottom: 10px;">Ask card colour</div>
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">
+          <div style="border: 1.5px solid #10224A; background: #EDF2FB; border-radius: 10px; padding: 6px;"><div style="aspect-ratio: 1/1; border-radius: 6px; background: #10224A;"></div></div>
+          <div style="border: 1px solid #E3E8F0; border-radius: 10px; padding: 6px;"><div style="aspect-ratio: 1/1; border-radius: 6px; background: #0B1428;"></div></div>
+          <div style="border: 1px solid #E3E8F0; border-radius: 10px; padding: 6px;"><div style="aspect-ratio: 1/1; border-radius: 6px; background: #234B94;"></div></div>
+          <div style="border: 1px solid #E3E8F0; border-radius: 10px; padding: 6px;"><div style="aspect-ratio: 1/1; border-radius: 6px; background: #FFFFFF; border: 1px solid #D8E0EC;"></div></div>
+        </div>
+      </div>
+      <div style="background: #FFFFFF; border: 1px solid #E3E8F0; border-radius: 12px; padding: 18px; display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+        <div><div style="font-size: 15px; font-weight: 600; color: #111C36;">Inbox</div><div style="font-size: 12px; color: #7684A0; margin-top: 2px;">Accepting messages</div></div>
+        <div style="width: 44px; height: 26px; border-radius: 999px; background: #10224A; padding: 3px; display: flex; justify-content: flex-end; flex-shrink: 0;"><div style="width: 20px; height: 20px; border-radius: 999px; background: #FFFFFF;"></div></div>
+      </div>
+      <div style="background: #FFFFFF; border: 1px solid #E3E8F0; border-radius: 12px; padding: 18px; display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+        <div><div style="font-size: 15px; font-weight: 600; color: #111C36;">Profanity filter</div><div style="font-size: 12px; color: #7684A0; margin-top: 2px;">Screen incoming messages</div></div>
+        <div style="width: 44px; height: 26px; border-radius: 999px; background: #DDE3ED; padding: 3px; display: flex; flex-shrink: 0;"><div style="width: 20px; height: 20px; border-radius: 999px; background: #FFFFFF;"></div></div>
+      </div>
+    </div>
+    <div style="height: 76px; background: #FFFFFF; border-top: 1px solid #E3E8F0; display: flex; align-items: flex-start; padding: 10px 8px 0; flex-shrink: 0;">
+      <div style="flex: 1; min-height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; color: #7684A0;"><span class="ms" style="font-size: 24px;">home</span><span style="font-size: 11px; font-weight: 500;">Home</span></div>
+      <div style="flex: 1; min-height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; color: #7684A0;"><span class="ms" style="font-size: 24px;">mail</span><span style="font-size: 11px; font-weight: 500;">Messages</span></div>
+      <div style="flex: 1; min-height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; color: #10224A;"><span class="ms" style="font-size: 24px;">tune</span><span style="font-size: 11px; font-weight: 600;">Customise</span></div>
+      <div style="flex: 1; min-height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; color: #7684A0;"><span class="ms" style="font-size: 24px;">settings</span><span style="font-size: 11px; font-weight: 500;">Settings</span></div>
+    </div>
+  </div>
+</div>
+
+</x-dc>
+</body>
+</html>
