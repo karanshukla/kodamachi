@@ -130,8 +130,8 @@ body {
       override them under [data-mantine-color-scheme="dark"], so a component
       writes `var(--ds-surface)` once and both schemes follow. This is why no
       component needs `useComputedColorScheme` to pick a background.
-   3. Fixed foregrounds (`--ds-on-fill*`, `--ds-on-paper*`) — the one family
-      that is deliberately scheme-independent, because the brand fills keep
+   3. Fixed foregrounds (`--ds-on-fill*`, `--ds-on-paper*`) — text on an
+      ask-card preset. Deliberately scheme-independent, because the presets keep
       their colour in both schemes, so text painted on one has a single correct
       colour either way.
 
@@ -157,14 +157,15 @@ body {
   --ds-ink-dark: #f4f7fc;
   --ds-muted-dark: #9ba9c4;
   --ds-link-dark: #9bb4e6;
-  --ds-line-dark: #1b2a4d;
-  --ds-midnight-card: #101e3c;
-  --ds-midnight-hover: #16264a;
+  --ds-line-dark: #2e447a;
+  --ds-navy-raised: #1a3163;
 }
 
 /* ── Layer 1b: brand fills ── */
-/* The ask-card presets and every other navy surface. Paper is the one light
-   fill; anything painted on it reads the on-paper tokens in layer 3. */
+/* The ask-card presets and the image-theme previews. They keep their colour in
+   both schemes: a preset is the profile owner's choice, and a preview stands
+   for a PNG that does not change. Paper is the one light fill; anything
+   painted on it reads the on-paper tokens in layer 3. */
 :root {
   --ds-fill-ink: var(--ds-navy);
   --ds-fill-midnight: var(--ds-midnight);
@@ -229,37 +230,45 @@ body {
   --ds-mark-bg: var(--ds-navy);
   --ds-mark-fg: var(--ds-paper);
 
-  /* A profile banner with no image: the navy fill here, and the darker
-     midnight fill in the dark, where the navy fill is the card's own blue. */
-  --ds-banner: var(--ds-fill-ink);
+  /* Hero surfaces — the welcome card, the inbox link, ink question cards, a
+     profile banner with no image: navy with white ink, inverted in the dark.
+     -faint is for dashed rules and progress tracks only, never text. */
+  --ds-hero: var(--ds-navy);
+  --ds-on-hero: var(--ds-paper);
+  --ds-on-hero-muted: rgba(255, 255, 255, 0.72);
+  --ds-on-hero-faint: rgba(255, 255, 255, 0.32);
+  --ds-on-hero-edge: rgba(255, 255, 255, 0.28);
+  --ds-on-hero-wash: rgba(255, 255, 255, 0.06);
 
   /* The danger title on alerts and toasts; every other tone titles in navy. */
   --ds-tone-red: #7a2727;
 
-  /* Fallbacks for the card-local foreground pair below. A question card
-     overrides both on its own root; anything using the classes outside one still
+  /* Fallbacks for the card-local foreground set below. A question card
+     overrides them on its own root; anything using the classes outside one still
      gets readable text rather than an unresolved var. */
   --ds-card-fg: var(--mantine-color-text);
   --ds-card-fg-muted: var(--mantine-color-dimmed);
   --ds-card-fg-faint: var(--mantine-color-dimmed);
   --ds-card-accent: var(--ds-link);
   --ds-card-edge: var(--mantine-color-default-border);
+  --ds-card-wash: var(--ds-selected-bg);
   --ds-card-input-bg: var(--ds-surface-ghost);
 }
 
 /* ── Layer 2: semantic tokens — dark ── */
-/* Dark mode is the same design, inverted: white ink on dark blue, no new hues.
-   Shadows vanish, so elevation becomes the dark line. */
+/* Dark mode is light mode inverted: white ink on navy paper over a midnight
+   page, and the navy hero surfaces turn off-white with navy ink. Shadows
+   vanish, so elevation becomes the dark line. */
 :root[data-mantine-color-scheme="dark"] {
-  --ds-surface: var(--ds-midnight-card);
-  --ds-surface-ghost: #0e1a34;
+  --ds-surface: var(--ds-navy);
+  --ds-surface-ghost: var(--ds-midnight);
   --ds-page: var(--ds-midnight);
-  --ds-surface-highlight: var(--ds-midnight-hover);
+  --ds-surface-highlight: var(--ds-navy-raised);
 
   --ds-link: var(--ds-link-dark);
   --ds-accent-text: var(--ds-ink-dark);
 
-  --ds-nav-active-bg: var(--ds-midnight-hover);
+  --ds-nav-active-bg: var(--ds-navy-raised);
   --ds-nav-active-color: var(--ds-ink-dark);
 
   --ds-boundary-border: var(--ds-line-dark);
@@ -267,7 +276,7 @@ body {
   --ds-danger-fg: #e08a8a;
   --ds-danger-bg: rgba(169, 54, 54, 0.2);
   --ds-danger-border: #4a2a2a;
-  --ds-selected-bg: var(--ds-midnight-hover);
+  --ds-selected-bg: var(--ds-navy-raised);
   --ds-selected-border: var(--ds-ink-dark);
 
   --ds-focus-ring: var(--ds-link-dark);
@@ -276,20 +285,19 @@ body {
   --ds-card-action-active: var(--ds-ink-dark);
 
   --ds-attention-bg: var(--ds-ink-dark);
-  --ds-attention-fg: var(--ds-midnight);
+  --ds-attention-fg: var(--ds-navy);
 
   --ds-mark-bg: var(--ds-ink-dark);
-  --ds-mark-fg: var(--ds-midnight);
+  --ds-mark-fg: var(--ds-navy);
 
-  --ds-banner: var(--ds-fill-midnight);
+  --ds-hero: var(--ds-ink-dark);
+  --ds-on-hero: var(--ds-navy);
+  --ds-on-hero-muted: rgba(16, 34, 74, 0.72);
+  --ds-on-hero-faint: rgba(16, 34, 74, 0.32);
+  --ds-on-hero-edge: rgba(16, 34, 74, 0.28);
+  --ds-on-hero-wash: rgba(16, 34, 74, 0.06);
 
   --ds-tone-red: #f0b3b3;
-
-  /* Navy surfaces on a midnight page become the card blue with a border; the
-     paper preset stays paper so its owner's choice survives the scheme. */
-  --ds-fill-ink: var(--ds-midnight-card);
-  --ds-fill-midnight: #08101f;
-  --ds-fill-steel: #1b3a73;
 }
 
 /* ── Mantine bridges ── */
@@ -323,17 +331,21 @@ body {
   --input-bd: var(--mantine-color-default-border);
 }
 
+/* A checked switch's track is the primary fill, which is white in the dark, and
+   Mantine's thumb is always white; the thumb takes the navy paper instead. */
+:root[data-mantine-color-scheme="dark"] .mantine-Switch-input:checked + .mantine-Switch-track {
+  --switch-thumb-bg: var(--ds-surface);
+}
+
 /* ── Layer 3: fixed foregrounds ── */
-/* The brand fills keep their colour in both schemes, so these do not flip.
-   -muted is the lightest alpha that still clears AA over the lightest dark
-   fill; -faint is for dashed rules and progress tracks only, never text. */
+/* Text on an ask-card preset. The presets keep their colour in both schemes,
+   so these do not flip. -muted is the lightest alpha that still clears AA over
+   the lightest dark preset. */
 :root {
   --ds-on-fill: #ffffff;
   --ds-on-fill-muted: rgba(255, 255, 255, 0.72);
-  --ds-on-fill-faint: rgba(255, 255, 255, 0.32);
-  --ds-on-fill-fill: rgba(255, 255, 255, 0.06);
   --ds-on-fill-border: rgba(255, 255, 255, 0.28);
-  /* The primary action on a navy surface is a white button with navy text. */
+  /* The primary action on a navy preset is a white button with navy text. */
   --ds-on-fill-button-fg: var(--ds-navy);
 
   --ds-on-paper: var(--ds-ink);
@@ -354,8 +366,8 @@ body {
 }
 
 /* ── Card-local foreground ── */
-/* A question card is painted either with the navy fill or with the ordinary
-   surface, and its contents have to follow. The card sets these two on its own
+/* A question card is painted either as a hero surface or with the ordinary
+   surface, and its contents have to follow. The card sets these on its own
    root (see QuestionCard.styles.ts) and every descendant reads them, so the
    choice is made once instead of at each Text. */
 .ds-oncard {
@@ -401,8 +413,8 @@ body {
 /* Already pinned, so the hover affordance is "unpin" rather than "pin". */
 .ds-pin-btn--active:hover,
 .ds-pin-btn--active:focus-visible {
-  color: var(--ds-on-fill) !important;
-  background: var(--ds-on-fill-fill) !important;
+  color: var(--ds-card-fg) !important;
+  background: var(--ds-card-wash) !important;
 }
 
 /* ── Animation ── */

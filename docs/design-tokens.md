@@ -21,33 +21,55 @@ components may only read from the last two layers:
 1. **Brand primitives** — scheme-independent raw values, in three groups.
    - _1a, the brand palette_ (`--ds-navy`, `--ds-ink`, `--ds-steel`, `--ds-paper`,
      `--ds-canvas`, `--ds-line`, `--ds-tint`, `--ds-muted`, `--ds-danger`, and the
-     dark scheme's steps `--ds-ink-dark`, `--ds-line-dark`, `--ds-midnight-card`, …)
-     — the hues a repaint replaces. **Nothing outside `index.css` may reference
-     one**, and `contrast.test.ts` fails on any file that does. Reaching for
-     `var(--ds-navy)` in a component means the colour needs a semantic token; add
-     one here.
+     dark steps `--ds-ink-dark`, `--ds-muted-dark`, `--ds-line-dark`,
+     `--ds-navy-raised`, …) — the hues a repaint replaces. **Nothing outside
+     `index.css` may reference one**, and `contrast.test.ts` fails on any file that
+     does. Reaching for `var(--ds-navy)` in a component means the colour needs a
+     semantic token; add one here.
    - _1b, the brand fills_ (`--ds-fill-ink`, `--ds-fill-midnight`, `--ds-fill-steel`,
-     `--ds-fill-paper`) — the ask-card presets and every other navy surface.
-     Components read these directly; a fill is a single design decision, not a hue.
-     They are solid: the redesign has two hues plus danger and no ramps, and a
-     test fails on any `gradient(` in the stylesheet.
+     `--ds-fill-paper`) — the ask-card presets and the image-theme previews. They
+     keep their colour in both schemes: a preset is the profile owner's choice, and
+     a preview stands for a PNG that does not change. They are solid: the redesign
+     has two hues plus danger and no ramps, and a test fails on any `gradient(` in
+     the stylesheet.
    - _1c, structural primitives_ (`--ds-font-sans`, `--ds-ease`, `--ds-dur-*`,
      `--ds-radius-*`) — carry no colour and no restriction.
-2. **Semantic tokens** (`--ds-surface`, `--ds-page`, `--ds-link`, `--ds-nav-active-bg`,
+2. **Semantic tokens** (`--ds-surface`, `--ds-page`, `--ds-link`, `--ds-hero`,
    `--ds-mark-bg`, …) — named for the job. Light values on `:root`, dark overrides
    under `:root[data-mantine-color-scheme="dark"]`. **This is why no component calls
    `useComputedColorScheme` to choose a colour** — the browser picks. If you find
    yourself adding an `isDark` prop, add a token instead.
 3. **Fixed foregrounds** (`--ds-on-fill`, `--ds-on-fill-muted`, `--ds-on-fill-border`,
-   `--ds-on-fill-button-fg`, `--ds-on-paper`, `--ds-on-paper-muted`) — deliberately
-   _not_ scheme-aware, because a brand fill keeps its colour in both schemes, so the
-   text on it has one correct colour. The paper preset stays white in dark mode,
-   which is why its contents read `--ds-on-paper` and not the scheme's text colour.
-   `--ds-on-fill-faint` is for dashed rules and progress tracks; it is not strong
-   enough for text and a test pins that.
+   `--ds-on-fill-button-fg`, `--ds-on-paper`, `--ds-on-paper-muted`) — text on an
+   ask-card preset. Deliberately _not_ scheme-aware, because the presets keep their
+   colour, so the text on one has one correct colour. The paper preset stays white
+   in dark mode, which is why its contents read `--ds-on-paper` and not the scheme's
+   text colour.
 
 `src/styles/tokens.ts` gives these TypeScript handles so a renamed token is a compile
 error rather than a colour that silently resolves to nothing.
+
+## Dark mode is the inverse of light
+
+Navy and white swap roles; nothing new is introduced for the dark scheme.
+
+| Role | Light | Dark |
+|---|---|---|
+| Page | canvas `#F7F9FC` | midnight `#0B1428` |
+| Card (`--ds-surface`) | paper white | brand navy `#10224A` |
+| Text | navy ink | white ink `#F4F7FC` |
+| Hero (`--ds-hero`) | navy, white ink | off-white, navy ink |
+| Filled button | navy, white label | pale tint, navy label |
+| Inputs (`--ds-surface-ghost`) | canvas well | midnight well |
+
+Filled controls flip through Mantine rather than CSS: `primaryShade` is
+`{ light: 6, dark: 0 }` and `autoContrast` picks the label. Mantine's switch thumb is
+always white, so on the white dark-mode track it takes the navy paper instead (the
+switch rule in `index.css`).
+
+The ask-card presets and the image-theme previews are the only things that do not
+invert. Each preset carries a hairline, because one of them always matches what
+sits behind it.
 
 ## The design source
 
@@ -104,16 +126,16 @@ The suite is the acceptance test for a repaint: contrast pairs are re-checked at
 WCAG AA, so a hue that reads well on white and badly on the dark surface fails
 before it ships.
 
-## Fill usage
+## Hero surfaces and fills
 
-- `--ds-fill-ink` — the navy fill; the welcome card, the inbox link, the ask card's
-  default and "ink" question cards.
-- `--ds-banner` — a profile banner with no image. It is the navy fill in light
-  mode and the darker midnight fill in dark mode, where the navy fill is already
-  the card's own colour.
-- `--ds-fill-midnight` / `--ds-fill-steel` / `--ds-fill-paper` — the other three
-  ask-card presets. Paper is the one light fill and paints its contents with the
-  on-paper tokens.
+- `--ds-hero` — the welcome card, the inbox link, "ink" question cards and a profile
+  banner with no image. Text on it reads `--ds-on-hero*`; its buttons are
+  `heroButton` and `heroOutlineButton` in `tokens.ts`. `--ds-on-hero-faint` is for
+  dashed rules and progress tracks; it is not strong enough for text and a test
+  pins that.
+- `--ds-fill-*` — the four ask-card presets (ink is the default) and the
+  image-theme previews. Paper is the one light fill and paints its contents with
+  the on-paper tokens.
 
 Nav active state uses the tint (`--ds-nav-active-bg`), the unread badge the navy
 pill (`--ds-attention-bg`). Nothing anywhere is a gradient.
@@ -137,7 +159,8 @@ input instead would pin one colour over all three states.
 ## Contrast is enforced, not reviewed
 
 `src/tests/theme/contrast.test.ts` parses `index.css`, resolves the tokens, and fails
-if any documented text/background pair drops below WCAG AA — on every fill, in both
-colour schemes, and for every `Alert` tone against the paper it sits on. It also
+if any documented text/background pair drops below WCAG AA — on every fill, on the
+hero in both schemes, and for every `Alert` tone against the paper it sits on. It
+also checks that the hero and the filled primary stand apart from the card, and it
 fails on a declared `--ds-*` token nothing references and on a referenced token
 nothing declares, so the palette cannot accumulate dead entries or typos.

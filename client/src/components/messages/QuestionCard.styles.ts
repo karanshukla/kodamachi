@@ -2,38 +2,42 @@ import type { CSSProperties } from "react";
 
 import {
   borderColor,
-  fillInk,
-  onFill,
-  onFillFaint,
-  onFillMuted,
-  onFillOutlineButton,
+  heroBg,
+  heroOutlineButton,
+  onHero,
+  onHeroEdge,
+  onHeroFaint,
+  onHeroMuted,
+  onHeroWash,
   radiusCard,
+  selectedBg,
   surface,
   textDefault,
   textDimmed,
 } from "../../styles/tokens";
 
 export interface CardState {
-  /** Painted with the navy fill rather than paper — the "ink backgrounds" preference. */
+  /** Painted as a hero surface rather than a plain card — the "ink backgrounds" preference. */
   ink: boolean;
   pinned: boolean;
   focused: boolean;
 }
 
 /**
- * A question card is painted either with the navy fill or with paper, and
+ * A question card is painted either as a hero surface or as a plain card, and
  * everything inside it has to follow. Rather than each Text repeating the
  * choice — which is how the message body ended up hard-coded to white and
- * therefore invisible on the light surface — the card publishes four
+ * therefore invisible on the light surface — the card publishes its
  * `--ds-card-*` custom properties and its children read those.
  */
 function foreground(ink: boolean): CSSProperties {
   return {
-    "--ds-card-fg": ink ? onFill : textDefault,
-    "--ds-card-fg-muted": ink ? onFillMuted : textDimmed,
-    "--ds-card-fg-faint": ink ? onFillFaint : textDimmed,
-    "--ds-card-accent": ink ? onFill : "var(--ds-link)",
-    "--ds-card-edge": ink ? "var(--ds-on-fill-border)" : borderColor,
+    "--ds-card-fg": ink ? onHero : textDefault,
+    "--ds-card-fg-muted": ink ? onHeroMuted : textDimmed,
+    "--ds-card-fg-faint": ink ? onHeroFaint : textDimmed,
+    "--ds-card-accent": ink ? onHero : "var(--ds-link)",
+    "--ds-card-edge": ink ? onHeroEdge : borderColor,
+    "--ds-card-wash": ink ? onHeroWash : selectedBg,
   } as CSSProperties;
 }
 
@@ -51,7 +55,7 @@ function borderFor({ pinned, focused }: CardState): string {
 export const card = (state: CardState): CSSProperties => ({
   ...foreground(state.ink),
   borderRadius: radiusCard,
-  background: state.ink ? fillInk : surface,
+  background: state.ink ? heroBg : surface,
   border: borderFor(state),
   padding: "10px 20px 20px",
   transition: "border-color var(--ds-dur-fast) var(--ds-ease)",
@@ -112,9 +116,9 @@ export const threadLinkText: CSSProperties = {
 };
 
 /**
- * "Reply to thread" on the pinned root is the filled navy button; a plain
- * card's "Reply" is the outline. On an ink card both become the on-fill
- * outline, since navy on navy would vanish.
+ * "Reply to thread" on the pinned root is the filled primary button; a plain
+ * card's "Reply" is the outline. On an ink card both become the hero outline,
+ * since the filled primary would match the hero behind it.
  */
 export type ReplyVariant = "default" | "filled" | "outline";
 
@@ -124,7 +128,7 @@ export function replyButtonVariant(ink: boolean, inThread: boolean): ReplyVarian
 }
 
 export const replyButton = (blocked: boolean, ink: boolean): CSSProperties => ({
-  ...(ink ? onFillOutlineButton : {}),
+  ...(ink ? heroOutlineButton : {}),
   height: 44,
   opacity: blocked ? 0.45 : 1,
   cursor: blocked ? "not-allowed" : undefined,

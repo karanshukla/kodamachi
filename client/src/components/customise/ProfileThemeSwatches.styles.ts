@@ -17,11 +17,11 @@ export const grid: CSSProperties = {
   gap: 12,
 };
 
-/** The paper preset needs a hairline, or it disappears into the card. */
+/** Every swatch carries a hairline: one preset always matches the card behind it. */
 export const fill = (theme: ProfileCardFill): CSSProperties => ({
   height: "100%",
   background: theme.background,
-  border: theme.paper ? border : "none",
+  border,
   borderRadius: 6,
   display: "flex",
   alignItems: "center",

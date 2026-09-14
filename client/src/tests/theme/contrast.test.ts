@@ -19,10 +19,14 @@ import { declaredTokens, paletteTokens, referencedTokens, token, type Scheme } f
  */
 
 const AA = 4.5;
-/** WCAG's relaxed threshold, for ≥24px or ≥18.66px-bold text only. */
+/** WCAG's relaxed threshold, for ≥24px or ≥18.66px-bold text, and for UI shapes. */
 const AA_LARGE = 3;
 
 const SRC = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
+
+/** The primary colour's two palettes: `navy` in light mode, `inverse` in dark. */
+const navy = appTheme.colors!.navy!;
+const inverse = appTheme.colors!.inverse!;
 
 /**
  * Opaque page background a translucent surface has to be flattened against.
@@ -72,46 +76,85 @@ describe("body text", () => {
   });
 });
 
-describe("text on brand fills", () => {
+/**
+ * Hero surfaces are navy in light mode and off-white in dark, so each is the
+ * inverse of the card around it. The last pair pins that: before the inverse,
+ * the dark hero was the card's own blue and the welcome card vanished into it.
+ */
+describe("hero surfaces", () => {
+  it.each(SCHEMES)("carry their ink and muted text at AA (%s)", (scheme) => {
+    const bg = parseColor(token("--ds-hero", scheme));
+    expect(ratio("--ds-on-hero", bg, scheme)).toBeGreaterThanOrEqual(AA);
+    expect(ratio("--ds-on-hero-muted", bg, scheme)).toBeGreaterThanOrEqual(AA);
+  });
+
+  it.each(SCHEMES)("label their primary button at AA (%s)", (scheme) => {
+    const button = parseColor(token("--ds-on-hero", scheme));
+    expect(ratio("--ds-hero", button, scheme)).toBeGreaterThanOrEqual(AA);
+  });
+
+  it.each(SCHEMES)("keep the faint ink too weak for text (%s)", (scheme) => {
+    // Pinned so nobody promotes it to a Text colour: it exists for dashed rules
+    // and progress-ring tracks, where contrast is not a legibility requirement.
+    const bg = parseColor(token("--ds-hero", scheme));
+    expect(ratio("--ds-on-hero-faint", bg, scheme)).toBeLessThan(AA_LARGE);
+  });
+
+  it.each(SCHEMES)("stand apart from the card surface (%s)", (scheme) => {
+    const hero = parseColor(token("--ds-hero", scheme));
+    expect(contrast(hero, surface(scheme))).toBeGreaterThanOrEqual(AA_LARGE);
+  });
+});
+
+describe("text on the ask-card presets", () => {
   const DARK_FILLS = ["--ds-fill-ink", "--ds-fill-midnight", "--ds-fill-steel"];
   const FOREGROUNDS = ["--ds-on-fill", "--ds-on-fill-muted"];
 
-  it.each(
-    SCHEMES.flatMap((scheme) =>
-      DARK_FILLS.flatMap((fill) => FOREGROUNDS.map((fg) => [scheme, fill, fg] as const))
-    )
-  )("%s: %s carries %s at AA", (scheme, fill, fg) => {
-    // Alpha-carrying foregrounds are flattened against the fill itself.
-    const bg = flatten(token(fill, scheme), BODY[scheme]);
-    expect(contrast(flatten(token(fg), bg), bg)).toBeGreaterThanOrEqual(AA);
-  });
-
-  it.each(SCHEMES)(
-    "the paper fill carries the on-paper ink and muted text at AA (%s)",
-    (scheme) => {
-      const bg = flatten(token("--ds-fill-paper", scheme), BODY[scheme]);
-      expect(ratio("--ds-on-paper", bg, scheme)).toBeGreaterThanOrEqual(AA);
-      expect(ratio("--ds-on-paper-muted", bg, scheme)).toBeGreaterThanOrEqual(AA);
+  it.each(DARK_FILLS.flatMap((fill) => FOREGROUNDS.map((fg) => [fill, fg] as const)))(
+    "%s carries %s at AA",
+    (fill, fg) => {
+      // Alpha-carrying foregrounds are flattened against the fill itself.
+      const bg = parseColor(token(fill));
+      expect(contrast(flatten(token(fg), bg), bg)).toBeGreaterThanOrEqual(AA);
     }
   );
 
-  it("the faint on-fill token is not strong enough for text", () => {
-    // Pinned so nobody promotes it to a Text colour: it exists for dashed rules
-    // and progress-ring tracks, where contrast is not a legibility requirement.
-    const bg = parseColor(token("--ds-fill-ink"));
-    expect(contrast(flatten(token("--ds-on-fill-faint"), bg), bg)).toBeLessThan(AA_LARGE);
+  it("the paper preset carries the on-paper ink and muted text at AA", () => {
+    const bg = parseColor(token("--ds-fill-paper"));
+    expect(ratio("--ds-on-paper", bg, "light")).toBeGreaterThanOrEqual(AA);
+    expect(ratio("--ds-on-paper-muted", bg, "light")).toBeGreaterThanOrEqual(AA);
   });
 
-  it("the white button on a fill carries its navy label at AA", () => {
+  it("the white button on a preset carries its navy label at AA", () => {
     const bg = parseColor(token("--ds-on-fill"));
     expect(ratio("--ds-on-fill-button-fg", bg, "light")).toBeGreaterThanOrEqual(AA);
   });
 });
 
 describe("controls", () => {
-  it("filled primary buttons carry white labels at AA", () => {
-    const fill = appTheme.colors!.primary![appTheme.primaryShade as number];
-    expect(contrast(parseColor(appTheme.white!), parseColor(fill))).toBeGreaterThanOrEqual(AA);
+  /** autoContrast labels the navy fill white, and the pale dark-mode fill with `black`. */
+  it("filled primary buttons carry their label at AA in both schemes", () => {
+    const shade = appTheme.primaryShade as number;
+    expect(contrast(parseColor(appTheme.white!), parseColor(navy[shade]))).toBeGreaterThanOrEqual(
+      AA
+    );
+    expect(
+      contrast(parseColor(appTheme.black!), parseColor(inverse[shade]))
+    ).toBeGreaterThanOrEqual(AA);
+  });
+
+  it.each([
+    ["light", navy],
+    ["dark", inverse],
+  ] as const)("the filled primary stands apart from the card surface (%s)", (scheme, palette) => {
+    const fill = parseColor(palette[appTheme.primaryShade as number]);
+    expect(contrast(fill, surface(scheme))).toBeGreaterThanOrEqual(AA_LARGE);
+  });
+
+  /** In dark mode Mantine draws outlines from shade 2 and links from shade 4. */
+  it("dark-mode outline buttons and links read on the card at AA", () => {
+    expect(contrast(parseColor(inverse[2]), surface("dark"))).toBeGreaterThanOrEqual(AA);
+    expect(contrast(parseColor(inverse[4]), surface("dark"))).toBeGreaterThanOrEqual(AA);
   });
 
   it("destructive buttons carry white labels at AA", () => {
@@ -161,11 +204,17 @@ describe("alert tones", () => {
  */
 describe("the Mantine palette and the stylesheet agree", () => {
   const SHADES: [string, string][] = [
-    ["--ds-navy", appTheme.colors!.primary![6]],
-    ["--ds-steel", appTheme.colors!.primary![5]],
+    ["--ds-navy", navy[6]],
+    ["--ds-steel", navy[5]],
     ["--ds-steel", appTheme.colors!.accent![6]],
-    ["--ds-tint", appTheme.colors!.primary![0]],
-    ["--ds-tint-deep", appTheme.colors!.primary![1]],
+    ["--ds-tint", navy[0]],
+    ["--ds-tint-deep", navy[1]],
+    ["--ds-ink-dark", inverse[0]],
+    ["--ds-tint-deep", inverse[2]],
+    ["--ds-link-dark", inverse[4]],
+    ["--ds-tint", inverse[6]],
+    ["--ds-navy-raised", inverse[8]],
+    ["--ds-navy", inverse[9]],
     ["--ds-ink", appTheme.colors!.ink![7]],
     ["--ds-muted", appTheme.colors!.ink![5]],
     ["--ds-midnight", appTheme.colors!.dark![7]],
@@ -178,8 +227,7 @@ describe("the Mantine palette and the stylesheet agree", () => {
     ["--ds-ink-dark", appTheme.colors!.dark![0]],
     ["--ds-muted-dark", appTheme.colors!.dark![2]],
     ["--ds-line-dark", appTheme.colors!.dark![4]],
-    ["--ds-midnight-hover", appTheme.colors!.dark![5]],
-    ["--ds-midnight-card", appTheme.colors!.dark![6]],
+    ["--ds-navy-raised", appTheme.colors!.dark![6]],
   ];
 
   it.each(SHADES)("%s is the same colour as its Mantine shade", (name, shade) => {

@@ -29,21 +29,30 @@ export const dangerText = "var(--ds-tone-red)";
 export const selectedBg = "var(--ds-selected-bg)";
 export const selectedBorder = "var(--ds-selected-border)";
 
-/** Foreground colours valid only on top of a dark brand fill. */
+/**
+ * Hero surfaces — the welcome card, the inbox link, ink question cards, a
+ * banner with no image — and what is painted on them. Navy with white ink in
+ * light mode, inverted in dark.
+ */
+export const heroBg = "var(--ds-hero)";
+export const onHero = "var(--ds-on-hero)";
+export const onHeroMuted = "var(--ds-on-hero-muted)";
+export const onHeroFaint = "var(--ds-on-hero-faint)";
+export const onHeroEdge = "var(--ds-on-hero-edge)";
+export const onHeroWash = "var(--ds-on-hero-wash)";
+
+/** Foreground colours for a dark ask-card preset, fixed in both schemes. */
 export const onFill = "var(--ds-on-fill)";
 export const onFillMuted = "var(--ds-on-fill-muted)";
-export const onFillFaint = "var(--ds-on-fill-faint)";
 export const onFillBorder = "var(--ds-on-fill-border)";
 
-/** Foreground colours valid only on top of the paper fill, in either scheme. */
+/** Foreground colours for the paper preset, in either scheme. */
 export const onPaper = "var(--ds-on-paper)";
 export const onPaperMuted = "var(--ds-on-paper-muted)";
 
-/** The navy fill behind every hero surface. */
+/** Fixed fills, for the image-theme previews. */
 export const fillInk = "var(--ds-fill-ink)";
 export const fillMidnight = "var(--ds-fill-midnight)";
-/** A profile banner with no image. */
-export const bannerFallback = "var(--ds-banner)";
 
 /** Avatar with no picture: tint fill, navy initials — never a hashed hue. */
 export const avatarFallback = {
@@ -58,16 +67,23 @@ export const radiusCard = "var(--ds-radius-card)";
 export const radiusControl = "var(--ds-radius-control)";
 export const radiusPill = "var(--ds-radius-pill)";
 
-/** A white button with navy text: the primary action on a navy surface. */
+/** The primary action on a hero surface: the hero's ink as the button, the hero as its label. */
+export const heroButton = {
+  background: onHero,
+  border: "none",
+  "--button-color": heroBg,
+} as const;
+
+/** The secondary action on a hero surface: a translucent outline in the hero's ink. */
+export const heroOutlineButton = {
+  background: "transparent",
+  border: `1px solid ${onHeroEdge}`,
+  "--button-color": onHero,
+} as const;
+
+/** A white button with navy text: the primary action on a dark ask-card preset. */
 export const onFillButton = {
   background: onFill,
   border: "none",
   "--button-color": "var(--ds-on-fill-button-fg)",
-} as const;
-
-/** The secondary action on a navy surface: a translucent outline in the fill's own ink. */
-export const onFillOutlineButton = {
-  background: "transparent",
-  border: `1px solid ${onFillBorder}`,
-  "--button-color": onFill,
 } as const;

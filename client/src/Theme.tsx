@@ -9,15 +9,15 @@ import {
   TextInput,
   Title,
   createTheme,
+  virtualColor,
   MantineColorsTuple,
 } from "@mantine/core";
 
 /**
- * Navy — the one fill. Shade 6 is the brand navy every primary control uses;
- * the lighter shades exist for Mantine's `light` variant (the Update chip) and
- * the deeper ones for hover.
+ * Navy — the one fill, and the primary colour in light mode. Shade 6 is the
+ * brand navy every filled control uses.
  */
-const primary: MantineColorsTuple = [
+const navy: MantineColorsTuple = [
   "#EDF2FB",
   "#C9D5EA",
   "#9BB4E6",
@@ -28,6 +28,25 @@ const primary: MantineColorsTuple = [
   "#0D1C3D",
   "#0B1428",
   "#070E1C",
+];
+
+/**
+ * The primary colour in dark mode, where filled controls invert to a pale fill
+ * with a navy label. Not a ramp: in dark mode Mantine reads shade 6 for the
+ * fill, 7 for its hover, 2 for outlines, 4 for links and 0 for light-variant
+ * text, so each index holds the value that role needs on the navy card.
+ */
+const inverse: MantineColorsTuple = [
+  "#F4F7FC",
+  "#E3E8F0",
+  "#C9D5EA",
+  "#B4C6E8",
+  "#9BB4E6",
+  "#DCE4F3",
+  "#EDF2FB",
+  "#DCE4F3",
+  "#1A3163",
+  "#10224A",
 ];
 
 /** Link — the second hue, for inline links and the composing-card border. */
@@ -72,16 +91,17 @@ const danger: MantineColorsTuple = [
   "#5E1D1D",
 ];
 
-// Dark mode surface colors — body=#0B1428 (midnight), Paper/card=#101E3C
+// Dark mode steps. Cards are the brand navy, which is the --ds-surface token
+// rather than a shade here; the page (body) is midnight.
 const dark: MantineColorsTuple = [
-  "#F4F7FC", // [0] light text
+  "#F4F7FC", // [0] text
   "#C6D0E3", // [1] body text
   "#9BA9C4", // [2] dimmed text
   "#8798B8", // [3] placeholder
-  "#1B2A4D", // [4] subtle border
-  "#16264A", // [5] hover
-  "#101E3C", // [6] Paper / card bg
-  "#0B1428", // [7] body bg (midnight)
+  "#2E447A", // [4] border
+  "#213875", // [5] hover
+  "#1A3163", // [6] raised: default controls, disabled fills
+  "#0B1428", // [7] body (midnight page)
   "#08101F", // [8]
   "#050A15", // [9]
 ];
@@ -127,7 +147,18 @@ const TOAST_SHADOW = "0 10px 24px -18px rgba(16,34,74,0.5)"; /* i18n-allow */
 const appTheme = createTheme({
   primaryColor: "primary",
   primaryShade: 6,
-  colors: { primary, accent, ink, danger, dark },
+  // A filled primary control's label comes from --mantine-color-primary-contrast,
+  // which Mantine only computes per scheme with autoContrast on.
+  autoContrast: true,
+  colors: {
+    navy,
+    inverse,
+    primary: virtualColor({ name: "primary", light: "navy", dark: "inverse" }),
+    accent,
+    ink,
+    danger,
+    dark,
+  },
   white: "#FFFFFF",
   black: "#111C36",
 

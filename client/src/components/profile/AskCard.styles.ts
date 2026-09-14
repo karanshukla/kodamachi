@@ -38,12 +38,13 @@ function foreground(fill: ProfileCardFill): CSSProperties {
   ) as CSSProperties;
 }
 
+/** Every preset carries a hairline: one of them always matches the page behind it. */
 export const card = (fill: ProfileCardFill, composing: boolean): CSSProperties => ({
   ...foreground(fill),
   borderRadius: radiusCard,
   padding: "30px 28px",
   background: fill.background,
-  border: fill.paper ? border : "none",
+  border,
   cursor: composing ? "text" : undefined,
   position: "relative",
   overflow: "hidden",

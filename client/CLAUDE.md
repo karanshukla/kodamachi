@@ -34,9 +34,12 @@ from "./Thing.styles"`). Anything computed from props is a named function there,
   not an inline ternary. If a style function needs a business rule, the rule belongs
   in the component or a hook.
 - **`src/index.css` is the single source of truth for colour**, in three layers:
-  brand primitives → semantic tokens (`--ds-surface`, `--ds-link`, …) → fixed
-  foregrounds (`--ds-on-fill*`, `--ds-on-paper*`, deliberately not scheme-aware).
-  Components read only from the last two.
+  brand primitives → semantic tokens (`--ds-surface`, `--ds-link`, `--ds-hero`,
+  …) → fixed foregrounds for the ask-card presets (`--ds-on-fill*`,
+  `--ds-on-paper*`). Components read only from the last two.
+- **Dark mode is the inverse of light.** Navy and white swap roles: navy paper
+  with white ink, and hero surfaces turn off-white with navy ink. Only the
+  ask-card presets and the image-theme previews keep their colour.
 - **The brand palette (layer 1a) is off-limits outside `index.css`.** A component
   spelling `var(--ds-navy)` survives a repaint as the old colour, so the contrast
   suite fails on it; give it a semantic token instead. Fills (1b) and the

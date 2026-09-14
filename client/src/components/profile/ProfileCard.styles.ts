@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 
-import { bannerFallback, borderColor, radiusCard, surface, textDefault } from "../../styles/tokens";
+import { heroBg, borderColor, radiusCard, surface, textDefault } from "../../styles/tokens";
 
 const BANNER_HEIGHT = 160;
 const AVATAR_SIZE = 84;
@@ -13,7 +13,7 @@ export const card: CSSProperties = {
 
 export const banner = (url?: string): CSSProperties => ({
   height: BANNER_HEIGHT,
-  background: url ? `url(${url}) center/cover no-repeat` : bannerFallback,
+  background: url ? `url(${url}) center/cover no-repeat` : heroBg,
   position: "relative",
 });
 

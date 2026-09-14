@@ -4,7 +4,7 @@ import { useHaptic } from "use-haptic";
 
 import { useTranslations } from "../../lib/i18n";
 import { warmOgCard } from "../../lib/ogWarm";
-import { onFillOutlineButton } from "../../styles/tokens";
+import { heroOutlineButton } from "../../styles/tokens";
 import ShareButton from "../ShareButton";
 
 import * as styles from "./InboxLinkCard.styles";
@@ -48,7 +48,7 @@ export function InboxLinkCard({ shortUrl, fullUrl, handle, shareData }: InboxLin
                   radius="md"
                   variant="default"
                   leftSection={<IconClipboard size={16} />}
-                  style={onFillOutlineButton}
+                  style={heroOutlineButton}
                 >
                   {copied ? messages.common.copied : messages.common.copy}
                 </Button>

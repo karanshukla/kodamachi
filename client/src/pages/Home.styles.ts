@@ -2,9 +2,9 @@ import type { CSSProperties } from "react";
 
 import {
   accentText,
-  fillInk,
+  heroBg,
   link,
-  onFill,
+  onHero,
   radiusCard,
   surface,
   textDimmed,
@@ -35,13 +35,13 @@ export const disclaimer: CSSProperties = {
   lineHeight: 1.55,
 };
 
-/** The welcome card is the one navy surface on the page. */
+/** The welcome card is the one hero surface on the page. */
 export const hero: CSSProperties = {
   padding: "40px 32px",
   textAlign: "center",
-  background: fillInk,
+  background: heroBg,
   borderRadius: radiusCard,
-  color: onFill,
+  color: onHero,
 };
 
 export const greeting: CSSProperties = {

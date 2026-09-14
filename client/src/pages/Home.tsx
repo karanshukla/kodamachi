@@ -22,7 +22,7 @@ import { ShortcutList, type Shortcut } from "../components/ShortcutList";
 import { APP_DOMAIN, APP_NAME } from "../lib/brand";
 import { useTranslations } from "../lib/i18n";
 import type { Messages } from "../lib/i18n/types";
-import { onFillButton, onFillOutlineButton } from "../styles/tokens";
+import { heroButton, heroOutlineButton } from "../styles/tokens";
 
 import * as styles from "./Home.styles";
 
@@ -172,7 +172,7 @@ function WelcomeBack({ profile }: { profile: SessionProfile }) {
             size="md"
             radius="md"
             variant="default"
-            style={onFillButton}
+            style={heroButton}
           >
             {messages.home.viewYourMessages}
           </Button>
@@ -187,7 +187,7 @@ function WelcomeBack({ profile }: { profile: SessionProfile }) {
                   size="md"
                   radius="md"
                   variant="default"
-                  style={onFillOutlineButton}
+                  style={heroOutlineButton}
                   leftSection={<IconClipboard size={16} />}
                 >
                   {copied ? messages.common.copied : messages.home.copyLinkButton}
@@ -199,7 +199,7 @@ function WelcomeBack({ profile }: { profile: SessionProfile }) {
             size="md"
             radius="md"
             variant="default"
-            style={onFillOutlineButton}
+            style={heroOutlineButton}
             leftSection={<IconShare size={16} />}
             onClick={share}
           >
