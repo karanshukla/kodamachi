@@ -54,5 +54,17 @@
   "status_codes": {
     "CHALLENGE": 200,
     "DENY": 200
+  },
+  "openGraph": {
+    "enabled": true,
+    "considerHost": false,
+    "ttl": "24h"
+  },
+  "impressum": {
+    "footer": "kodamachi is an open-source, AT Protocol-native anonymous Q&A app for Bluesky. This check runs once per browser to keep automated scrapers off the public inbox pages; it stores a single cookie and nothing else.",
+    "page": {
+      "title": "About this check",
+      "body": "<p>kodamachi uses <a href=\"https://anubis.techaro.lol\">Anubis</a> to filter automated traffic before it reaches the app. The proof-of-work check runs once per browser, sets a single cookie so it is not repeated, and processes only the connection metadata needed to serve the page.</p><p>kodamachi itself never sees the identity of anyone who sends an anonymous question. Source, licence and issue tracker: <a href=\"https://github.com/karanshukla/navyfragen-app\">github.com/karanshukla/navyfragen-app</a>.</p>"
+    }
   }
 }
