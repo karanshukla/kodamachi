@@ -18,7 +18,7 @@ const (
 type OGInput struct {
 	DisplayName string
 	Handle      string
-	Banner      string // empty → brand gradient fallback
+	Banner      string // empty → navy fallback
 	Avatar      string // empty → glyph fallback
 	Prompt      string // owner's customPrompt; empty → resolvePrompt's locale/English default
 	Locale      string // owner's touchpointLocale; empty → English default
@@ -99,9 +99,8 @@ func primarySubtag(locale string) string {
 // ── Palette ──────────────────────────────────────────────────────────────────
 //
 // Mirrors client/src/index.css's design tokens so a shared link looks like the
-// page it points at. The OG canvas has no colour scheme to follow, so it takes
-// the dark treatment the app's brand gradients already assume
-// (`--ds-on-grad-*` exists for exactly this reason).
+// page it points at: paper and ink, the light scheme, since a link card has no
+// colour scheme to follow and the design is light-mode-centric.
 //
 // [TestOGPalette_EveryTextColourClearsAAOnEverySurface] checks every text
 // colour here against every surface it can land on, and
@@ -110,22 +109,22 @@ func primarySubtag(locale string) string {
 // client/src/tests/theme/contrast.test.ts: changing a value below fails a test
 // rather than silently shipping unreadable text.
 const (
-	// ogGradMark matches --ds-grad-mark, the app's primary brand gradient.
-	ogGradMark = "linear-gradient(135deg, #3349E0 0%, #5322C5 55%, #4F1FA6 100%)"
+	// ogFillNavy matches --ds-fill-ink: the banner fallback, the mark tile and
+	// the prompt headline.
+	ogFillNavy = "#10224A"
 
-	// The content surface below the banner. A two-stop vertical ramp rather
-	// than a flat fill, so 440px of dark does not read as a void.
-	ogSurfaceTop    = "#1B1747"
-	ogSurfaceBottom = "#12102F"
+	ogSurface = "#FFFFFF"
 
-	ogText       = "#FDF8FF" // --ds-paper
-	ogTextMuted  = "#C3BCE4"
-	ogTextAccent = "#DCC9FF"
+	ogText      = "#111C36" // --ds-ink
+	ogTextMuted = "#63708C" // the design's "muted" step
 
 	// Chip and hairline are solid rather than alpha so their contrast is a
 	// fixed number the test can assert, not a function of what is behind them.
-	ogChipBG   = "#2C2560"
-	ogHairline = "#332B6B"
+	ogChipBG   = "#F4F6FA"
+	ogHairline = "#E3E8F0"
+
+	// The on-navy glyph.
+	ogMarkGlyph = "#FFFFFF"
 
 	// The flat darken over a user banner, copied from ProfileCard.styles.ts's
 	// bannerScrim. It exists to keep the avatar ring readable on a bright photo,
@@ -136,8 +135,8 @@ const (
 // ogSurfaces / ogTextColors enumerate the palette for the contrast test: every
 // text colour must clear AA against every surface it can land on.
 var (
-	ogSurfaces   = []string{ogSurfaceTop, ogSurfaceBottom, ogChipBG}
-	ogTextColors = []string{ogText, ogTextMuted, ogTextAccent}
+	ogSurfaces   = []string{ogSurface, ogChipBG}
+	ogTextColors = []string{ogText, ogTextMuted, ogFillNavy}
 )
 
 // ── Typography ───────────────────────────────────────────────────────────────
@@ -263,18 +262,14 @@ var promptMaxHeight = promptMaxLines * promptLineBox
 // given, not the /profile/:handle path the crawler happened to fetch.
 const shareDomain = "fragen.navy"
 
-// winkMark is the app's brand mark (client/src/components/WinkMark.tsx) inlined
-// as SVG. Inlining keeps it independent of the network: an OG render that
-// cannot reach a CDN still carries brand identity.
-const winkMark = `<svg class="mark" viewBox="0 0 160 160" aria-hidden="true">
-  <defs><linearGradient id="m" x1="0" y1="0" x2="1" y2="1">
-    <stop offset="0%" stop-color="#3349E0"/><stop offset="55%" stop-color="#6B3FD4"/><stop offset="100%" stop-color="#4F1FA6"/>
-  </linearGradient></defs>
-  <rect width="160" height="160" rx="36" fill="url(#m)"/>
-  <circle cx="60" cy="66" r="10" fill="#FDF8FF"/>
-  <path d="M88 70 Q100 56 112 70" stroke="#FDF8FF" stroke-width="10" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M50 96 Q80 124 110 96" stroke="#FDF8FF" stroke-width="10" fill="none" stroke-linecap="round"/>
-</svg>`
+// brandMark is the app's mark inlined as SVG: the navy tile with the glyph.
+// Inlining keeps it independent of the network: an OG render that cannot
+// reach a CDN still carries brand identity.
+//
+// Built by concatenation rather than through the template's slots: the
+// Replacer is single-pass, so a slot inside a substituted value would be
+// inserted literally ([TestBuildOGTemplate_LeavesNoUnfilledSlots]).
+var brandMark = `<svg class="mark" viewBox="0 0 160 160" aria-hidden="true"><rect width="160" height="160" rx="` + fmt.Sprint(MarkTileRadius) + `" fill="` + ogFillNavy + `"/><path d="` + MarkGlyphPath + `" fill="` + ogMarkGlyph + `"/></svg>`
 
 // ogTemplate is expanded by a strings.Replacer, not fmt.Sprintf. The CSS is
 // dense with percentages, and under fmt every one of them has to be written
@@ -296,7 +291,7 @@ const ogTemplate = `<!DOCTYPE html>
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     font-synthesis: none;
-    background: linear-gradient(180deg, {{SURFACE_TOP}} 0%, {{SURFACE_BOTTOM}} 100%);
+    background: {{SURFACE}};
     color: {{TEXT}};
     display: flex;
     flex-direction: column;
@@ -308,7 +303,7 @@ const ogTemplate = `<!DOCTYPE html>
     position: relative;
     height: {{BANNER_H}}px;
     flex-shrink: 0;
-    background: {{GRAD_MARK}};
+    background: {{FILL_NAVY}};
     overflow: hidden;
   }
   .banner img {
@@ -350,20 +345,20 @@ const ogTemplate = `<!DOCTYPE html>
        Avatar. */
     border-radius: {{AVATAR_RADIUS}}px;
     object-fit: cover;
-    background: {{GRAD_MARK}};
-    border: 6px solid {{SURFACE_TOP}};
+    background: {{FILL_NAVY}};
+    border: 6px solid {{SURFACE}};
     /* Glyph fallback shares this box, so it centres its letter. */
     display: flex; align-items: center; justify-content: center;
-    color: {{TEXT}};
-    font-size: 58px; font-weight: 800; line-height: 1;
+    color: {{MARK_GLYPH}};
+    font-size: 58px; font-weight: 600; line-height: 1;
   }
   .meta {
     min-width: 0;
     padding-top: {{NAME_GAP}}px;
   }
   .name {
-    font-size: {{NAME_FS}}px; font-weight: 800; line-height: {{NAME_LH}};
-    letter-spacing: -0.02em;
+    font-size: {{NAME_FS}}px; font-weight: 600; line-height: {{NAME_LH}};
+    letter-spacing: -0.03em;
     max-width: 900px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
   }
   .handle {
@@ -384,8 +379,9 @@ const ogTemplate = `<!DOCTYPE html>
     padding-top: {{PROMPT_GAP}}px;
   }
   .prompt {
-    font-size: {{PROMPT_FS}}px; font-weight: 800; line-height: {{PROMPT_LH}};
-    letter-spacing: -0.02em;
+    font-size: {{PROMPT_FS}}px; font-weight: 600; line-height: {{PROMPT_LH}};
+    letter-spacing: -0.03em;
+    color: {{FILL_NAVY}};
     display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: {{PROMPT_LINES}};
     max-width: 1010px;
     max-height: {{PROMPT_MAX_H}}px;
@@ -401,9 +397,8 @@ const ogTemplate = `<!DOCTYPE html>
   .brand { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
   .mark { width: {{MARK_SIZE}}px; height: {{MARK_SIZE}}px; flex-shrink: 0; }
   .wordmark {
-    font-size: 30px; font-weight: 800; letter-spacing: -0.03em; line-height: 1;
+    font-size: 30px; font-weight: 600; letter-spacing: -0.03em; line-height: 1;
   }
-  .wordmark span { color: {{TEXT_ACCENT}}; }
   /* The share link, in the same "fragen.navy/<handle>" pill the profile page
      uses (client/src/components/profile/ProfileUrlBar.tsx): bordered, domain
      muted and the handle emphasised, because the handle is the part a reader
@@ -418,7 +413,7 @@ const ogTemplate = `<!DOCTYPE html>
     border-radius: {{CHIP_RADIUS}}px;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
-  .chip b { color: {{TEXT}}; font-weight: 700; }
+  .chip b { color: {{TEXT}}; font-weight: 600; }
 </style>
 </head>
 <body>
@@ -444,9 +439,9 @@ const ogTemplate = `<!DOCTYPE html>
 </html>`
 
 // BuildOGTemplate renders an OG-sized (1200x630) HTML page laid out like the
-// profile page it previews: a banner strip (or the brand gradient when the
-// profile has none), the avatar straddling the seam, name and handle, the ask
-// prompt as the headline, and a navyfragen wordmark lockup.
+// profile page it previews: a banner strip (or solid navy when the profile has
+// none), the avatar straddling the seam, name and handle, the ask prompt as the
+// headline, and the wordmark lockup.
 //
 // All user-supplied strings are HTML-escaped — the output is fed to a headless
 // browser, so an unescaped payload would be a code-injection vector. Remote URLs
@@ -477,13 +472,12 @@ func BuildOGTemplate(in OGInput) string {
 		"{{FONT_STACK}}", ogFontStack,
 		"{{W}}", fmt.Sprint(OGWidth),
 		"{{H}}", fmt.Sprint(OGHeight),
-		"{{GRAD_MARK}}", ogGradMark,
-		"{{WORDMARK}}", AppNameWordmarkHTML,
-		"{{SURFACE_TOP}}", ogSurfaceTop,
-		"{{SURFACE_BOTTOM}}", ogSurfaceBottom,
+		"{{FILL_NAVY}}", ogFillNavy,
+		"{{MARK_GLYPH}}", ogMarkGlyph,
+		"{{WORDMARK}}", AppName,
+		"{{SURFACE}}", ogSurface,
 		"{{TEXT}}", ogText,
 		"{{TEXT_MUTED}}", ogTextMuted,
-		"{{TEXT_ACCENT}}", ogTextAccent,
 		"{{CHIP_BG}}", ogChipBG,
 		"{{HAIRLINE}}", ogHairline,
 		"{{BANNER_H}}", fmt.Sprint(bannerHeight),
@@ -511,7 +505,7 @@ func BuildOGTemplate(in OGInput) string {
 		"{{FOOTER_PAD}}", fmt.Sprint(footerPadTop),
 		"{{HAIRLINE_W}}", fmt.Sprint(hairlineWidth),
 		"{{CHIP_RADIUS}}", fmt.Sprint(chipRadiusPx),
-		"{{MARK_SVG}}", winkMark,
+		"{{MARK_SVG}}", brandMark,
 		"{{MARK_SIZE}}", fmt.Sprint(markSize),
 		"{{BANNER_IMG}}", buildBannerElement(in.Banner),
 		"{{AVATAR_EL}}", buildAvatarElement(in.Avatar, in.DisplayName, in.Handle),

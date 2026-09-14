@@ -171,9 +171,9 @@ func TestBuildOGTemplate_BannerEmpty(t *testing.T) {
 		Prompt:      "p",
 	})
 	mustContain(t, html, "bob.bsky.social")
-	mustNotContain(t, html, `url()`)        // no empty CSS url()
-	mustNotContain(t, html, `src=""`)       // no empty img src
-	mustContain(t, html, "linear-gradient") // brand gradient fallback bg
+	mustNotContain(t, html, `url()`)                // no empty CSS url()
+	mustNotContain(t, html, `src=""`)               // no empty img src
+	mustContain(t, html, "background: "+ogFillNavy) // navy fallback bg
 }
 
 func TestBuildOGTemplate_AvatarEmpty(t *testing.T) {
@@ -201,7 +201,7 @@ func TestBuildOGTemplate_BothEmpty(t *testing.T) {
 	mustContain(t, html, "dave.bsky.social")
 	mustNotContain(t, html, `url()`)
 	mustNotContain(t, html, `src=""`)
-	mustContain(t, html, "linear-gradient")
+	mustContain(t, html, "background: "+ogFillNavy)
 	mustContain(t, html, "D") // glyph
 }
 

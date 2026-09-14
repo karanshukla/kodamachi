@@ -46,16 +46,16 @@ func TestContrastRatio_RejectsALowContrastPair(t *testing.T) {
 // The muted colour is the one most likely to be nudged darker for taste, and it
 // is the one carrying the @handle. Pin the surface it actually sits on.
 func TestOGPalette_MutedHandleTextOnSurface(t *testing.T) {
-	if got := contrastRatio(t, ogTextMuted, ogSurfaceTop); got < wcagAA {
-		t.Fatalf("@handle (%s on %s) = %.2f:1, below AA", ogTextMuted, ogSurfaceTop, got)
+	if got := contrastRatio(t, ogTextMuted, ogSurface); got < wcagAA {
+		t.Fatalf("@handle (%s on %s) = %.2f:1, below AA", ogTextMuted, ogSurface, got)
 	}
 }
 
 // The chip is the one place where accent text sits on something other than the
 // page surface, so its own pair is asserted rather than assumed.
 func TestOGPalette_ChipTextOnChipBackground(t *testing.T) {
-	if got := contrastRatio(t, ogTextAccent, ogChipBG); got < wcagAA {
-		t.Fatalf("chip label (%s on %s) = %.2f:1, below AA", ogTextAccent, ogChipBG, got)
+	if got := contrastRatio(t, ogFillNavy, ogChipBG); got < wcagAA {
+		t.Fatalf("chip label (%s on %s) = %.2f:1, below AA", ogFillNavy, ogChipBG, got)
 	}
 }
 
