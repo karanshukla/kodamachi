@@ -38,6 +38,7 @@ function foreground(ink: boolean): CSSProperties {
     "--ds-card-accent": ink ? onHero : "var(--ds-link)",
     "--ds-card-edge": ink ? onHeroEdge : borderColor,
     "--ds-card-wash": ink ? onHeroWash : selectedBg,
+    ...(ink ? { "--ds-focus-ring": onHero } : {}),
   } as CSSProperties;
 }
 

@@ -122,7 +122,7 @@ function NotFoundPage() {
   return (
     <Container>
       <Paper p={40} radius="xl" withBorder ta="center" style={styles.notFoundCard}>
-        <Title order={2} fz={26} style={styles.notFoundTitle}>
+        <Title order={1} fz={26} style={styles.notFoundTitle}>
           {messages.notFoundPage.title}
         </Title>
         <Text c="dimmed" mt={8} maw={300} mx="auto">

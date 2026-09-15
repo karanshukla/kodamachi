@@ -131,6 +131,19 @@ describe("text on the ask-card presets", () => {
   });
 });
 
+/**
+ * WCAG 2.4.11 wants a focus indicator at 3:1 against what surrounds it. The
+ * ring is drawn outside the control, so it sits on the card or the page; on a
+ * hero surface it takes the hero's ink, which the hero tests above cover.
+ */
+describe("focus ring", () => {
+  it.each(SCHEMES)("shows against the card surface and the page (%s)", (scheme) => {
+    expect(ratio("--ds-focus-ring", surface(scheme), scheme)).toBeGreaterThanOrEqual(AA_LARGE);
+    const page = flatten(token("--ds-page", scheme), BODY[scheme]);
+    expect(ratio("--ds-focus-ring", page, scheme)).toBeGreaterThanOrEqual(AA_LARGE);
+  });
+});
+
 describe("controls", () => {
   /** autoContrast labels the navy fill white, and the pale dark-mode fill with `black`. */
   it("filled primary buttons carry their label at AA in both schemes", () => {

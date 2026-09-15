@@ -27,6 +27,7 @@ export interface ErrorMessages {
 
 export interface CommonMessages {
   cancel: string;
+  close: string;
   confirm: string;
   delete: string;
   retry: string;
@@ -160,6 +161,7 @@ export interface AppHeaderMessages {
   disableAnimations: string;
   enableAnimations: string;
   toggleColorScheme: string;
+  toggleNavigation: string;
 }
 
 export interface HomeMessages {

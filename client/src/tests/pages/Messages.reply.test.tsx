@@ -254,6 +254,15 @@ describe("Messages page — composing and posting a reply", () => {
     }
   });
 
+  it("pressing Enter on a button inside a card leaves the card closed", () => {
+    setupMocks();
+    renderWithProviders(<Messages />);
+
+    const pin = screen.getAllByRole("button", { name: en.questionCard.setAsThreadRootLabel })[0];
+    fireEvent.keyDown(pin, { key: "Enter" });
+    expect(screen.queryByRole("textbox", { name: en.replyComposer.responseAriaLabel })).toBeNull();
+  });
+
   it("clicking the card while it is expanded collapses it", async () => {
     setupMocks();
     renderWithProviders(<Messages />);

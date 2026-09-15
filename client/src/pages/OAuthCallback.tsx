@@ -47,7 +47,7 @@ export default function OAuthCallback() {
 
         {loading ? (
           <>
-            <Title order={2} fw={600} fz={22} ta="center">
+            <Title order={1} fw={600} fz={22} ta="center">
               {messages.oauthCallback.loggingIn}
             </Title>
             <Text size="sm" c="dimmed" ta="center">
@@ -59,7 +59,7 @@ export default function OAuthCallback() {
           </>
         ) : (
           <>
-            <Title order={2} fw={600} fz={22} ta="center" style={{ color: dangerText }}>
+            <Title order={1} fw={600} fz={22} ta="center" style={{ color: dangerText }}>
               {messages.oauthCallback.loginFailed}
             </Title>
             <Text size="sm" c="dimmed" ta="center">

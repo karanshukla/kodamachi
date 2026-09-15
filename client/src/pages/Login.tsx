@@ -122,6 +122,7 @@ function LoginForm() {
             variant="filled"
             size="md"
             radius="md"
+            aria-disabled={!search.isHandleReady}
             style={{
               opacity: search.isHandleReady ? 1 : 0.45,
               cursor: search.isHandleReady ? undefined : "not-allowed",

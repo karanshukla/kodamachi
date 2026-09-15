@@ -59,7 +59,7 @@ export function ProfileCard({ profile, clientId, openProfilesInApp }: ProfileCar
 
         <Group justify="space-between" align="flex-start" pt={48}>
           <Box>
-            <Text fw={800} fz={24} style={styles.displayName}>
+            <Text component="h1" fw={800} fz={24} style={styles.displayName}>
               {profile.displayName}
             </Text>
             <Text c="dimmed" mt={2} fz={13}>

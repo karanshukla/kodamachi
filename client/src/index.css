@@ -337,6 +337,14 @@ body {
   --switch-thumb-bg: var(--ds-surface);
 }
 
+/* Mantine rings focus in the primary colour, which on a hero surface or a navy
+   preset is the surface itself. Every ring reads --ds-focus-ring instead, and
+   those surfaces set it to their own ink. */
+:root .mantine-focus-auto:focus-visible,
+:root .mantine-focus-always:focus {
+  outline-color: var(--ds-focus-ring);
+}
+
 /* ── Layer 3: fixed foregrounds ── */
 /* Text on an ask-card preset. The presets keep their colour in both schemes,
    so these do not flip. -muted is the lightest alpha that still clears AA over

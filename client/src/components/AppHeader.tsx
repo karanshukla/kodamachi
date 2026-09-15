@@ -68,6 +68,7 @@ export function AppHeader({ opened, onBurgerToggle, burgerRef, onNavClose }: App
         }}
         hiddenFrom="sm"
         size="sm"
+        aria-label={messages.appHeader.toggleNavigation}
       />
       <Box
         component={Link}

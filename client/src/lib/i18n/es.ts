@@ -18,6 +18,7 @@ function pluralize(count: number, singular: string, plural: string): string {
 export const es = {
   common: {
     cancel: "Cancelar",
+    close: "Cerrar",
     confirm: "Confirmar",
     delete: "Eliminar",
     retry: "Reintentar",
@@ -180,6 +181,7 @@ export const es = {
     disableAnimations: "Desactivar animaciones",
     enableAnimations: "Activar animaciones",
     toggleColorScheme: "Cambiar esquema de color",
+    toggleNavigation: "Mostrar u ocultar la navegación",
   },
   customisePage: {
     heading: "Personalizar",

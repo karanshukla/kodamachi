@@ -12,6 +12,7 @@ const numberFormat = new Intl.NumberFormat("en");
 export const en = {
   common: {
     cancel: "Cancel",
+    close: "Close",
     confirm: "Confirm",
     delete: "Delete",
     retry: "Retry",
@@ -171,6 +172,7 @@ export const en = {
     disableAnimations: "Disable animations",
     enableAnimations: "Enable animations",
     toggleColorScheme: "Toggle color scheme",
+    toggleNavigation: "Toggle navigation",
   },
   customisePage: {
     heading: "Customise",

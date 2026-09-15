@@ -93,11 +93,12 @@ export function QuestionCard({
       id={`message-card-${message.tid}`}
       ref={cardRef}
       tabIndex={0}
-      role="button"
-      aria-expanded={expanded}
+      role="article"
+      aria-labelledby={`message-text-${message.tid}`}
       radius="lg"
       onFocus={onFocus}
       onKeyDown={(e) => {
+        if (e.target !== e.currentTarget) return;
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
           onToggleExpanded();
@@ -173,7 +174,7 @@ export function QuestionCard({
         </Group>
 
         <Box style={styles.bodyWrap}>
-          <Text fw={600} style={styles.body}>
+          <Text id={`message-text-${message.tid}`} fw={600} style={styles.body}>
             {message.message}
           </Text>
         </Box>

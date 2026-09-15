@@ -28,12 +28,14 @@ function foreground(fill: ProfileCardFill): CSSProperties {
           "--ds-card-fg-muted": onPaperMuted,
           "--ds-card-edge": "var(--ds-compose-border)",
           "--ds-card-input-bg": "var(--ds-compose-bg)",
+          "--ds-focus-ring": onPaper,
         }
       : {
           "--ds-card-fg": onFill,
           "--ds-card-fg-muted": onFillMuted,
           "--ds-card-edge": onFillBorder,
           "--ds-card-input-bg": "var(--ds-fill-paper)",
+          "--ds-focus-ring": onFill,
         }
   ) as CSSProperties;
 }

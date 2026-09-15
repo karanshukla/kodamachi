@@ -2,12 +2,13 @@ import type { CSSProperties } from "react";
 
 import { heroBg, onHero, onHeroMuted, radiusCard } from "../../styles/tokens";
 
-export const card: CSSProperties = {
+export const card = {
   borderRadius: radiusCard,
   background: heroBg,
   overflow: "hidden",
   padding: "22px 24px",
-};
+  "--ds-focus-ring": onHero,
+} as CSSProperties;
 
 export const eyebrow: CSSProperties = {
   color: onHeroMuted,

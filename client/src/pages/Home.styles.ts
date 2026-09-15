@@ -36,13 +36,14 @@ export const disclaimer: CSSProperties = {
 };
 
 /** The welcome card is the one hero surface on the page. */
-export const hero: CSSProperties = {
+export const hero = {
   padding: "40px 32px",
   textAlign: "center",
   background: heroBg,
   borderRadius: radiusCard,
   color: onHero,
-};
+  "--ds-focus-ring": onHero,
+} as CSSProperties;
 
 export const greeting: CSSProperties = {
   letterSpacing: "-0.02em",
