@@ -58,9 +58,6 @@ export const es = {
     notLoggedInTitle: "No has iniciado sesión",
     notLoggedInMessage: "Inicia sesión para ver tus mensajes.",
     heading: "Mensajes",
-    noMessagesCount: "sin mensajes",
-    newMessagesCount: (count: number) =>
-      `${numberFormat.format(count)} ${pluralize(count, "nuevo", "nuevos")}`,
     noMessagesTitle: "Todavía no hay preguntas",
     noMessagesBody: "Comparte tu enlace y la primera pregunta anónima llegará aquí.",
     addExampleMessages: "Añadir mensajes de ejemplo",
@@ -79,6 +76,7 @@ export const es = {
     title: "Preferencias de publicación",
     appendProfileLink: {
       label: "Añadir enlace de bandeja automáticamente",
+      shortLabel: "Enlace de bandeja",
       description: "Añade tu enlace a cada publicación. Reduce el límite de caracteres.",
     },
     useGradients: {
@@ -87,6 +85,7 @@ export const es = {
     },
     includeQuestionAsImage: {
       label: "Pregunta como imagen",
+      shortLabel: "Pregunta como imagen",
       description: "Genera una imagen compartible con texto alternativo automático.",
     },
     confirmBeforeDelete: {
@@ -97,8 +96,6 @@ export const es = {
       label: "Desplazamiento automático a mensajes",
       description: "Desplaza los mensajes nuevos a la vista cuando se cargan.",
     },
-    summary: (enabled: number, total: number) =>
-      `${numberFormat.format(enabled)} de ${numberFormat.format(total)} activas`,
   },
   questionCard: {
     cannotDeleteThreadRootTooltip: "Desancla el hilo primero",
@@ -140,6 +137,9 @@ export const es = {
     placeholder: "escribe tu respuesta…",
     replyToThread: "Responder al hilo",
     reply: "Responder",
+  },
+  preferencesBar: {
+    open: "Más ajustes",
   },
   imageThemePicker: {
     title: "Tema de imagen",

@@ -57,9 +57,6 @@ export const pt = {
     notLoggedInTitle: "Você não está logado",
     notLoggedInMessage: "Faça login para ver suas mensagens.",
     heading: "Mensagens",
-    noMessagesCount: "sem mensagens",
-    newMessagesCount: (count: number) =>
-      `${numberFormat.format(count)} ${pluralize(count, "nova", "novas")}`,
     noMessagesTitle: "Nenhuma pergunta ainda",
     noMessagesBody: "Compartilhe seu link e a primeira pergunta anônima vai chegar aqui.",
     addExampleMessages: "Adicionar mensagens de exemplo",
@@ -78,6 +75,7 @@ export const pt = {
     title: "Preferências de publicação",
     appendProfileLink: {
       label: "Anexar link da caixa de entrada automaticamente",
+      shortLabel: "Link da caixa",
       description: "Adiciona seu link a cada publicação. Reduz o limite de caracteres.",
     },
     useGradients: {
@@ -86,6 +84,7 @@ export const pt = {
     },
     includeQuestionAsImage: {
       label: "Pergunta como imagem",
+      shortLabel: "Pergunta como imagem",
       description: "Gera uma imagem compartilhável com texto alternativo automático.",
     },
     confirmBeforeDelete: {
@@ -96,8 +95,6 @@ export const pt = {
       label: "Rolagem automática até as mensagens",
       description: "Rola as mensagens novas para a tela quando são carregadas.",
     },
-    summary: (enabled: number, total: number) =>
-      `${numberFormat.format(enabled)} de ${numberFormat.format(total)} ativas`,
   },
   questionCard: {
     cannotDeleteThreadRootTooltip: "Desafixe o tópico primeiro",
@@ -139,6 +136,9 @@ export const pt = {
     placeholder: "escreva sua resposta…",
     replyToThread: "Responder ao tópico",
     reply: "Responder",
+  },
+  preferencesBar: {
+    open: "Mais configurações",
   },
   imageThemePicker: {
     title: "Tema da imagem",

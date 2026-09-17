@@ -11,6 +11,7 @@ import {
   resetMessagesPage,
   setupMocks,
   startRenderMutate,
+  togglePreference,
   typeAndSend,
 } from "./messagesHarness";
 
@@ -66,7 +67,7 @@ describe("Messages page — the question-image render pipeline", () => {
 
     // Nothing will ever settle this render now, so a status the queue does not
     // release leaves the send stuck with no error and no way to retry.
-    fireEvent.click(screen.getByLabelText(/question as image/i));
+    await togglePreference(en.postingPreferences.includeQuestionAsImage.label);
 
     await waitFor(() => expect(mockRespondMutate).toHaveBeenCalledTimes(1));
     expect(mockRespondMutate.mock.calls[0][0]).toMatchObject({
@@ -91,7 +92,7 @@ describe("Messages page — the question-image render pipeline", () => {
     setupMocks();
     renderWithProviders(<Messages />);
 
-    fireEvent.click(screen.getByLabelText(/question as image/i));
+    await togglePreference(en.postingPreferences.includeQuestionAsImage.label);
 
     const replyButtons = screen.getAllByRole("button", { name: isReplyTriggerName });
     fireEvent.click(replyButtons.find((b) => b.textContent?.includes("↩"))!);
@@ -110,8 +111,7 @@ describe("Messages page — the question-image render pipeline", () => {
 
     expect(screen.getByText("0/277")).toBeInTheDocument();
 
-    const imageSwitch = screen.getByLabelText(/question as image/i);
-    fireEvent.click(imageSwitch);
+    await togglePreference(en.postingPreferences.includeQuestionAsImage.label);
 
     await waitFor(() => {
       expect(screen.queryByText("0/277")).toBeNull();
@@ -143,7 +143,7 @@ describe("Messages page — the question-image render pipeline", () => {
     } as any);
     renderWithProviders(<Messages />);
 
-    fireEvent.click(screen.getByLabelText(/question as image/i));
+    await togglePreference(en.postingPreferences.includeQuestionAsImage.label);
     await openComposerFor();
     await typeAndSend();
 
@@ -273,7 +273,7 @@ describe("Messages page — the question-image render pipeline", () => {
     await openComposerFor();
     expect(startRenderMutate).not.toHaveBeenCalled();
 
-    fireEvent.click(screen.getByLabelText(/question as image/i));
+    await togglePreference(en.postingPreferences.includeQuestionAsImage.label);
 
     await waitFor(() => expect(startRenderMutate).toHaveBeenCalledTimes(1));
   });

@@ -10,6 +10,7 @@ import {
   mockUseUserSettings,
   resetMessagesPage,
   setupMocks,
+  togglePreference,
 } from "./messagesHarness";
 
 import { screen, fireEvent, waitFor, act } from "@testing-library/react";
@@ -206,8 +207,7 @@ describe("Messages page — composing and posting a reply", () => {
 
     expect(screen.getByText("0/277")).toBeInTheDocument();
 
-    const appendSwitch = screen.getByLabelText(/auto-append inbox link/i);
-    fireEvent.click(appendSwitch);
+    await togglePreference(en.postingPreferences.appendProfileLink.label);
 
     await waitFor(() => {
       expect(screen.queryByText("0/277")).toBeNull();

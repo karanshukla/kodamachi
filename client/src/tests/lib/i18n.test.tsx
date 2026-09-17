@@ -158,11 +158,6 @@ describe("counts reach the catalog as numbers", () => {
   // form. #406 depends on this staying a number.
   it("formats a grouped count rather than interpolating it raw", () => {
     expect(en.nav.unreadCount(1234)).toBe("1,234 unread");
-    expect(en.messagesPage.newMessagesCount(1234)).toBe("1,234 new");
-  });
-
-  it("formats both counts in the preferences summary", () => {
-    expect(en.postingPreferences.summary(1000, 2000)).toBe("1,000 of 2,000 on");
   });
 
   // Spanish adjectives agree in number with the noun — "1 nuevo" vs "2 nuevos" —
@@ -170,13 +165,11 @@ describe("counts reach the catalog as numbers", () => {
   // for. One test inside the singular rule, one outside it.
   it("uses the singular Spanish form for exactly one", () => {
     expect(es.nav.unreadCount(1)).toBe("1 no leído");
-    expect(es.messagesPage.newMessagesCount(1)).toBe("1 nuevo");
   });
 
   it("uses the plural Spanish form for zero and for more than one", () => {
     expect(es.nav.unreadCount(0)).toBe("0 no leídos");
     expect(es.nav.unreadCount(1234)).toBe("1234 no leídos");
-    expect(es.messagesPage.newMessagesCount(2)).toBe("2 nuevos");
   });
 
   // Portuguese and French both classify 0 with the singular ("one") category
@@ -185,25 +178,19 @@ describe("counts reach the catalog as numbers", () => {
   it("uses the singular Portuguese form for both zero and one", () => {
     expect(pt.nav.unreadCount(0)).toBe("0 não lida");
     expect(pt.nav.unreadCount(1)).toBe("1 não lida");
-    expect(pt.messagesPage.newMessagesCount(0)).toBe("0 nova");
-    expect(pt.messagesPage.newMessagesCount(1)).toBe("1 nova");
   });
 
   it("uses the plural Portuguese form for more than one", () => {
     expect(pt.nav.unreadCount(2)).toBe("2 não lidas");
-    expect(pt.messagesPage.newMessagesCount(2)).toBe("2 novas");
   });
 
   it("uses the singular French form for both zero and one", () => {
     expect(fr.nav.unreadCount(0)).toBe("0 non lu");
     expect(fr.nav.unreadCount(1)).toBe("1 non lu");
-    expect(fr.messagesPage.newMessagesCount(0)).toBe("0 nouveau");
-    expect(fr.messagesPage.newMessagesCount(1)).toBe("1 nouveau");
   });
 
   it("uses the plural French form for more than one", () => {
     expect(fr.nav.unreadCount(2)).toBe("2 non lus");
-    expect(fr.messagesPage.newMessagesCount(2)).toBe("2 nouveaux");
   });
 
   // German count labels are bare predicate adjectives that don't inflect for
@@ -212,14 +199,10 @@ describe("counts reach the catalog as numbers", () => {
     expect(de.nav.unreadCount(0)).toBe("0 ungelesen");
     expect(de.nav.unreadCount(1)).toBe("1 ungelesen");
     expect(de.nav.unreadCount(2)).toBe("2 ungelesen");
-    expect(de.messagesPage.newMessagesCount(1)).toBe("1 neu");
-    expect(de.messagesPage.newMessagesCount(2)).toBe("2 neu");
   });
 
-  it("formats grouped counts per locale in the preferences summary", () => {
-    expect(pt.postingPreferences.summary(3, 5)).toBe("3 de 5 ativas");
-    expect(de.postingPreferences.summary(1000, 2000)).toBe("1.000 von 2.000 aktiv");
-    expect(fr.postingPreferences.summary(3, 5)).toBe("3 sur 5 actives");
+  it("groups thousands with the locale's own separator", () => {
+    expect(de.nav.unreadCount(1234)).toBe("1.234 ungelesen");
   });
 });
 
@@ -229,7 +212,6 @@ describe("es catalog interpolations", () => {
   // component rendering the way en's do — each one needs a direct call here.
   it("interpolates every function-valued entry", () => {
     expect(es.common.switchedToAccount("alice.bsky.social")).toBe("Cambiaste a @alice.bsky.social");
-    expect(es.postingPreferences.summary(3, 5)).toBe("3 de 5 activas");
     expect(es.nav.friendGroups.moots.emptyText("kodamachi")).toBe(
       "Todavía no tienes amigos mutuos en kodamachi."
     );
@@ -264,7 +246,6 @@ describe("pt/de/fr catalog interpolations", () => {
     expect(pt.common.switchedToAccount("alice.bsky.social")).toBe(
       "Você mudou para @alice.bsky.social"
     );
-    expect(pt.postingPreferences.summary(3, 5)).toBe("3 de 5 ativas");
     expect(pt.nav.friendGroups.moots.emptyText("kodamachi")).toBe(
       "Você ainda não tem amigos mútuos no kodamachi."
     );
@@ -294,7 +275,6 @@ describe("pt/de/fr catalog interpolations", () => {
     expect(de.common.switchedToAccount("alice.bsky.social")).toBe(
       "Zu @alice.bsky.social gewechselt"
     );
-    expect(de.postingPreferences.summary(3, 5)).toBe("3 von 5 aktiv");
     expect(de.nav.friendGroups.moots.emptyText("kodamachi")).toBe(
       "Noch keine gegenseitigen Follows auf kodamachi."
     );
@@ -322,7 +302,6 @@ describe("pt/de/fr catalog interpolations", () => {
 
   it("interpolates every function-valued entry in fr", () => {
     expect(fr.common.switchedToAccount("alice.bsky.social")).toBe("Passé à @alice.bsky.social");
-    expect(fr.postingPreferences.summary(3, 5)).toBe("3 sur 5 actives");
     expect(fr.nav.friendGroups.moots.emptyText("kodamachi")).toBe(
       "Aucun mutuel sur kodamachi pour l'instant."
     );

@@ -57,9 +57,6 @@ export const fr = {
     notLoggedInTitle: "Non connecté",
     notLoggedInMessage: "Connecte-toi pour voir tes messages.",
     heading: "Messages",
-    noMessagesCount: "aucun message",
-    newMessagesCount: (count: number) =>
-      `${numberFormat.format(count)} ${pluralize(count, "nouveau", "nouveaux")}`,
     noMessagesTitle: "Pas encore de questions",
     noMessagesBody: "Partage ton lien et la première question anonyme arrivera ici.",
     addExampleMessages: "Ajouter des messages d'exemple",
@@ -78,6 +75,7 @@ export const fr = {
     title: "Préférences de publication",
     appendProfileLink: {
       label: "Ajouter automatiquement le lien de la boîte de réception",
+      shortLabel: "Lien de la boîte",
       description:
         "Ajoute ton lien à chaque publication. Réduit le nombre de caractères disponibles.",
     },
@@ -87,6 +85,7 @@ export const fr = {
     },
     includeQuestionAsImage: {
       label: "Question sous forme d'image",
+      shortLabel: "Question en image",
       description: "Génère une image partageable avec un texte alternatif automatique.",
     },
     confirmBeforeDelete: {
@@ -97,8 +96,6 @@ export const fr = {
       label: "Défilement automatique vers les messages",
       description: "Fait défiler les nouveaux messages à l'écran quand ils se chargent.",
     },
-    summary: (enabled: number, total: number) =>
-      `${numberFormat.format(enabled)} sur ${numberFormat.format(total)} actives`,
   },
   questionCard: {
     cannotDeleteThreadRootTooltip: "Détache d'abord le fil",
@@ -140,6 +137,9 @@ export const fr = {
     placeholder: "écris ta réponse…",
     replyToThread: "Répondre au fil",
     reply: "Répondre",
+  },
+  preferencesBar: {
+    open: "Plus de réglages",
   },
   imageThemePicker: {
     title: "Thème de l'image",

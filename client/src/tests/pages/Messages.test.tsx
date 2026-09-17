@@ -26,6 +26,10 @@ import Messages from "../../pages/Messages";
 import { renderWithProviders } from "../testUtils";
 /* eslint-enable import/order */
 
+/** The image-theme chip in the preferences bar, which opens the swatch picker. */
+const openThemePicker = () =>
+  screen.findByRole("button", { name: new RegExp(en.imageThemePicker.title) });
+
 describe("Messages page", () => {
   beforeEach(() => {
     resetMessagesPage();
@@ -76,11 +80,13 @@ describe("Messages page", () => {
     expect(screen.getByText(en.messagesPage.notLoggedInTitle)).toBeInTheDocument();
   });
 
-  it("renders Posting preferences and Image theme panel headers when messages exist", () => {
+  it("renders the preferences bar when messages exist", () => {
     setupMocks();
     renderWithProviders(<Messages />);
-    expect(screen.getByText(en.postingPreferences.title)).toBeInTheDocument();
-    expect(screen.getByText(en.imageThemePicker.title)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: en.preferencesBar.open })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: en.postingPreferences.includeQuestionAsImage.shortLabel })
+    ).toBeInTheDocument();
   });
 
   it("renders message card content", () => {
@@ -97,30 +103,29 @@ describe("Messages page", () => {
     expect(yearMatches.length).toBeGreaterThan(0);
   });
 
-  it("clicking 'Posting preferences' header does not throw", () => {
+  it("keeps each preference's description behind the Preferences button", async () => {
     setupMocks();
     renderWithProviders(<Messages />);
-    expect(() => fireEvent.click(screen.getByText(en.postingPreferences.title))).not.toThrow();
+    expect(screen.queryByText(en.postingPreferences.autoScrollToMessages.description)).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: en.preferencesBar.open }));
+
+    expect(
+      await screen.findByText(en.postingPreferences.autoScrollToMessages.description)
+    ).toBeInTheDocument();
   });
 
-  it("clicking 'Image theme' header does not throw", () => {
-    setupMocks();
-    renderWithProviders(<Messages />);
-    expect(() => fireEvent.click(screen.getByText(en.imageThemePicker.title))).not.toThrow();
-  });
-
-  it("renders Auto-scroll to messages switch in the preferences panel", () => {
-    setupMocks();
-    renderWithProviders(<Messages />);
-    expect(screen.getByText(en.postingPreferences.autoScrollToMessages.label)).toBeInTheDocument();
-  });
-
-  it("preferences counter reflects 5 total toggles", () => {
+  it("presses only the chips whose preference is on", () => {
     setupMocks();
     renderWithProviders(<Messages />);
     // Cleared localStorage falls back to the preference defaults: useGradients,
-    // includeQuestionAsImage, and autoScrollToMessages start enabled (3 of 5).
-    expect(screen.getByText(en.postingPreferences.summary(3, 5))).toBeInTheDocument();
+    // includeQuestionAsImage, and autoScrollToMessages start enabled.
+    expect(
+      screen.getByRole("button", { name: en.postingPreferences.includeQuestionAsImage.shortLabel })
+    ).toHaveAttribute("aria-pressed", "true");
+    expect(
+      screen.getByRole("button", { name: en.postingPreferences.appendProfileLink.shortLabel })
+    ).toHaveAttribute("aria-pressed", "false");
   });
 
   it("calls scrollIntoView with block:nearest when messages first load", async () => {
@@ -170,11 +175,10 @@ describe("Messages page", () => {
     scrollSpy.mockRestore();
   });
 
-  it("does not render panel headers when there are no messages", () => {
+  it("does not render the preferences bar when there are no messages", () => {
     setupMocks([]);
     renderWithProviders(<Messages />);
-    expect(screen.queryByText(en.postingPreferences.title)).toBeNull();
-    expect(screen.queryByText(en.imageThemePicker.title)).toBeNull();
+    expect(screen.queryByRole("button", { name: en.preferencesBar.open })).toBeNull();
   });
 
   it("shows a welcome-back toast notification after a new login", async () => {
@@ -336,13 +340,13 @@ describe("Messages page", () => {
     expect(() => fireEvent.click(copyBtn)).not.toThrow();
   });
 
-  it("clicking a ThemeCard saves only imageTheme when not loading", () => {
+  it("clicking a ThemeCard saves only imageTheme when not loading", async () => {
     setupMocks();
     const save = mockSettingsMutation();
     renderWithProviders(<Messages />);
 
-    const defaultThemeBtn = screen.getByRole("button", { name: en.themes.image.default });
-    fireEvent.click(defaultThemeBtn);
+    fireEvent.click(await openThemePicker());
+    fireEvent.click(await screen.findByRole("button", { name: en.themes.image.default }));
 
     expect(save).toHaveBeenCalledWith({ imageTheme: "default" });
   });
@@ -464,22 +468,28 @@ describe("Messages page", () => {
     expect(screen.getAllByText(imageThemeLabels(en).default).length).toBeGreaterThan(0);
   });
 
-  it("clicking a ThemeCard while settings are loading does not call updateSettings.mutate", () => {
+  it("cannot pick a theme while settings are loading", async () => {
     setupMocks();
     mockUseUserSettings.mockReturnValue({ data: undefined, isLoading: true } as any);
     const save = mockSettingsMutation();
     renderWithProviders(<Messages />);
 
-    fireEvent.click(screen.getByRole("button", { name: en.themes.image.default }));
+    expect(await openThemePicker()).toBeDisabled();
+
+    fireEvent.click(screen.getByRole("button", { name: en.preferencesBar.open }));
+    fireEvent.click(await screen.findByRole("button", { name: en.themes.image.default }));
+
     expect(save).not.toHaveBeenCalled();
   });
 
-  it("clicking a ThemeCard while its own save is in flight does not save again", () => {
+  it("cannot pick a theme while its own save is in flight", async () => {
     setupMocks();
     const save = mockSettingsMutation("imageTheme");
     renderWithProviders(<Messages />);
 
-    fireEvent.click(screen.getByRole("button", { name: en.themes.image.default }));
+    fireEvent.click(screen.getByRole("button", { name: en.preferencesBar.open }));
+    fireEvent.click(await screen.findByRole("button", { name: en.themes.image.default }));
+
     expect(save).not.toHaveBeenCalled();
   });
 
@@ -503,6 +513,7 @@ describe("Messages page", () => {
     localStorage.setItem("useGradients", JSON.stringify(false));
     setupMocks();
     renderWithProviders(<Messages />);
+    fireEvent.click(screen.getByRole("button", { name: en.preferencesBar.open }));
 
     await waitFor(() => {
       const gradientSwitch = screen.getByLabelText(

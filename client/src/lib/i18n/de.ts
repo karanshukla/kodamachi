@@ -58,9 +58,6 @@ export const de = {
     notLoggedInTitle: "Nicht angemeldet",
     notLoggedInMessage: "Bitte melde dich an, um deine Nachrichten zu sehen.",
     heading: "Nachrichten",
-    noMessagesCount: "keine Nachrichten",
-    newMessagesCount: (count: number) =>
-      `${numberFormat.format(count)} ${pluralize(count, "neu", "neu")}`,
     noMessagesTitle: "Noch keine Fragen",
     noMessagesBody: "Teile deinen Link, und die erste anonyme Frage landet hier.",
     addExampleMessages: "Beispielnachrichten hinzufügen",
@@ -79,6 +76,7 @@ export const de = {
     title: "Veröffentlichungseinstellungen",
     appendProfileLink: {
       label: "Posteingangslink automatisch anhängen",
+      shortLabel: "Posteingangslink",
       description: "Fügt deinen Link an jeden Beitrag an. Verringert das Zeichenbudget.",
     },
     useGradients: {
@@ -87,6 +85,7 @@ export const de = {
     },
     includeQuestionAsImage: {
       label: "Frage als Bild",
+      shortLabel: "Frage als Bild",
       description: "Erstellt ein teilbares Bild mit automatischem Alt-Text.",
     },
     confirmBeforeDelete: {
@@ -97,8 +96,6 @@ export const de = {
       label: "Automatisch zu Nachrichten scrollen",
       description: "Scrollt neue Nachrichten beim Laden in den sichtbaren Bereich.",
     },
-    summary: (enabled: number, total: number) =>
-      `${numberFormat.format(enabled)} von ${numberFormat.format(total)} aktiv`,
   },
   questionCard: {
     cannotDeleteThreadRootTooltip: "Thread zuerst lösen",
@@ -140,6 +137,9 @@ export const de = {
     placeholder: "schreib deine Antwort…",
     replyToThread: "Auf Thread antworten",
     reply: "Antworten",
+  },
+  preferencesBar: {
+    open: "Weitere Einstellungen",
   },
   imageThemePicker: {
     title: "Bild-Theme",

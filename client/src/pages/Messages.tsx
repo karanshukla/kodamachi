@@ -1,15 +1,4 @@
-import {
-  Alert,
-  Box,
-  Button,
-  Center,
-  Group,
-  Loader,
-  Paper,
-  SimpleGrid,
-  Text,
-  Title,
-} from "@mantine/core";
+import { Alert, Box, Button, Center, Loader, Paper, Text, Title } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { IconMailOpened } from "@tabler/icons-react";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -26,9 +15,8 @@ import {
 } from "../api/messageService";
 import { useUserSettings, useUpdateUserSettings } from "../api/settingsService";
 import { ConfirmationModal } from "../components/ConfirmationModal";
-import { ImageThemePicker } from "../components/messages/ImageThemePicker";
 import { InboxLinkCard } from "../components/messages/InboxLinkCard";
-import { PostingPreferences } from "../components/messages/PostingPreferences";
+import { MessagePreferencesBar } from "../components/messages/MessagePreferencesBar";
 import { QuestionGrid } from "../components/messages/QuestionGrid";
 import { postedAnswerLink } from "../lib/waypointClients";
 import { resolveApiErrorMessage } from "../lib/i18n/apiErrors";
@@ -199,12 +187,9 @@ export default function Messages() {
 
   return (
     <Box maw={1080}>
-      <Group justify="space-between" align="flex-end" mb="lg" wrap="wrap" gap="sm">
-        <Box>
-          <Title order={1}>{messages.messagesPage.heading}</Title>
-          {!messagesLoading && <MessageCount count={messageCount} />}
-        </Box>
-      </Group>
+      <Title order={1} mb="lg">
+        {messages.messagesPage.heading}
+      </Title>
 
       <InboxLinkCard
         shortUrl={shortUrl}
@@ -223,19 +208,14 @@ export default function Messages() {
         </Center>
       ) : messageCount > 0 ? (
         <>
-          <SimpleGrid
-            cols={{ base: 1, md: 2 }}
-            spacing="md"
-            mb="lg"
-            style={{ alignItems: "start" }}
-          >
-            <PostingPreferences state={prefs} />
-            <ImageThemePicker
-              selected={settingsLoading ? null : (userSettings?.imageTheme ?? null)}
-              disabled={settingsLoading || updateSettings.isSaving("imageTheme")}
-              onSelect={(imageTheme) => updateSettings.save({ imageTheme })}
+          <Box mb="lg">
+            <MessagePreferencesBar
+              state={prefs}
+              imageTheme={settingsLoading ? null : (userSettings?.imageTheme ?? null)}
+              imageThemeDisabled={settingsLoading || updateSettings.isSaving("imageTheme")}
+              onSelectImageTheme={(imageTheme) => updateSettings.save({ imageTheme })}
             />
-          </SimpleGrid>
+          </Box>
 
           <QuestionGrid
             messages={thread.ordered}
@@ -304,24 +284,6 @@ export default function Messages() {
         loading={deletingTid !== null && deletingTid === messageIdToDelete}
       />
     </Box>
-  );
-}
-
-function MessageCount({ count }: { count: number }) {
-  const messages = useTranslations();
-  return (
-    <Text fz={11} c="dimmed" mt={6} style={{ letterSpacing: "0.05em" }}>
-      {count > 0 ? (
-        <>
-          <span style={{ color: "var(--ds-attention-bg)" }} aria-hidden>
-            ●
-          </span>{" "}
-          {messages.messagesPage.newMessagesCount(count)}
-        </>
-      ) : (
-        messages.messagesPage.noMessagesCount
-      )}
-    </Text>
   );
 }
 

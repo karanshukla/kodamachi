@@ -52,8 +52,6 @@ export const en = {
     notLoggedInTitle: "Not logged in",
     notLoggedInMessage: "Please log in to see your messages.",
     heading: "Messages",
-    noMessagesCount: "no messages",
-    newMessagesCount: (count: number) => `${numberFormat.format(count)} new`,
     noMessagesTitle: "No questions yet",
     noMessagesBody: "Share your link and the first anonymous question will land here.",
     addExampleMessages: "Add example messages",
@@ -72,6 +70,7 @@ export const en = {
     title: "Posting preferences",
     appendProfileLink: {
       label: "Auto-append inbox link",
+      shortLabel: "Inbox link",
       description: "Appends your link to every post. Reduces character budget.",
     },
     useGradients: {
@@ -80,6 +79,7 @@ export const en = {
     },
     includeQuestionAsImage: {
       label: "Question as image",
+      shortLabel: "Question as image",
       description: "Generates a shareable image with auto alt text.",
     },
     confirmBeforeDelete: {
@@ -90,8 +90,6 @@ export const en = {
       label: "Auto-scroll to messages",
       description: "Scrolls new messages into view when they load.",
     },
-    summary: (enabled: number, total: number) =>
-      `${numberFormat.format(enabled)} of ${numberFormat.format(total)} on`,
   },
   questionCard: {
     cannotDeleteThreadRootTooltip: "Unpin thread first",
@@ -133,6 +131,9 @@ export const en = {
     placeholder: "write your reply…",
     replyToThread: "Reply to thread",
     reply: "Reply",
+  },
+  preferencesBar: {
+    open: "More settings",
   },
   imageThemePicker: {
     title: "Image theme",
