@@ -2,6 +2,7 @@ import { test, expect, type Page } from "@playwright/test";
 
 import { en } from "../../client/src/lib/i18n/en";
 import { escapeRegex } from "../helpers/i18n";
+import { flipSettingsSwitch, settingsSwitch } from "../helpers/settings-switch";
 
 test.use({ storageState: "e2e/.auth/user.json" });
 
@@ -81,13 +82,11 @@ test("posting-preferences switch toggles state", async ({ page }) => {
 
   // The switches live in the preferences bar's popover, not on the page.
   await page.getByRole("button", { name: en.preferencesBar.open }).click();
-  const autoScroll = page.getByRole("switch", {
-    name: en.postingPreferences.autoScrollToMessages.label,
-  });
+  const autoScroll = settingsSwitch(page, en.postingPreferences.autoScrollToMessages.label);
   await expect(autoScroll).toBeVisible({ timeout: 5_000 });
 
   const before = await autoScroll.isChecked();
-  await autoScroll.click();
+  await flipSettingsSwitch(autoScroll);
   if (before) {
     await expect(autoScroll).not.toBeChecked({ timeout: 5_000 });
   } else {
