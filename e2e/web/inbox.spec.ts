@@ -79,13 +79,11 @@ test("pin and unpin a thread root is local state only", async ({ page }) => {
 test("posting-preferences switch toggles state", async ({ page }) => {
   const seeded = await ensureExampleMessages(page);
 
-  const header = page.getByText(en.postingPreferences.title);
+  // The switches live in the preferences bar's popover, not on the page.
+  await page.getByRole("button", { name: en.preferencesBar.open }).click();
   const autoScroll = page.getByRole("switch", {
     name: en.postingPreferences.autoScrollToMessages.label,
   });
-  if (!(await autoScroll.isVisible().catch(() => false))) {
-    await header.click();
-  }
   await expect(autoScroll).toBeVisible({ timeout: 5_000 });
 
   const before = await autoScroll.isChecked();
