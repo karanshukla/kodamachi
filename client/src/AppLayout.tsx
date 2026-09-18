@@ -6,6 +6,7 @@ import { Link, Route, Routes } from "react-router";
 import { useSession, useSwitchAccount } from "./api/authService";
 import { AppHeader } from "./components/AppHeader";
 import { BouncingLogos } from "./components/BouncingLogos";
+import { Mascot } from "./components/Mascot";
 import { buildAccountSwitchUrl, consumeAccountSwitchToast } from "./lib/accountSwitchToast";
 import { useTranslations } from "./lib/i18n";
 import { consumeNotificationSwitchRequest } from "./lib/notificationSwitch";
@@ -122,6 +123,7 @@ function NotFoundPage() {
   return (
     <Container>
       <Paper p={40} radius="xl" withBorder ta="center" style={styles.notFoundCard}>
+        <Mascot mood="error" size={148} style={styles.notFoundMascot} />
         <Title order={1} fz={26} style={styles.notFoundTitle}>
           {messages.notFoundPage.title}
         </Title>

@@ -19,6 +19,10 @@ export const emptyIcon: CSSProperties = {
   justifyContent: "center",
 };
 
+export const emptyMascot: CSSProperties = {
+  marginBottom: 16,
+};
+
 export const emptyBody: CSSProperties = {
   lineHeight: 1.55,
 };

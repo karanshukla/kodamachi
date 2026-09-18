@@ -45,6 +45,10 @@ export const hero = {
   "--ds-focus-ring": onHero,
 } as CSSProperties;
 
+export const heroMascot: CSSProperties = {
+  marginBottom: 16,
+};
+
 export const greeting: CSSProperties = {
   letterSpacing: "-0.02em",
 };

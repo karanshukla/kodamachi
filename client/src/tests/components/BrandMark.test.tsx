@@ -1,11 +1,18 @@
 import { render } from "@testing-library/react";
 import React from "react";
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 
 import { BrandMark } from "../../components/BrandMark";
 import { APP_NAME, MARK_GLYPH_PATH } from "../../lib/brand";
+import { mascotSrc } from "../../lib/mascot";
+
+vi.mock("../../lib/mascot", () => ({ mascotSrc: vi.fn() }));
 
 describe("BrandMark", () => {
+  beforeEach(() => {
+    vi.mocked(mascotSrc).mockReset();
+  });
+
   it("renders the 木 tile without crashing with default props", () => {
     const { container } = render(<BrandMark />);
     const svg = container.querySelector("svg");
@@ -39,5 +46,24 @@ describe("BrandMark", () => {
     expect(svg!.getAttribute("role")).toBeNull();
     expect(svg!.getAttribute("aria-label")).toBeNull();
     expect(svg!.getAttribute("aria-hidden")).toBe("true");
+  });
+
+  it("draws the mascot mark in place of 木 once the artwork exists", () => {
+    vi.mocked(mascotSrc).mockReturnValue("/assets/mark.svg");
+    const { container } = render(<BrandMark size={64} />);
+    const img = container.querySelector("img")!;
+    expect(mascotSrc).toHaveBeenCalledWith("mark");
+    expect(container.querySelector("svg")).toBeNull();
+    expect(img.getAttribute("src")).toBe("/assets/mark.svg");
+    expect(img.getAttribute("width")).toBe("64");
+    expect(img.getAttribute("alt")).toBe(APP_NAME);
+  });
+
+  it("gives the mascot mark an empty alt when aria-hidden is true", () => {
+    vi.mocked(mascotSrc).mockReturnValue("/assets/mark.svg");
+    const { container } = render(<BrandMark aria-hidden />);
+    const img = container.querySelector("img")!;
+    expect(img.getAttribute("alt")).toBe("");
+    expect(img.getAttribute("aria-hidden")).toBe("true");
   });
 });

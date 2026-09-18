@@ -15,6 +15,7 @@ import {
 } from "../api/messageService";
 import { useUserSettings, useUpdateUserSettings } from "../api/settingsService";
 import { ConfirmationModal } from "../components/ConfirmationModal";
+import { Mascot } from "../components/Mascot";
 import { InboxLinkCard } from "../components/messages/InboxLinkCard";
 import { MessagePreferencesBar } from "../components/messages/MessagePreferencesBar";
 import { QuestionGrid } from "../components/messages/QuestionGrid";
@@ -243,9 +244,16 @@ export default function Messages() {
         </>
       ) : (
         <Paper withBorder p={40} radius="lg" ta="center" style={styles.emptyState}>
-          <div style={styles.emptyIcon}>
-            <IconMailOpened size={26} stroke={1.5} />
-          </div>
+          <Mascot
+            mood="neutral"
+            size={148}
+            style={styles.emptyMascot}
+            fallback={
+              <div style={styles.emptyIcon}>
+                <IconMailOpened size={26} stroke={1.5} />
+              </div>
+            }
+          />
           <Text fw={600} fz={18}>
             {messages.messagesPage.noMessagesTitle}
           </Text>

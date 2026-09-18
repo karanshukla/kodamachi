@@ -7,6 +7,7 @@ import { apiClient } from "../api/apiClient";
 import { authKeys } from "../api/authService";
 import { AuthPanel } from "../components/AuthPanel";
 import { BrandMark } from "../components/BrandMark";
+import { Mascot } from "../components/Mascot";
 import { useTranslations } from "../lib/i18n";
 import { resolveApiErrorMessage } from "../lib/i18n/apiErrors";
 import { dangerText } from "../styles/tokens";
@@ -42,7 +43,11 @@ export default function OAuthCallback() {
     <Box maw={480} mx="auto" mt="xl">
       <AuthPanel>
         <Box ta="center">
-          <BrandMark size={56} />
+          <Mascot
+            mood={loading ? "neutral" : "error"}
+            size={112}
+            fallback={<BrandMark size={56} />}
+          />
         </Box>
 
         {loading ? (
