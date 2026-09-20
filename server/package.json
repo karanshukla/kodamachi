@@ -33,7 +33,7 @@
     "@atproto/oauth-client-node": "^0.5.7",
     "@atproto/syntax": "^0.7.4",
     "@atproto/xrpc-server": "^0.13.1",
-    "@aturi.to/waypoints": "0.1.3",
+    "@aturi.to/waypoints": "0.1.4",
     "@axiomhq/pino": "^2.0.0",
     "@hono/zod-validator": "^0.9.0",
     "@types/cryptr": "^4.0.3",
