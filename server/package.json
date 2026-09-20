@@ -41,7 +41,7 @@
     "cryptr": "^6.4.0",
     "dotenv": "^17.4.2",
     "envalid": "^8.2.0",
-    "hono": "^4.13.5",
+    "hono": "^4.13.8",
     "hono-rate-limiter": "^0.5.3",
     "kysely": "^0.29.5",
     "multiformats": "^14.0.5",
