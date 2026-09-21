@@ -25,11 +25,14 @@ test.beforeEach(async ({ page }) => {
 });
 
 test("settings page renders key cards", async ({ page }) => {
-  // Card titles are bold <Text>, not headings.
-  await expect(page.getByText(en.settingsPage.pdsSync, { exact: true })).toBeVisible({
+  await expect(
+    page.getByRole("heading", { name: en.settingsPage.pdsSync, exact: true })
+  ).toBeVisible({
     timeout: 10_000,
   });
-  await expect(page.getByText(en.pushNotificationsCard.title, { exact: true })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: en.pushNotificationsCard.title, exact: true })
+  ).toBeVisible();
 });
 
 test("PDS sync toggle flips and is restored afterwards", async ({ page }) => {
