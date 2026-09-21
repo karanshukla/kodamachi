@@ -58,7 +58,7 @@ export function AppHeader({ opened, onBurgerToggle, burgerRef, onNavClose }: App
   };
 
   return (
-    <Group h="100%" px="md">
+    <Group h="100%" px="md" gap="sm" wrap="nowrap">
       <Burger
         ref={burgerRef}
         opened={opened}
@@ -78,9 +78,9 @@ export function AppHeader({ opened, onBurgerToggle, burgerRef, onNavClose }: App
         <Wordmark size={17} />
       </Box>
 
-      <UpdateAvailableButton />
-
       <Flex gap="sm" justify="flex-end" align="center" style={{ flexGrow: 1 }}>
+        <UpdateAvailableButton />
+
         {hasBounceGap && (
           <Button
             onClick={() => {

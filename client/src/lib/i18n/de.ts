@@ -326,7 +326,6 @@ export const de = {
     ariaLabel: "Update verfügbar — zum Anwenden neu laden",
     buttonLabel: "Update",
     applyingAriaLabel: "Update wird angewendet — die Seite wird neu geladen",
-    applyingLabel: "Aktualisiere…",
   },
   userMenu: {
     switchAccountErrorTitle: "Konto konnte nicht gewechselt werden",

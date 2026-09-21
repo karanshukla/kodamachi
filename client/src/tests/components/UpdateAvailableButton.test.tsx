@@ -80,7 +80,7 @@ describe("UpdateAvailableButton", () => {
     expect(triggerHaptic).toHaveBeenCalledTimes(1);
   });
 
-  it("shows a pending state while the update is being applied", async () => {
+  it("keeps its label while the update is being applied, so the header does not reflow", async () => {
     swUpdate.setUpdateApplier(vi.fn());
     swUpdate.markUpdateReady();
     renderWithProviders(<UpdateAvailableButton />);
@@ -90,7 +90,8 @@ describe("UpdateAvailableButton", () => {
     const button = screen.getByRole("button", {
       name: en.updateAvailableButton.applyingAriaLabel,
     });
-    expect(button).toHaveTextContent(en.updateAvailableButton.applyingLabel);
+    expect(button).toHaveTextContent(en.updateAvailableButton.buttonLabel);
+    expect(button).toHaveAttribute("data-loading", "true");
     expect(button).toBeDisabled();
   });
 

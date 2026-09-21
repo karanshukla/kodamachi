@@ -324,7 +324,6 @@ export const es = {
     ariaLabel: "Actualización disponible — recarga para aplicarla",
     buttonLabel: "Actualizar",
     applyingAriaLabel: "Aplicando la actualización — la página se recargará",
-    applyingLabel: "Actualizando…",
   },
   userMenu: {
     switchAccountErrorTitle: "No se pudo cambiar de cuenta",

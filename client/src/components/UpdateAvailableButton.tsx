@@ -1,4 +1,4 @@
-import { Button } from "@mantine/core";
+import { Box, Button } from "@mantine/core";
 import { IconRefresh } from "@tabler/icons-react";
 import { useState, useSyncExternalStore } from "react";
 import { useHaptic } from "use-haptic";
@@ -12,7 +12,8 @@ export function UpdateAvailableButton() {
   const updateReady = useSyncExternalStore(subscribeToUpdate, isUpdateReady, isUpdateReady);
   // Applying swaps the waiting worker in and reloads the page, which takes long
   // enough to look like nothing happened. The state only has to outlive the
-  // click: the reload tears the component down.
+  // click: the reload tears the component down. The label stays put under the
+  // spinner, so the header does not reflow in the moment before the reload.
   const [applying, setApplying] = useState(false);
   const { triggerHaptic } = useHaptic(1);
   const messages = useTranslations();
@@ -29,20 +30,22 @@ export function UpdateAvailableButton() {
       loading={applying}
       disabled={applying}
       size="xs"
+      px={{ base: 7, xs: 14 }}
       radius="xl"
       variant="light"
       color="accent"
       style={styles.chip}
-      leftSection={<IconRefresh size={14} />}
+      styles={styles.iconAndLabel}
       aria-label={
         applying
           ? messages.updateAvailableButton.applyingAriaLabel
           : messages.updateAvailableButton.ariaLabel
       }
     >
-      {applying
-        ? messages.updateAvailableButton.applyingLabel
-        : messages.updateAvailableButton.buttonLabel}
+      <IconRefresh size={14} aria-hidden />
+      <Box component="span" visibleFrom="xs">
+        {messages.updateAvailableButton.buttonLabel}
+      </Box>
     </Button>
   );
 }

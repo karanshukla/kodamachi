@@ -326,7 +326,6 @@ export const fr = {
     ariaLabel: "Mise à jour disponible — recharge pour l'appliquer",
     buttonLabel: "Mettre à jour",
     applyingAriaLabel: "Application de la mise à jour — la page va être rechargée",
-    applyingLabel: "Mise à jour…",
   },
   userMenu: {
     switchAccountErrorTitle: "Impossible de changer de compte",

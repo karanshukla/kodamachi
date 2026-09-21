@@ -366,7 +366,6 @@ export interface UpdateAvailableButtonMessages {
   ariaLabel: string;
   buttonLabel: string;
   applyingAriaLabel: string;
-  applyingLabel: string;
 }
 
 export interface UserMenuMessages {
