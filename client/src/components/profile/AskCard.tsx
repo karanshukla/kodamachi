@@ -6,7 +6,6 @@ import { useTranslations } from "../../lib/i18n";
 import type { ProfileCardFill } from "../../lib/themes";
 import type { TouchpointTranslations } from "../../lib/touchpointTranslations";
 import { useNumberFormat } from "../../lib/useNumberFormat";
-import { Mascot } from "../Mascot";
 
 import * as styles from "./AskCard.styles";
 
@@ -81,19 +80,12 @@ export function AskCard({
           </Alert>
         )}
         {!open ? (
-          <>
-            <Mascot mood="neutral" size={104} />
-            <Text ta="center" fz={14} style={styles.closedNotice}>
-              {translations.inboxClosed}
-            </Text>
-          </>
+          <Text ta="center" fz={14} style={styles.closedNotice}>
+            {translations.inboxClosed}
+          </Text>
         ) : sent ? (
           <div role="status" style={styles.sentState}>
-            <Mascot
-              mood="success"
-              size={104}
-              fallback={<IconCircleCheck size={32} stroke={1.5} aria-hidden />}
-            />
+            <IconCircleCheck size={32} stroke={1.5} aria-hidden />
             <Text fw={600} fz={18}>
               {messages.publicProfilePage.messageSentTitle}
             </Text>

@@ -77,8 +77,7 @@ sits behind it.
 The redesign is the Claude Design handoff vendored at `docs/design/kodamachi-handoff/`
 (`Kodamachi Foundations.dc.html` holds the palette, type and chrome rules; `github.md`
 maps each screen to the files under `client/src`). The handoff reserves mascot slots
-but supplies no artwork. `Mascot` fills them from `client/src/assets/mascot/`, and each
-slot keeps its current UI until its file exists.
+but supplies no artwork, so the app ships no mascot until there is a real drawing.
 The rules that matter for code:
 
 - **Two hues plus danger.** Navy (`#10224A`) and Link (`#234B94`) carry every state;

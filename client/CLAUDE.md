@@ -51,11 +51,8 @@ from "./Thing.styles"`). Anything computed from props is a named function there,
   `ink`, `danger`. `color="sunshine"` was a claim about a hue that a repaint would
   falsify.
 - **The mark is 木.** `BrandMark` draws the glyph as an outline (no serif webfont).
-  The design source is `docs/design/kodamachi-handoff/`.
-- **Mascots are artwork files, never drawn in code.** `<Mascot mood>` (neutral,
-  success, error) and `BrandMark` read `src/assets/mascot/{neutral,success,error,mark}.*`
-  by name and render their fallback until the file exists. One mascot per screen,
-  only on empty, loading, error or confirmed states; see that folder's README.
+  The handoff's mascot slots stay empty until there is real artwork; do not draw
+  one in code. The design source is `docs/design/kodamachi-handoff/`.
 - **No component calls `useComputedColorScheme` to choose a colour** — light values
   sit on `:root`, dark under `:root[data-mantine-color-scheme="dark"]`, and the
   browser picks. Reaching for an `isDark` prop means you want a token.

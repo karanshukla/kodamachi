@@ -18,7 +18,6 @@ import { Link } from "react-router";
 
 import { useSession } from "../api/authService";
 import { useSyncMessages } from "../api/messageService";
-import { Mascot } from "../components/Mascot";
 import { ShortcutList, type Shortcut } from "../components/ShortcutList";
 import { APP_DOMAIN, APP_NAME } from "../lib/brand";
 import { useTranslations } from "../lib/i18n";
@@ -164,7 +163,6 @@ function WelcomeBack({ profile }: { profile: SessionProfile }) {
 
   return (
     <Paper style={styles.hero}>
-      <Mascot mood="neutral" size={132} style={styles.heroMascot} />
       <Text fw={600} fz={24} style={styles.greeting}>
         {messages.home.welcomeBackGreetingPrefix} {name}
       </Text>
