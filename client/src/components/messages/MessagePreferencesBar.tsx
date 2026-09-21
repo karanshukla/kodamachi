@@ -215,7 +215,7 @@ export function MessagePreferencesBar({
               </UnstyledButton>
             </Popover.Target>
             <Popover.Dropdown>
-              <Text fw={700} fz={15} mb="sm">
+              <Text fw={600} fz={15} mb="sm">
                 {messages.imageThemePicker.title}
               </Text>
               {themeSwatches}
@@ -248,7 +248,7 @@ export function MessagePreferencesBar({
             </Button>
           </Popover.Target>
           <Popover.Dropdown>
-            <Text fw={700} fz={15}>
+            <Text fw={600} fz={15}>
               {copy.title}
             </Text>
             {panelBody}

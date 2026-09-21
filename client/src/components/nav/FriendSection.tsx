@@ -76,7 +76,6 @@ function FriendIdentity({ friend }: { friend: Friend }) {
     <Group gap={10} wrap="nowrap" style={{ overflow: "hidden", width: "100%" }}>
       <Avatar
         size={28}
-        radius="xl"
         src={friend.avatar || undefined}
         alt={friend.displayName || friend.handle}
         style={{ flexShrink: 0 }}

@@ -79,19 +79,12 @@ export function UserMenu({
       styles={styles.menu}
     >
       <Menu.Target>
-        <Button
-          onClick={triggerHaptic}
-          variant="transparent"
-          px={8}
-          radius="xl"
-          style={styles.trigger}
-        >
+        <Button onClick={triggerHaptic} variant="transparent" px={8} style={styles.trigger}>
           <Group gap="xs">
             <Avatar
               size={28}
               src={userProfile.avatar || undefined}
               alt={userProfile.displayName || messages.userMenu.userAvatarAltFallback}
-              radius="xl"
               styles={avatarFallback}
             >
               {initialsOf(userProfile.displayName || userProfile.handle)}
@@ -119,7 +112,7 @@ export function UserMenu({
                   disabled={isActive || isSwitching}
                   onClick={() => handleSwitch(acct.did, acct.handle || acct.did)}
                   leftSection={
-                    <Avatar size={20} src={acct.avatar || undefined} radius="xl">
+                    <Avatar size={20} src={acct.avatar || undefined}>
                       {(acct.handle || "?").charAt(0).toUpperCase()}
                     </Avatar>
                   }

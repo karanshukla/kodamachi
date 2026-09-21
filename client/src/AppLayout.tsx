@@ -121,26 +121,24 @@ function NotFoundPage() {
   const messages = useTranslations();
   const { data: session } = useSession();
   return (
-    <Container>
-      <Paper p={40} radius="xl" withBorder ta="center" style={styles.notFoundCard}>
-        <Mascot mood="error" size={148} style={styles.notFoundMascot} />
-        <Title order={1} fz={26} style={styles.notFoundTitle}>
-          {messages.notFoundPage.title}
-        </Title>
-        <Text c="dimmed" mt={8} maw={300} mx="auto">
-          {messages.notFoundPage.message}
-        </Text>
-        <Group justify="center" gap={8} mt={24}>
-          <Button component={Link} to="/" variant="filled">
-            {messages.notFoundPage.goHome}
+    <Paper p={40} radius="xl" withBorder ta="center">
+      <Mascot mood="error" size={148} style={styles.notFoundMascot} />
+      <Title order={1} fz={26} style={styles.notFoundTitle}>
+        {messages.notFoundPage.title}
+      </Title>
+      <Text c="dimmed" mt={8} maw={300} mx="auto">
+        {messages.notFoundPage.message}
+      </Text>
+      <Group justify="center" gap={8} mt={24}>
+        <Button component={Link} to="/" variant="filled">
+          {messages.notFoundPage.goHome}
+        </Button>
+        {session?.isLoggedIn && (
+          <Button component={Link} to="/messages" variant="outline">
+            {messages.notFoundPage.yourMessages}
           </Button>
-          {session?.isLoggedIn && (
-            <Button component={Link} to="/messages" variant="outline">
-              {messages.notFoundPage.yourMessages}
-            </Button>
-          )}
-        </Group>
-      </Paper>
-    </Container>
+        )}
+      </Group>
+    </Paper>
   );
 }

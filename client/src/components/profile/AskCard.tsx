@@ -63,7 +63,7 @@ export function AskCard({
       style={styles.card(fill, composing)}
     >
       {!sent && (
-        <Text fw={600} mb="lg" ta="center" fz={21} style={styles.headline}>
+        <Text component="h2" fw={600} mb="lg" ta="center" fz={21} style={styles.headline}>
           {headline}
         </Text>
       )}

@@ -75,19 +75,21 @@ body {
   position: relative;
 }
 
-.app-shell-boundary::before {
-  content: "";
-  position: fixed;
-  top: 0;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 1400px;
-  max-width: 100vw;
-  pointer-events: none;
-  border-left: 1px solid var(--ds-boundary-border);
-  border-right: 1px solid var(--ds-boundary-border);
-  z-index: 200;
+/* Below the column width the dividers would sit on the screen edges. */
+@media (min-width: 87.5em) {
+  .app-shell-boundary::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 1400px;
+    pointer-events: none;
+    border-left: 1px solid var(--ds-boundary-border);
+    border-right: 1px solid var(--ds-boundary-border);
+    z-index: 200;
+  }
 }
 
 /* Center + clip the fixed header to the 1400px column without an ancestor
@@ -343,6 +345,13 @@ body {
 :root .mantine-focus-auto:focus-visible,
 :root .mantine-focus-always:focus {
   outline-color: var(--ds-focus-ring);
+}
+
+/* Mantine signals input focus through the border alone, which a card that sets
+   its own input border (the ask card, the reply composer) overrides. */
+:root .mantine-Input-input:focus-visible {
+  outline: 2px solid var(--ds-focus-ring);
+  outline-offset: 2px;
 }
 
 /* ── Layer 3: fixed foregrounds ── */

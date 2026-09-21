@@ -1,4 +1,4 @@
-import { Alert, Container } from "@mantine/core";
+import { Alert } from "@mantine/core";
 
 import { Mascot } from "../Mascot";
 
@@ -16,11 +16,11 @@ interface ProfileNoticeProps {
  */
 export function ProfileNotice({ tone, title, children }: ProfileNoticeProps) {
   return (
-    <Container>
+    <>
       <Mascot mood={tone === "red" ? "error" : "neutral"} size={132} style={{ marginBottom: 16 }} />
       <Alert color={tone} title={title} withCloseButton={false}>
         {children}
       </Alert>
-    </Container>
+    </>
   );
 }

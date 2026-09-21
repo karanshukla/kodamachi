@@ -23,7 +23,7 @@ export function AccountOverview({ loading, stats }: AccountOverviewProps) {
   const messages = useTranslations();
   return (
     <Paper withBorder style={styles.panel}>
-      <Text fw={700} fz={18} mb={18}>
+      <Text component="h2" fw={600} fz={18} mb={18}>
         {messages.settingsPage.accountOverview}
       </Text>
       {loading ? (
@@ -39,7 +39,7 @@ export function AccountOverview({ loading, stats }: AccountOverviewProps) {
         <SimpleGrid cols={{ base: 2, sm: 4 }} spacing="xl" style={{ alignItems: "flex-end" }}>
           {stats.map((stat) => (
             <Stack key={stat.label} gap={2} style={stat.truncate ? { minWidth: 0 } : undefined}>
-              <Text fw={800} truncate={stat.truncate} style={styles.value(SIZE[stat.size])}>
+              <Text fw={600} truncate={stat.truncate} style={styles.value(SIZE[stat.size])}>
                 {stat.value}
               </Text>
               <Text size="xs" c="dimmed">

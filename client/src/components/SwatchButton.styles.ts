@@ -27,8 +27,9 @@ export const label: CSSProperties = {
   color: textDefault,
   fontSize: 12,
   fontWeight: 600,
-  // A long single-word preset name (pt "Meia-noite") is narrower than its
-  // swatch on every viewport but the smallest phones, where it breaks rather
-  // than spilling over the neighbouring swatch.
+  // Four swatches share a phone-width card, where the button's own padding is
+  // what forces "Midnight" onto two lines; the label takes most of it back. A
+  // longer name (de "Mitternacht") still breaks rather than spilling over.
+  margin: "0 -7px",
   overflowWrap: "break-word",
 };

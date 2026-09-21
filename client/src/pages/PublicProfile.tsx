@@ -1,4 +1,4 @@
-import { Anchor, Container, Group, Text } from "@mantine/core";
+import { Anchor, Group, Text } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { useState, useRef, useEffect } from "react";
 import { useParams } from "react-router";
@@ -147,7 +147,7 @@ export default function PublicProfile() {
   const profileUrl = `https://fragen.navy/${profile.handle}`;
 
   return (
-    <Container>
+    <>
       <ProfileUrlBar
         handle={profile.handle!}
         url={profileUrl}
@@ -199,7 +199,7 @@ export default function PublicProfile() {
         confirmLabel={messages.publicProfilePage.sendMessage}
         cancelLabel={messages.common.cancel}
       />
-    </Container>
+    </>
   );
 }
 
