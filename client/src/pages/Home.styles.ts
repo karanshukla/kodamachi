@@ -1,14 +1,6 @@
 import type { CSSProperties } from "react";
 
-import {
-  accentText,
-  heroBg,
-  link,
-  onHero,
-  radiusCard,
-  surface,
-  textDimmed,
-} from "../styles/tokens";
+import { accentText, eyebrow, heroBg, link, onHero } from "../styles/tokens";
 
 export const title: CSSProperties = {
   textWrap: "pretty",
@@ -18,16 +10,8 @@ export const subtitle: CSSProperties = {
   lineHeight: 1.6,
 };
 
-export const infoCard: CSSProperties = {
-  background: surface,
-};
-
-/** Uppercase eyebrow, not a display heading. */
 export const infoHeading: CSSProperties = {
-  fontSize: 11,
-  fontWeight: 600,
-  letterSpacing: "0.1em",
-  color: textDimmed,
+  ...eyebrow,
   marginBottom: 14,
 };
 
@@ -40,7 +24,6 @@ export const hero = {
   padding: "40px 32px",
   textAlign: "center",
   background: heroBg,
-  borderRadius: radiusCard,
   color: onHero,
   "--ds-focus-ring": onHero,
 } as CSSProperties;

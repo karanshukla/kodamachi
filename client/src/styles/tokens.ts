@@ -63,6 +63,15 @@ export const avatarFallback = {
 export const markBg = "var(--ds-mark-bg)";
 export const markFg = "var(--ds-mark-fg)";
 
+/** The uppercase label over a section or a card. */
+export const eyebrow = {
+  fontSize: 11,
+  fontWeight: 600,
+  letterSpacing: "0.1em",
+  textTransform: "uppercase",
+  color: textDimmed,
+} as const;
+
 export const radiusCard = "var(--ds-radius-card)";
 export const radiusControl = "var(--ds-radius-control)";
 export const radiusPill = "var(--ds-radius-pill)";

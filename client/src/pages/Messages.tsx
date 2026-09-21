@@ -243,7 +243,7 @@ export default function Messages() {
           />
         </>
       ) : (
-        <Paper withBorder p={40} radius="lg" ta="center" style={styles.emptyState}>
+        <Paper withBorder p={40} ta="center">
           <Mascot
             mood="neutral"
             size={148}

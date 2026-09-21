@@ -95,7 +95,6 @@ export function QuestionCard({
       tabIndex={0}
       role="article"
       aria-labelledby={`message-text-${message.tid}`}
-      radius="lg"
       onFocus={onFocus}
       onKeyDown={(e) => {
         if (e.target !== e.currentTarget) return;

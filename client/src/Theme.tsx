@@ -139,6 +139,18 @@ function toneFor(color: unknown) {
   return ALERT_TONES[color as keyof typeof ALERT_TONES] ?? NAVY_TONE;
 }
 
+/** The card `Alert` and `Notification` share: paper, a hairline, a toned left rule. */
+function toneCard(tone: typeof NAVY_TONE) {
+  return {
+    root: {
+      background: "var(--ds-surface)",
+      border: `1px solid ${tone.edge}`,
+      borderLeft: `3px solid ${tone.rule}` /* i18n-allow */,
+    },
+    title: { fontWeight: 600, color: tone.title },
+  };
+}
+
 /** Elevation is scarce: only things that float — menus, modals, toasts. */
 const FLOATING_SHADOW = "0 16px 34px -22px rgba(16,34,74,0.5)"; /* i18n-allow */
 const MODAL_SHADOW = "0 24px 50px -24px rgba(16,34,74,0.4)"; /* i18n-allow */
@@ -235,36 +247,19 @@ const appTheme = createTheme({
     }),
 
     Alert: Alert.extend({
-      styles: (_theme, props) => {
-        const tone = toneFor(props.color);
-        return {
-          root: {
-            background: "var(--ds-surface)",
-            border: `1px solid ${tone.edge}`,
-            borderLeft: `3px solid ${tone.rule}` /* i18n-allow */,
-          },
-          title: {
-            fontFamily: "var(--ds-font-sans)",
-            fontWeight: 600,
-            color: tone.title,
-          },
-          message: { color: "var(--mantine-color-dimmed)" },
-        };
-      },
+      styles: (_theme, props) => ({
+        ...toneCard(toneFor(props.color)),
+        message: { color: "var(--mantine-color-dimmed)" },
+      }),
     }),
 
     Notification: Notification.extend({
       styles: (_theme, props) => {
         const tone = toneFor(props.color);
+        const card = toneCard(tone);
         return {
-          root: {
-            background: "var(--ds-surface)",
-            border: `1px solid ${tone.edge}`,
-            borderLeft: `3px solid ${tone.rule}` /* i18n-allow */,
-            boxShadow: TOAST_SHADOW,
-            "--notification-color": tone.rule,
-          },
-          title: { fontFamily: "var(--ds-font-sans)", fontWeight: 600, color: tone.title },
+          ...card,
+          root: { ...card.root, boxShadow: TOAST_SHADOW, "--notification-color": tone.rule },
           description: { color: "var(--mantine-color-dimmed)" },
         };
       },

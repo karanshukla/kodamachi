@@ -1,10 +1,6 @@
 import type { CSSProperties } from "react";
 
-import { surface, surfaceGhost, textDimmed } from "../styles/tokens";
-
-export const emptyState: CSSProperties = {
-  background: surface,
-};
+import { surfaceGhost, textDimmed } from "../styles/tokens";
 
 /** A soft tile around the icon, the one ornament the empty state carries. */
 export const emptyIcon: CSSProperties = {

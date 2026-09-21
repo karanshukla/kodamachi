@@ -151,7 +151,7 @@ export function MessagePreferencesBar({
   }
 
   return (
-    <Paper style={styles.bar}>
+    <Paper withBorder style={styles.bar}>
       <Box style={styles.chips}>
         <Tooltip
           label={copy.appendProfileLink.description}

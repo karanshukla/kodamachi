@@ -1,13 +1,12 @@
 import type { CSSProperties } from "react";
 
+import { disclosureChevron, selectedChrome } from "../../styles/controls.styles";
 import {
   border,
   borderColor,
   radiusCard,
   radiusPill,
-  selectedBg,
   selectedBorder,
-  surface,
   textDefault,
   textDimmed,
 } from "../../styles/tokens";
@@ -19,9 +18,6 @@ export const bar: CSSProperties = {
   alignItems: "center",
   gap: 12,
   padding: 10,
-  borderRadius: radiusCard,
-  background: surface,
-  border,
 };
 
 export const chips: CSSProperties = {
@@ -32,15 +28,11 @@ export const chips: CSSProperties = {
   minWidth: 0,
 };
 
-/**
- * On is the ink border on tint, matching the swatch picker's chrome. Off is a
- * hairline — never dimmed text, which reads as disabled rather than off.
- */
+/** Off is a hairline, never dimmed text, which reads as disabled rather than off. */
 const chipShell = (on: boolean): CSSProperties => ({
   height: CONTROL_HEIGHT,
   borderRadius: radiusPill,
-  background: on ? selectedBg : "transparent",
-  border: on ? `1.5px solid ${selectedBorder}` : `1px solid ${borderColor}`,
+  ...selectedChrome(on),
   color: textDefault,
   transition:
     "border-color var(--ds-dur-fast) var(--ds-ease), background var(--ds-dur-fast) var(--ds-ease)",
@@ -117,11 +109,7 @@ export const divider: CSSProperties = {
   background: borderColor,
 };
 
-export const chevron = (open: boolean): CSSProperties => ({
-  flex: "none",
-  transition: "transform var(--ds-dur-base) var(--ds-ease)",
-  transform: open ? "rotate(180deg)" : "rotate(0deg)",
-});
+export const chevron = disclosureChevron;
 
 export const panelSection: CSSProperties = {
   borderTop: border,

@@ -85,15 +85,15 @@ export default function Home() {
       )}
 
       <SimpleGrid cols={{ base: 1, sm: 2 }} mt="md">
-        <Paper p={22} radius="lg" withBorder style={styles.infoCard}>
+        <Paper p={22} withBorder>
           <ShortcutList
             title={messages.common.shortcuts.title}
             shortcuts={isLoggedIn ? signedInShortcuts(messages) : signedOutShortcuts(messages)}
           />
         </Paper>
 
-        <Paper p={22} radius="lg" withBorder style={styles.infoCard}>
-          <Title order={2} tt="uppercase" style={styles.infoHeading}>
+        <Paper p={22} withBorder>
+          <Title order={2} style={styles.infoHeading}>
             {messages.home.questionsFeedback}
           </Title>
           <Stack gap="sm">
@@ -125,7 +125,7 @@ export default function Home() {
 
 function HeroSkeleton() {
   return (
-    <Paper p="xl" radius="lg" withBorder style={styles.infoCard}>
+    <Paper p="xl" withBorder>
       <Stack gap="lg">
         <Skeleton height={30} width="60%" />
         <Skeleton height={20} />
@@ -161,7 +161,7 @@ function WelcomeBack({ profile }: { profile: SessionProfile }) {
   };
 
   return (
-    <Paper radius="lg" style={styles.hero}>
+    <Paper style={styles.hero}>
       <Mascot mood="neutral" size={132} style={styles.heroMascot} />
       <Text fw={600} fz={24} style={styles.greeting}>
         {messages.home.welcomeBackGreetingPrefix} {name}
@@ -216,7 +216,7 @@ function WelcomeBack({ profile }: { profile: SessionProfile }) {
 function SignedOutHero() {
   const messages = useTranslations();
   return (
-    <Paper p={32} radius="lg" withBorder style={styles.infoCard}>
+    <Paper p={32} withBorder>
       <Stack gap={22}>
         {sellingPoints(messages).map(({ title, body }) => (
           <div key={title} style={styles.sellingPoint}>

@@ -22,7 +22,7 @@ interface SettingsCardProps {
  */
 export function SettingsCard({ title, description, control, note, children }: SettingsCardProps) {
   return (
-    <Paper style={styles.card}>
+    <Paper withBorder style={styles.card}>
       <Group justify="space-between" align="center" wrap="nowrap" gap="sm" style={styles.header}>
         <Text component="h2" fw={600} fz={16}>
           {title}

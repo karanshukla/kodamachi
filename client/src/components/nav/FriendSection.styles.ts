@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 
-import { surface, textDimmed } from "../../styles/tokens";
+import { eyebrow, surface, textDimmed } from "../../styles/tokens";
 
 /**
  * Sticky so the group label stays put while its list scrolls under it, and
@@ -19,10 +19,9 @@ export const header: CSSProperties = {
   paddingTop: "var(--mantine-spacing-lg)",
 };
 
-/** Section label: uppercase, faint, tracked. */
 export const label: CSSProperties = {
+  ...eyebrow,
   flex: 1,
-  letterSpacing: "0.1em",
 };
 
 export const chevron = (open: boolean): CSSProperties => ({

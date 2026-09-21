@@ -40,9 +40,7 @@ export function FriendSection({ label, friends, emptyText, onLinkClick, did }: F
         aria-label={`${label} — ${opened ? "collapse" : "expand"}`}
         style={styles.header}
       >
-        <Text fz={11} fw={600} tt="uppercase" c="dimmed" style={styles.label}>
-          {label}
-        </Text>
+        <Text style={styles.label}>{label}</Text>
         <IconChevronDown size={12} style={styles.chevron(opened)} />
       </UnstyledButton>
 

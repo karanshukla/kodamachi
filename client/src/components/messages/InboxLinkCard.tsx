@@ -27,7 +27,7 @@ export function InboxLinkCard({ shortUrl, fullUrl, handle, shareData }: InboxLin
     <Paper mb="md" style={styles.card}>
       <Group align="center" gap="md" wrap="wrap">
         <Box style={{ flex: 1, minWidth: 200 }}>
-          <Text fz={11} fw={600} tt="uppercase" mb={7} style={styles.eyebrow}>
+          <Text mb={7} style={styles.eyebrow}>
             {messages.inboxLinkCard.eyebrow}
           </Text>
           <Text fw={600} fz={18} style={styles.url}>

@@ -1,11 +1,10 @@
 import type { CSSProperties } from "react";
 
-import { borderColor, selectedBg, selectedBorder, textDefault } from "../styles/tokens";
+import { selectedChrome } from "../styles/controls.styles";
+import { textDefault } from "../styles/tokens";
 
-/** Selected is the 1.5px ink border on tint; the rest is a hairline on paper. */
 export const button = (selected: boolean, disabled?: boolean): CSSProperties => ({
-  background: selected ? selectedBg : "transparent",
-  border: selected ? `1.5px solid ${selectedBorder}` : `1px solid ${borderColor}`,
+  ...selectedChrome(selected),
   borderRadius: 10,
   padding: 8,
   cursor: disabled ? "default" : "pointer",

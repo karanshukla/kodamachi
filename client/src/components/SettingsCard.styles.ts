@@ -1,16 +1,11 @@
 import type { CSSProperties } from "react";
 
-import { border, radiusCard, surface } from "../styles/tokens";
-
 export const card: CSSProperties = {
   width: "100%",
   height: "100%",
   display: "flex",
   flexDirection: "column",
-  borderRadius: radiusCard,
   padding: 20,
-  background: surface,
-  border,
 };
 
 /** Fixed height so titles line up whether or not the card carries a control. */

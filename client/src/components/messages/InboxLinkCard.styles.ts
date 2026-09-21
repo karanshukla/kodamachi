@@ -1,9 +1,8 @@
 import type { CSSProperties } from "react";
 
-import { heroBg, onHero, onHeroMuted, radiusCard } from "../../styles/tokens";
+import { eyebrow as eyebrowLabel, heroBg, onHero, onHeroMuted } from "../../styles/tokens";
 
 export const card = {
-  borderRadius: radiusCard,
   background: heroBg,
   overflow: "hidden",
   padding: "22px 24px",
@@ -11,8 +10,8 @@ export const card = {
 } as CSSProperties;
 
 export const eyebrow: CSSProperties = {
+  ...eyebrowLabel,
   color: onHeroMuted,
-  letterSpacing: "0.1em",
 };
 
 export const url: CSSProperties = {

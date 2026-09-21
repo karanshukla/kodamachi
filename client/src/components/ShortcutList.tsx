@@ -43,7 +43,7 @@ export function ShortcutList({ title, shortcuts, collapsible = false }: Shortcut
   if (!collapsible) {
     return (
       <>
-        <Title order={2} tt="uppercase" style={styles.heading}>
+        <Title order={2} style={styles.heading}>
           {title}
         </Title>
         {rows}

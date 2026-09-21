@@ -1,14 +1,12 @@
 import type { CSSProperties } from "react";
 
-import { heroBg, borderColor, radiusCard, surface, textDefault } from "../../styles/tokens";
+import { heroBg, borderColor, surface, textDefault } from "../../styles/tokens";
 
 const BANNER_HEIGHT = 160;
 const AVATAR_SIZE = 84;
 
 export const card: CSSProperties = {
-  borderRadius: radiusCard,
   overflow: "hidden",
-  background: surface,
 };
 
 export const banner = (url?: string): CSSProperties => ({

@@ -1,13 +1,10 @@
 import type { CSSProperties } from "react";
 
-import { textDimmed } from "../styles/tokens";
+import { disclosureChevron } from "../styles/controls.styles";
+import { eyebrow, textDimmed } from "../styles/tokens";
 
-/** Uppercase section label rather than a display heading. */
 export const heading: CSSProperties = {
-  fontSize: 11,
-  fontWeight: 600,
-  letterSpacing: "0.1em",
-  color: textDimmed,
+  ...eyebrow,
   marginBottom: 14,
 };
 
@@ -30,10 +27,8 @@ export const disclosure: CSSProperties = {
 };
 
 export const chevron = (open: boolean): CSSProperties => ({
+  ...disclosureChevron(open),
   color: textDimmed,
-  flex: "none",
-  transition: "transform var(--ds-dur-base) var(--ds-ease)",
-  transform: open ? "rotate(180deg)" : "rotate(0deg)",
 });
 
 export const rows: CSSProperties = {
