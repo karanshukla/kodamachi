@@ -107,7 +107,7 @@ export function HandleSuggestions({ search, suggestionRef, onEscape }: HandleSug
       style={styles.box}
     >
       {selectedActor ? (
-        <Box style={styles.staticRow} px="sm">
+        <Box style={styles.staticRow}>
           <ActorIdentity actor={selectedActor} bold />
         </Box>
       ) : isSearching ? (
