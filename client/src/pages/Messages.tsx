@@ -22,6 +22,7 @@ import { QuestionGrid } from "../components/messages/QuestionGrid";
 import { postedAnswerLink } from "../lib/waypointClients";
 import { resolveApiErrorMessage } from "../lib/i18n/apiErrors";
 import { useTranslations } from "../lib/i18n";
+import { usePageTitle } from "../lib/usePageTitle";
 import { getTouchpointTranslations } from "../lib/touchpointTranslations";
 import { useMessagePreferences } from "../lib/useMessagePreferences";
 import { useReplyComposer } from "../lib/useReplyComposer";
@@ -42,6 +43,7 @@ const quotedQuestion = (message: string) =>
 export default function Messages() {
   const { triggerHaptic } = useHaptic(1);
   const messages = useTranslations();
+  usePageTitle(messages.messagesPage.heading);
   const { data: session, isLoading: sessionLoading } = useSession();
   const prefs = useMessagePreferences();
   const { appendProfileLink, useGradients, includeQuestionAsImage, confirmBeforeDelete } =

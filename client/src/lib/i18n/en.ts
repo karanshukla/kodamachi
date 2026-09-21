@@ -11,6 +11,7 @@ const numberFormat = new Intl.NumberFormat("en");
 
 export const en = {
   common: {
+    skipToContent: "Skip to content",
     cancel: "Cancel",
     close: "Close",
     confirm: "Confirm",

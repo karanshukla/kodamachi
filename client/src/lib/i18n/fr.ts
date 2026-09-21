@@ -16,6 +16,7 @@ function pluralize(count: number, singular: string, plural: string): string {
 
 export const fr = {
   common: {
+    skipToContent: "Aller au contenu",
     cancel: "Annuler",
     close: "Fermer",
     confirm: "Confirmer",

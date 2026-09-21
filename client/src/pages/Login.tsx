@@ -13,6 +13,7 @@ import { HandleSuggestions } from "../components/login/HandleSuggestions";
 import { BrandMark } from "../components/BrandMark";
 import { APP_DOMAIN, APP_NAME } from "../lib/brand";
 import { useTranslations } from "../lib/i18n";
+import { usePageTitle } from "../lib/usePageTitle";
 import { resolveApiErrorMessage } from "../lib/i18n/apiErrors";
 import { useHandleSearch } from "../lib/useHandleSearch";
 
@@ -147,6 +148,7 @@ function LoginForm() {
 // The build-time constant leaves exactly one branch reachable, so the hooks in
 // each panel are never conditional.
 export default function Login() {
+  usePageTitle(useTranslations().common.shortcuts.login);
   if (import.meta.env.VITE_E2E_TESTING === "true") {
     return <E2ELoginPanel />;
   }

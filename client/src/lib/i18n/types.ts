@@ -26,6 +26,7 @@ export interface ErrorMessages {
 }
 
 export interface CommonMessages {
+  skipToContent: string;
   cancel: string;
   close: string;
   confirm: string;

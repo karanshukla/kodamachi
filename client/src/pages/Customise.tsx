@@ -20,6 +20,7 @@ import { SettingsSection } from "../components/customise/SettingsSection";
 import { SettingsCard } from "../components/SettingsCard";
 import { SettingsToggle } from "../components/SettingsToggle";
 import { uiLocaleOptions, useTranslations } from "../lib/i18n";
+import { usePageTitle } from "../lib/usePageTitle";
 import { touchpointLocales } from "../lib/touchpointTranslations";
 import { useNumberFormat } from "../lib/useNumberFormat";
 
@@ -30,6 +31,7 @@ const CARD_SPAN = { base: 12, md: 6 };
 
 export default function Customise() {
   const messages = useTranslations();
+  usePageTitle(messages.customisePage.heading);
   const formatNumber = useNumberFormat();
   const { data: session, isLoading: sessionLoading } = useSession();
   const {

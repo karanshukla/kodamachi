@@ -22,6 +22,7 @@ import { Mascot } from "../components/Mascot";
 import { ShortcutList, type Shortcut } from "../components/ShortcutList";
 import { APP_DOMAIN, APP_NAME } from "../lib/brand";
 import { useTranslations } from "../lib/i18n";
+import { usePageTitle } from "../lib/usePageTitle";
 import type { Messages } from "../lib/i18n/types";
 import { heroButton, heroOutlineButton } from "../styles/tokens";
 
@@ -56,6 +57,7 @@ function sellingPoints(messages: Messages) {
 
 export default function Home() {
   const messages = useTranslations();
+  usePageTitle();
   const { data: sessionData, isLoading } = useSession();
   const syncMessagesMutation = useSyncMessages();
   const isLoggedIn = !!sessionData?.isLoggedIn;

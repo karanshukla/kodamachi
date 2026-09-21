@@ -18,6 +18,7 @@ import { ProfileSkeleton } from "../components/profile/ProfileSkeleton";
 import { ProfileUrlBar } from "../components/profile/ProfileUrlBar";
 import { APP_NAME } from "../lib/brand";
 import { useTranslations } from "../lib/i18n";
+import { usePageTitle } from "../lib/usePageTitle";
 import { resolveApiErrorMessage } from "../lib/i18n/apiErrors";
 import type { Messages } from "../lib/i18n/types";
 import { profileCardFill } from "../lib/themes";
@@ -29,6 +30,7 @@ const MAX_MESSAGE_LENGTH = 150;
 export default function PublicProfile() {
   const messages = useTranslations();
   const { handle } = useParams<{ handle: string }>();
+  usePageTitle(handle && `@${handle}`);
   const [message, setMessage] = useState("");
   const [modalOpened, setModalOpened] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);

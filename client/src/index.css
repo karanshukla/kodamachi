@@ -52,6 +52,22 @@ body {
   max-width: 60vw !important;
 }
 
+/* Off-screen until a keyboard user tabs to it, then above the fixed header. */
+.skip-link {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  z-index: 300;
+  padding: 8px 14px;
+  border-radius: var(--ds-radius-control);
+  background: var(--ds-surface);
+  color: var(--ds-link);
+  transform: translateY(-200%);
+}
+.skip-link:focus {
+  transform: none;
+}
+
 /* Boxed layout: cap the whole app (header + navbar + main) to a centered
    column on wide/4K screens instead of letting it stretch edge-to-edge.
    NOTE: the header/navbar use `position: fixed` and must clip to this column

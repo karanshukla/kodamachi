@@ -9,6 +9,7 @@ import { BouncingLogos } from "./components/BouncingLogos";
 import { Mascot } from "./components/Mascot";
 import { buildAccountSwitchUrl, consumeAccountSwitchToast } from "./lib/accountSwitchToast";
 import { useTranslations } from "./lib/i18n";
+import { usePageTitle } from "./lib/usePageTitle";
 import { consumeNotificationSwitchRequest } from "./lib/notificationSwitch";
 import { Navigation } from "./Navigation";
 import Customise from "./pages/Customise";
@@ -73,6 +74,9 @@ export function AppLayout() {
   return (
     <>
       <BouncingLogos />
+      <a href="#main" className="skip-link">
+        {t.common.skipToContent}
+      </a>
       <div className="app-shell-boundary">
         <AppShell
           header={{ height: 60 }}
@@ -96,7 +100,7 @@ export function AppLayout() {
             <Navigation onLinkClick={() => setNavOpen(false)} />
           </AppShell.Navbar>
 
-          <AppShell.Main pt={70}>
+          <AppShell.Main id="main" tabIndex={-1} pt={70}>
             <Container pt="md">
               <Routes>
                 <Route path="/" element={<Home />} />
@@ -119,6 +123,7 @@ export function AppLayout() {
 
 function NotFoundPage() {
   const messages = useTranslations();
+  usePageTitle(messages.notFoundPage.title);
   const { data: session } = useSession();
   return (
     <Paper p={40} radius="xl" withBorder ta="center">
