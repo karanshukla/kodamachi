@@ -24,7 +24,7 @@ export function InboxLinkCard({ shortUrl, fullUrl, handle, shareData }: InboxLin
   const warmShareTarget = () => warmOgCard(handle);
 
   return (
-    <Paper mb="md" p="lg" style={styles.card}>
+    <Paper mb="md" style={styles.card}>
       <Group align="center" gap="md" wrap="wrap">
         <Box style={{ flex: 1, minWidth: 200 }}>
           <Text fz={11} fw={600} tt="uppercase" mb={7} style={styles.eyebrow}>
@@ -55,7 +55,7 @@ export function InboxLinkCard({ shortUrl, fullUrl, handle, shareData }: InboxLin
               </Tooltip>
             )}
           </CopyButton>
-          <ShareButton shareData={shareData} onSuccess={warmShareTarget} solid />
+          <ShareButton shareData={shareData} onSuccess={warmShareTarget} />
         </Group>
       </Group>
     </Paper>

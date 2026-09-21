@@ -4,6 +4,7 @@ import {
   borderColor,
   heroBg,
   heroOutlineButton,
+  link,
   onHero,
   onHeroEdge,
   onHeroFaint,
@@ -26,16 +27,15 @@ export interface CardState {
 /**
  * A question card is painted either as a hero surface or as a plain card, and
  * everything inside it has to follow. Rather than each Text repeating the
- * choice — which is how the message body ended up hard-coded to white and
- * therefore invisible on the light surface — the card publishes its
- * `--ds-card-*` custom properties and its children read those.
+ * choice, the card publishes its `--ds-card-*` custom properties and its
+ * children read those.
  */
 function foreground(ink: boolean): CSSProperties {
   return {
     "--ds-card-fg": ink ? onHero : textDefault,
     "--ds-card-fg-muted": ink ? onHeroMuted : textDimmed,
     "--ds-card-fg-faint": ink ? onHeroFaint : textDimmed,
-    "--ds-card-accent": ink ? onHero : "var(--ds-link)",
+    "--ds-card-accent": ink ? onHero : link,
     "--ds-card-edge": ink ? onHeroEdge : borderColor,
     "--ds-card-wash": ink ? onHeroWash : selectedBg,
     ...(ink ? { "--ds-focus-ring": onHero } : {}),

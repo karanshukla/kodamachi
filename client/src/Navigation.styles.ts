@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 
-import { border, radiusControl } from "./styles/tokens";
+import { border, radiusControl, textDimmed } from "./styles/tokens";
 
 export const root: CSSProperties = {
   display: "flex",
@@ -22,7 +22,7 @@ export const navItem = (active: boolean) => ({
       : {}),
   },
   section: {
-    color: active ? "var(--ds-nav-active-color)" : "var(--mantine-color-dimmed)",
+    color: active ? "var(--ds-nav-active-color)" : textDimmed,
   },
   label: {
     fontFamily: "var(--ds-font-sans)",

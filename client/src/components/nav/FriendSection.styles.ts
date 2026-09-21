@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 
-import { surface } from "../../styles/tokens";
+import { surface, textDimmed } from "../../styles/tokens";
 
 /**
  * Sticky so the group label stays put while its list scrolls under it, and
@@ -26,7 +26,7 @@ export const label: CSSProperties = {
 };
 
 export const chevron = (open: boolean): CSSProperties => ({
-  color: "var(--mantine-color-dimmed)",
+  color: textDimmed,
   transition: "transform var(--ds-dur-fast) var(--ds-ease)",
   transform: open ? "rotate(0deg)" : "rotate(-90deg)",
   flexShrink: 0,

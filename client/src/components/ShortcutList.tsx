@@ -21,9 +21,8 @@ interface ShortcutListProps {
 }
 
 /**
- * Keyboard-shortcut reference. Shared by the home page and the Messages
- * preferences panel, which previously kept two copies that disagreed on type
- * sizes and on whether the modifier read "Alt/Cmd" or "Alt/⌘".
+ * Keyboard-shortcut reference, shared by the home page and the Messages
+ * preferences panel.
  */
 export function ShortcutList({ title, shortcuts, collapsible = false }: ShortcutListProps) {
   const [opened, setOpened] = useState(false);

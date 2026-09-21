@@ -62,8 +62,9 @@ Navy and white swap roles; nothing new is introduced for the dark scheme.
 | Filled button | navy, white label | pale tint, navy label |
 | Inputs (`--ds-surface-ghost`) | canvas well | midnight well |
 
-Filled controls flip through Mantine rather than CSS: `primaryShade` is
-`{ light: 6, dark: 0 }` and `autoContrast` picks the label. Mantine's switch thumb is
+Filled controls flip through Mantine rather than CSS: `primary` is a
+`virtualColor` (navy in light, the inverse scale in dark) and `autoContrast` picks
+the label. Mantine's switch thumb is
 always white, so on the white dark-mode track it takes the navy paper instead (the
 switch rule in `index.css`).
 

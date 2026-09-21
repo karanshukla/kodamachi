@@ -9,8 +9,6 @@ import { useTranslations } from "../lib/i18n";
 import * as styles from "./ShareButton.styles";
 
 interface ShareButtonProps {
-  /** Solid white on the fill (the primary action) rather than the outline. */
-  solid?: boolean;
   shareData: {
     title?: string;
     text?: string;
@@ -21,7 +19,7 @@ interface ShareButtonProps {
   onError?: (error: unknown) => void;
 }
 
-const ShareButton = ({ shareData, onSuccess, onError, solid = false }: ShareButtonProps) => {
+const ShareButton = ({ shareData, onSuccess, onError }: ShareButtonProps) => {
   const { triggerHaptic } = useHaptic(1);
   const messages = useTranslations();
   const handleClick = async () => {
@@ -66,10 +64,9 @@ const ShareButton = ({ shareData, onSuccess, onError, solid = false }: ShareButt
     <Button
       onClick={handleClick}
       size="sm"
-      radius="xl"
       variant="transparent"
       leftSection={<IconShare size={14} />}
-      style={styles.button(solid)}
+      style={styles.button}
     >
       {messages.shareButton.button}
     </Button>

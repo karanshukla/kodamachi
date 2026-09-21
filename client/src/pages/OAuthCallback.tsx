@@ -64,7 +64,7 @@ export default function OAuthCallback() {
           </>
         ) : (
           <>
-            <Title order={1} fw={600} fz={22} ta="center" style={{ color: dangerText }}>
+            <Title order={1} fw={600} fz={22} ta="center" c={dangerText}>
               {messages.oauthCallback.loginFailed}
             </Title>
             <Text size="sm" c="dimmed" ta="center">
