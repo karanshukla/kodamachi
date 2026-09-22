@@ -25,16 +25,16 @@ The companion [navyfragen-feed](https://github.com/karanshukla/navyfragen-feed) 
 
 ## Tech Stack
 
-| Layer | Technologies |
-|---|---|
-| **Client** | React 19, Vite, TypeScript, Mantine UI v9, React Query v5, React Router v8 |
-| **Server** | Bun.serve + Hono, TypeScript, Kysely ORM, AT Protocol SDK, Pino |
-| **Image rendering** | `html-to-image`: Bun + headless Chromium, renders question cards to PNG |
-| **Link cards** | `opengraph-service`: Go, serves OpenGraph tags and preview images for shared links |
-| **Database** | SQLite (development) · PostgreSQL (production) |
-| **Auth** | AT Protocol OAuth (Bluesky as identity provider) |
-| **Testing** | Vitest + Testing Library (client) · `bun test` (server) · `go test` (opengraph-service) · Playwright (E2E) |
-| **Observability** | Pino structured logging, optional Axiom transport |
+| Layer               | Technologies                                                                                               |
+| ------------------- | ---------------------------------------------------------------------------------------------------------- |
+| **Client**          | React 19, Vite, TypeScript, Mantine UI v9, React Query v5, React Router v8                                 |
+| **Server**          | Bun.serve + Hono, TypeScript, Kysely ORM, AT Protocol SDK, Pino                                            |
+| **Image rendering** | `html-to-image`: Bun + headless Chromium, renders question cards to PNG                                    |
+| **Link cards**      | `opengraph-service`: Go, serves OpenGraph tags and preview images for shared links                         |
+| **Database**        | SQLite (development) · PostgreSQL (production)                                                             |
+| **Auth**            | AT Protocol OAuth (Bluesky as identity provider)                                                           |
+| **Testing**         | Vitest + Testing Library (client) · `bun test` (server) · `go test` (opengraph-service) · Playwright (E2E) |
+| **Observability**   | Pino structured logging, optional Axiom transport                                                          |
 
 ---
 
@@ -77,12 +77,14 @@ navyfragen-app/
 ### Installation
 
 1. **Clone the repository:**
+
    ```bash
    git clone https://github.com/karanshukla/navyfragen-app.git
    cd navyfragen-app
    ```
 
 2. **Install all dependencies:**
+
    ```bash
    bun install
    ```
@@ -94,11 +96,13 @@ navyfragen-app/
    ```
 
    The template works for local development as it is, except for `OAUTH_TOKEN_SECRET`, a 32-byte hex string used for AES-256 encryption that has no default. Generate one and set it in `server/.env`:
+
    ```bash
    bun -e "console.log(crypto.getRandomValues(new Uint8Array(32)).toHex())"
    ```
 
 4. **Point the client at the server:**
+
    ```bash
    echo "VITE_API_URL=http://127.0.0.1:8080" > client/.env.development.local
    ```
@@ -106,6 +110,7 @@ navyfragen-app/
    Use `.env.development.local` rather than `client/.env`: the test runner loads `.env` too, and a value there changes what the client tests see.
 
 5. **Start the development servers:**
+
    ```bash
    bun run dev
    ```
@@ -138,11 +143,11 @@ Set `EXPORT_HTML_URL=http://localhost:3033/` in `server/.env` (this is the defau
 
 Three themes are available when responding to a message:
 
-| Theme | Description |
-|---|---|
-| `default` | **Quote** — white card on the navy fill (the design's default) |
-| `compressed` | **Compact** — white-ruled block on midnight, for feeds read in the dark |
-| `twitter` | **Post** — a paper post from the app's own account, with the 木 mark as avatar |
+| Theme        | Description                                                                    |
+| ------------ | ------------------------------------------------------------------------------ |
+| `default`    | **Quote** — white card on the navy fill (the design's default)                 |
+| `compressed` | **Compact** — white-ruled block on midnight, for feeds read in the dark        |
+| `twitter`    | **Post** — a paper post from the app's own account, with the 木 mark as avatar |
 
 Users pick a theme in the Image theme card on the Messages page; it is stored per-user in the database.
 
@@ -210,12 +215,12 @@ The repo uses [Husky](https://typicode.github.io/husky/) to run checks automatic
 
 **What it does:**
 
-| Step | Tool | Effect |
-|---|---|---|
-| Format staged files | Prettier | Auto-fixes formatting (quotes, indentation, trailing commas) |
-| Lint staged files | oxlint | Auto-fixes import order, unused vars, etc. |
-| Type check client | `tsc --noEmit` | Blocks commit if there are TypeScript errors |
-| Type check server | `tsc --noEmit` | Blocks commit if there are TypeScript errors |
+| Step                | Tool           | Effect                                                       |
+| ------------------- | -------------- | ------------------------------------------------------------ |
+| Format staged files | Prettier       | Auto-fixes formatting (quotes, indentation, trailing commas) |
+| Lint staged files   | oxlint         | Auto-fixes import order, unused vars, etc.                   |
+| Type check client   | `tsc --noEmit` | Blocks commit if there are TypeScript errors                 |
+| Type check server   | `tsc --noEmit` | Blocks commit if there are TypeScript errors                 |
 
 The hook is installed automatically when you run `bun install` (via the `prepare` script).
 

@@ -53,14 +53,14 @@ error rather than a colour that silently resolves to nothing.
 
 Navy and white swap roles; nothing new is introduced for the dark scheme.
 
-| Role | Light | Dark |
-|---|---|---|
-| Page | canvas `#F7F9FC` | midnight `#0B1428` |
-| Card (`--ds-surface`) | paper white | brand navy `#10224A` |
-| Text | navy ink | white ink `#F4F7FC` |
-| Hero (`--ds-hero`) | navy, white ink | off-white, navy ink |
-| Filled button | navy, white label | pale tint, navy label |
-| Inputs (`--ds-surface-ghost`) | canvas well | midnight well |
+| Role                          | Light             | Dark                  |
+| ----------------------------- | ----------------- | --------------------- |
+| Page                          | canvas `#F7F9FC`  | midnight `#0B1428`    |
+| Card (`--ds-surface`)         | paper white       | brand navy `#10224A`  |
+| Text                          | navy ink          | white ink `#F4F7FC`   |
+| Hero (`--ds-hero`)            | navy, white ink   | off-white, navy ink   |
+| Filled button                 | navy, white label | pale tint, navy label |
+| Inputs (`--ds-surface-ghost`) | canvas well       | midnight well         |
 
 Filled controls flip through Mantine rather than CSS: `primary` is a
 `virtualColor` (navy in light, the inverse scale in dark) and `autoContrast` picks

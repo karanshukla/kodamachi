@@ -39,6 +39,7 @@ bun run test:watch   # watch mode
 ```
 
 To run a single test file:
+
 ```bash
 bun test --isolate --no-env-file --preload ./src/tests/test-bootstrap.js src/tests/message-service.test.ts
 ```

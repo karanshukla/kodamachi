@@ -17,21 +17,21 @@ arranged**, not in what a card looks like.
 
 ## Why `/customise` exists as its own page (and isn't just more of Settings)
 
-`Settings` is about *your account and the app* — install, PDS sync, push
+`Settings` is about _your account and the app_ — install, PDS sync, push
 notifications, the feed, delete-my-data. It's plumbing.
 
-Every setting routed to `/customise` by the open issues is about *what other
-people experience when they interact with you*:
+Every setting routed to `/customise` by the open issues is about _what other
+people experience when they interact with you_:
 
-| Issue | Setting | Who it affects |
-|-------|---------|----------------|
-| #199 | Custom profile prompt (replaces "Send X an anonymous message") | Visitors to your public profile |
-| #266 | Touchpoint language (profile strings + share payload) | Visitors + your audience |
-| #177 | Inbox on/off | People trying to send you a message |
-| #58 | Profanity filter | Messages you receive |
-| #192 | Notification preferences (only if it grows granular toggles) | You |
+| Issue | Setting                                                        | Who it affects                      |
+| ----- | -------------------------------------------------------------- | ----------------------------------- |
+| #199  | Custom profile prompt (replaces "Send X an anonymous message") | Visitors to your public profile     |
+| #266  | Touchpoint language (profile strings + share payload)          | Visitors + your audience            |
+| #177  | Inbox on/off                                                   | People trying to send you a message |
+| #58   | Profanity filter                                               | Messages you receive                |
+| #192  | Notification preferences (only if it grows granular toggles)   | You                                 |
 
-Four of the five change what a *stranger* sees or is allowed to do. That's the
+Four of the five change what a _stranger_ sees or is allowed to do. That's the
 page's identity: **"how your inbox presents itself to the world."** The
 designs below lean into that framing to varying degrees.
 
@@ -66,16 +66,18 @@ The literal reading of #273: one `Grid`, equal-height `SettingsCard`s, 3-up on
 dependent issue adds a `Grid.Col` and is done.
 
 **Pros**
+
 - Zero new patterns. Pixel-consistent with Settings; nothing to review but copy.
 - Exactly the scaffold #273 describes — "an empty `Grid` a dependent issue can
   add a `Grid.Col`/`SettingsCard` to without touching layout."
 - Lowest risk, fastest to land.
 
 **Cons**
+
 - The custom-prompt card (text field + counter) and the profanity reject/mask
   control are visually heavier than a lone `Switch`, so the grid looks uneven —
   the exact thing `SettingsCard`'s `flexGrow` description was meant to smooth
-  over works less well when the *controls* differ in height, not just the copy.
+  over works less well when the _controls_ differ in height, not just the copy.
 - No grouping. As the five issues land, it's five unlabelled cards in reading
   order with no signal about which affect your public profile vs. your inbox.
 - Reads as a second Settings page. Doesn't answer "why is this separate?"
@@ -85,10 +87,10 @@ least possible surface area and sort out hierarchy later.
 
 ---
 
-## Design B — Grouped sections *(recommended)*
+## Design B — Grouped sections _(recommended)_
 
 Same cards, same `SettingsCard`, but organised under two or three labelled
-sections that encode *who each setting affects*:
+sections that encode _who each setting affects_:
 
 - **Your public profile** — custom prompt (#199), language (#266)
 - **Message intake** — inbox open/closed (#177), profanity filter (#58)
@@ -104,14 +106,16 @@ so the text field has room, which also resolves Design A's uneven-height
 problem — heavy controls sit in wide cards, toggles sit in narrow ones.
 
 **Pros**
+
 - Gives the page a distinct identity from Settings without a single new token.
 - Scales cleanly: the five dependent issues each land in an obvious section
   instead of appending to one flat list; the page stays legible at 8+ settings.
-- The grouping *is* the argument for why `/customise` is its own page.
+- The grouping _is_ the argument for why `/customise` is its own page.
 - Still just `SettingsCard`s — a dependent issue adds a `Grid.Col` to the right
   section; only marginally more than Design A.
 
 **Cons**
+
 - Slightly more scaffolding than #273's "one empty `Grid`" — the page ships with
   labelled section containers, and a dependent issue picks a section (a one-line
   decision, but a decision).
@@ -126,7 +130,7 @@ but the page earns its separate existence and won't sprawl as issues land.
 
 Design B's grouped controls in a left column; a **sticky live preview of the
 public-profile ask-card** in a right column. Because #199 (prompt), #266
-(language) and #177 (inbox on/off) all change *exactly what a visitor sees*, the
+(language) and #177 (inbox on/off) all change _exactly what a visitor sees_, the
 preview renders the real ask-card (reusing `PublicProfile.tsx`'s `--ds-fill-ink`
 card) and updates as you type the prompt, pick a language, or
 toggle the inbox closed — turning three abstract settings into "this is what a
@@ -136,6 +140,7 @@ On mobile it collapses to one column with the preview pinned to the top (or
 behind a "Preview" toggle).
 
 **Pros**
+
 - Highest clarity for the profile-facing settings — the ones that matter most,
   since they're customer-facing acquisition copy. You edit the thing and watch
   the real artifact change.
@@ -145,6 +150,7 @@ behind a "Preview" toggle).
   it into a shared presentational component and feeds it draft settings.
 
 **Cons**
+
 - Most build effort: requires factoring the ask-card out of `PublicProfile.tsx`
   into a reusable, prop-driven component (worth doing anyway, but it's real work
   and needs its own tests).
@@ -181,7 +187,7 @@ willing to revisit hierarchy later.
   (`settingsService.ts`); each new setting is a `Partial<UserSettings>` field,
   same as `pdsSyncEnabled`/`imageTheme`.
 - Two open product questions block full implementation, not the layout choice:
-  #58's reject-vs-mask behaviour and #192's "what does *better* mean" — the
+  #58's reject-vs-mask behaviour and #192's "what does _better_ mean" — the
   mockups surface both rather than assume an answer.
 - Nav icon on `/customise` is still a placeholder per #273 (`IconAdjustments`
   used in the mockup); not a design decision.
