@@ -15,14 +15,6 @@
 
 ---
 
-## Screenshots
-
-<img width="983" height="734" alt="Inbox view" src="https://github.com/user-attachments/assets/ab0e4e7a-01d6-4f86-b2bc-15fc1983f431" />
-<img width="995" height="749" alt="Answer view" src="https://github.com/user-attachments/assets/b3ff44d6-4f45-49b2-8ff5-ba0dbb49f81b" />
-<img width="1004" height="755" alt="Image themes" src="https://github.com/user-attachments/assets/c44e65c6-ef56-4dfb-8818-28cc2451660f" />
-
----
-
 ## What It Does
 
 kodamachi lets Bluesky users receive anonymous questions via a public inbox link and post answers (optionally with a styled image card) directly to their Bluesky feed. Bluesky (AT Protocol) serves as both the identity provider (OAuth) and a secondary data store via PDS sync.
