@@ -214,7 +214,7 @@ describe("PublicProfile page", () => {
     fireEvent.click(screen.getByRole("button", { name: t.sendLabel }));
     await waitFor(() => screen.getByText(en.publicProfilePage.confirmSendMessage));
 
-    // The modal confirm button is labeled "Send Message"
+    // The modal confirm button is labeled "Send message"
     fireEvent.click(screen.getByRole("button", { name: en.publicProfilePage.sendMessage }));
     await waitFor(() => expect(mockMutate).toHaveBeenCalled());
 

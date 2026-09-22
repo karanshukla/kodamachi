@@ -94,7 +94,7 @@ describe("Messages page — composing and posting a reply", () => {
     expect(mockRespondMutate).not.toHaveBeenCalled();
   });
 
-  it("sending an empty response shows 'Empty Response' notification", async () => {
+  it("sending an empty response shows 'Empty response' notification", async () => {
     setupMocks();
     renderWithProviders(<Messages />);
 

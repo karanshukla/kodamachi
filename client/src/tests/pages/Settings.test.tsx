@@ -326,7 +326,7 @@ describe("Settings page", () => {
     expect(screen.queryByRole("link", { name: en.settingsPage.followTheBotOnBluesky })).toBeNull();
   });
 
-  it("opens delete account modal when 'Delete my Data' is clicked", async () => {
+  it("opens delete account modal when 'Delete my data' is clicked", async () => {
     setupLoggedIn();
     mockUseUserSettings.mockReturnValue({
       data: { pdsSyncEnabled: 1, imageTheme: "default" },

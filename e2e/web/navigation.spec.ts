@@ -28,7 +28,7 @@ test("header wordmark returns home", async ({ page }) => {
 test("sidebar navigates between home, messages, and settings", async ({ page }) => {
   await page.goto("/");
 
-  // The navbar scope avoids the home hero's "View Your Messages" link, which
+  // The navbar scope avoids the home hero's "View your messages" link, which
   // carries the same "Messages" substring.
   const navbar = page.locator("nav").first();
   await navbar.getByRole("link", { name: messagesLinkName }).click();

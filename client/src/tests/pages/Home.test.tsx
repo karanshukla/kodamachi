@@ -37,7 +37,7 @@ describe("Home page", () => {
     expect(screen.queryByText(en.home.viewYourMessages)).toBeNull();
   });
 
-  it("shows feature list and Get Started button when logged out", () => {
+  it("shows feature list and Get started button when logged out", () => {
     mockUseSession.mockReturnValue({
       data: { isLoggedIn: false, profile: null },
       isLoading: false,
@@ -108,7 +108,7 @@ describe("Home page", () => {
     expect(screen.queryByRole("img", { name: /karan/i })).toBeNull();
   });
 
-  it("shows Copy Link and Share buttons when logged in", () => {
+  it("shows Copy link and Share buttons when logged in", () => {
     mockUseSession.mockReturnValue({
       data: {
         isLoggedIn: true,
@@ -181,7 +181,7 @@ describe("Home page", () => {
     expect(screen.getByText(/Karan$/)).toBeInTheDocument();
   });
 
-  it("clicking Copy Link changes button text to Copied!", async () => {
+  it("clicking Copy link changes button text to Copied!", async () => {
     Object.defineProperty(navigator, "clipboard", {
       value: { writeText: vi.fn().mockResolvedValue(undefined) },
       configurable: true,
@@ -227,7 +227,7 @@ describe("Home page", () => {
     expect(document.body).toBeInTheDocument();
   });
 
-  it("Copy Link and Share buttons are not shown when logged out", () => {
+  it("Copy link and Share buttons are not shown when logged out", () => {
     mockUseSession.mockReturnValue({
       data: { isLoggedIn: false, profile: null },
       isLoading: false,
