@@ -3,7 +3,7 @@ import type { CSSProperties } from "react";
 import {
   borderColor,
   heroBg,
-  heroOutlineButton,
+  heroButton,
   link,
   onHero,
   onHeroEdge,
@@ -118,8 +118,9 @@ export const threadLinkText: CSSProperties = {
 
 /**
  * "Reply to thread" on the pinned root is the filled primary button; a plain
- * card's "Reply" is the outline. On an ink card both become the hero outline,
- * since the filled primary would match the hero behind it.
+ * card's "Reply" is the outline. On an ink card both become the hero button,
+ * since the filled primary would match the hero behind it and the hero
+ * outline's faint edge leaves the card's one action barely visible.
  */
 export type ReplyVariant = "default" | "filled" | "outline";
 
@@ -129,7 +130,7 @@ export function replyButtonVariant(ink: boolean, inThread: boolean): ReplyVarian
 }
 
 export const replyButton = (blocked: boolean, ink: boolean): CSSProperties => ({
-  ...(ink ? heroOutlineButton : {}),
+  ...(ink ? heroButton : {}),
   height: 44,
   opacity: blocked ? 0.45 : 1,
   cursor: blocked ? "not-allowed" : undefined,
