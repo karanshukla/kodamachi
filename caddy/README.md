@@ -1,7 +1,7 @@
 # Caddy Proxy
 
 The single public entry point for `navyfragen.app`. It fans one domain out to two
-upstream chains: `/api/*` to a regional Navyfragen server, everything else to the
+upstream chains: `/api/*` to a regional kodamachi server, everything else to the
 WAF. It also owns the site's security headers and cache policy.
 
 The [`Caddyfile`](Caddyfile) is deliberately comment-free. Everything that used to

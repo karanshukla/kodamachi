@@ -7,6 +7,7 @@ import { useSendMessage } from "../api/messageService";
 import { useResolveHandle, usePublicProfile } from "../api/profileService";
 import { useUserSettings } from "../api/settingsService";
 import { withMarks } from "../lib/atmosphereApps";
+import { SHARE_DOMAIN } from "../lib/brand";
 import { dbBoolean } from "../lib/dbBoolean";
 import { clientDestinationFor } from "../lib/waypointClients";
 import { profileWaypointTargetFor } from "../lib/waypointTarget";
@@ -146,7 +147,7 @@ export default function PublicProfile() {
 
   const t = getTouchpointTranslations(profileData?.touchpointLocale ?? null);
   const ownerName = profile.displayName || profile.handle || "";
-  const profileUrl = `https://fragen.navy/${profile.handle}`;
+  const profileUrl = `https://${SHARE_DOMAIN}/${profile.handle}`;
 
   return (
     <>

@@ -14,7 +14,7 @@ Playwright tests run against the full Docker stack using a real Bluesky account.
 
 ### 1. Create an app password
 
-In your PDS account settings, create an app password named something like `navyfragen-e2e`. Copy it — you won't see it again.
+In your PDS account settings, create an app password named something like `kodamachi-e2e`. Copy it — you won't see it again.
 
 ### 2. Add credentials to `docker/.env`
 

@@ -4,6 +4,7 @@ import { IconClipboard, IconShare, IconWorld } from "@tabler/icons-react";
 import { useHaptic } from "use-haptic";
 
 import type { AtmosphereApp } from "../../lib/atmosphereApps";
+import { SHARE_DOMAIN } from "../../lib/brand";
 import { useTranslations } from "../../lib/i18n";
 
 import { AtmosphereLinks } from "./AtmosphereLinks";
@@ -18,7 +19,7 @@ interface ProfileUrlBarProps {
   atmosphereApps: AtmosphereApp[];
 }
 
-/** The "fragen.navy/<handle>" pill, with copy and native-share affordances. */
+/** The "<share domain>/<handle>" pill, with copy and native-share affordances. */
 export function ProfileUrlBar({ handle, url, shareTitle, atmosphereApps }: ProfileUrlBarProps) {
   const { triggerHaptic } = useHaptic(1);
   const messages = useTranslations();
@@ -42,7 +43,7 @@ export function ProfileUrlBar({ handle, url, shareTitle, atmosphereApps }: Profi
       <Group gap="xs" align="center">
         <Box component="span" style={styles.pill}>
           <IconWorld size={12} />
-          fragen.navy/
+          {SHARE_DOMAIN}/
           <Text component="span" inherit style={styles.pillHandle}>
             {handle}
           </Text>
