@@ -66,7 +66,7 @@ export default defineRailway(() => {
     source: github("karanshukla/navyfragen-app", { checkSuites: true, rootDirectory: "/caddy" }),
     build: { builder: "DOCKERFILE", dockerfilePath: "Dockerfile", watchPatterns: ["/caddy/*"] },
     replicas: { "us-east4-eqdc4a": 1 },
-    domains: ["navyfragen.app"],
+    domains: ["navyfragen.app", { domain: "kodamachi.app", port: 8080 }],
     networking: { privateNetworkEndpoint: "caddy-proxy" },
     env: {
       BACKEND_DOMAIN: preserve(),

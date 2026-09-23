@@ -42,7 +42,7 @@ func main() {
 		cacheMaxStr = flag.String("cache-max-entries", envOr("OG_CACHE_MAX_ENTRIES", "0"), "max cache entries; 0 = built-in default")
 		renderTO    = flag.String("render-timeout", envOr("OG_RENDER_TIMEOUT", "30s"), "html-to-image render deadline")
 		pendingWait = flag.String("pending-render-wait", envOr("OG_PENDING_RENDER_WAIT", ""), "how long /og-cache/ waits on an in-flight render; empty = built-in default")
-		origin      = flag.String("origin", envOr("PUBLIC_URL", "https://navyfragen.app"), "public site origin for absolute OG URLs")
+		origin      = flag.String("origin", envOr("PUBLIC_URL", "https://kodamachi.app"), "public site origin for absolute OG URLs")
 		addr        = flag.String("addr", normalizeAddr(envOr("PORT", "8080")), "listen address")
 	)
 	flag.Parse()

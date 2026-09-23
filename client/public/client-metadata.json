@@ -1,8 +1,8 @@
 {
   "client_name": "kodamachi App",
-  "client_id": "https://navyfragen.app/client-metadata.json",
-  "client_uri": "https://navyfragen.app",
-  "redirect_uris": ["https://navyfragen.app/api/oauth/callback"],
+  "client_id": "https://kodamachi.app/client-metadata.json",
+  "client_uri": "https://kodamachi.app",
+  "redirect_uris": ["https://kodamachi.app/api/oauth/callback"],
   "scope": "atproto repo:app.bsky.feed.post repo:app.navyfragen.message blob:image/* rpc:app.bsky.actor.getProfile?aud=* rpc:app.bsky.graph.getFollows?aud=*",
   "grant_types": ["authorization_code", "refresh_token"],
   "response_types": ["code"],
