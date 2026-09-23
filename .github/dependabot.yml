@@ -30,6 +30,11 @@ updates:
       oxlint:
         patterns:
           - "oxlint"
+      # vitest and its @vitest/* plugins must share a version (#504).
+      vitest:
+        patterns:
+          - "vitest"
+          - "@vitest/*"
 
   - package-ecosystem: "docker"
     directory: "/anubis"
@@ -47,5 +52,11 @@ updates:
       interval: "weekly"
     commit-message:
       prefix: "chore(deps)"
+    # The otel modules build against each other, so a partial bump breaks the
+    # Go build (#504).
+    groups:
+      otel:
+        patterns:
+          - "go.opentelemetry.io/*"
     ignore:
       - dependency-name: "github.com/bluesky-social/indigo"
