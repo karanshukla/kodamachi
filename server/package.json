@@ -35,7 +35,7 @@
     "@atproto/xrpc-server": "^0.13.1",
     "@aturi.to/waypoints": "0.1.4",
     "@axiomhq/pino": "^2.0.0",
-    "@hono/zod-validator": "^0.9.0",
+    "@hono/zod-validator": "^0.9.1",
     "@types/cryptr": "^4.0.3",
     "@types/web-push": "^3.6.4",
     "cryptr": "^6.4.0",
