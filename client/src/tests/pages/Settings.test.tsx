@@ -655,7 +655,7 @@ describe("Settings page", () => {
     const feedLink = screen.getByRole("link", { name: en.settingsPage.openFeedOnBluesky });
     expect(feedLink).toHaveAttribute(
       "href",
-      `https://bsky.app/profile/${APP_DOMAIN}/feed/navyfragen`
+      `https://bsky.app/profile/${APP_DOMAIN}/feed/kodamachi`
     );
   });
 });
