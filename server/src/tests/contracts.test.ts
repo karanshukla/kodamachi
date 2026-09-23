@@ -25,6 +25,13 @@ describe("OAuth contract", () => {
     assert.strictEqual(metadata.scope, OAUTH_SCOPE);
   });
 
+  it("serves client_id and every redirect URI from the client_uri origin", () => {
+    const metadata = JSON.parse(readFileSync(CLIENT_METADATA_PATH, "utf8"));
+    const origin = new URL(metadata.client_uri).origin;
+    assert.strictEqual(new URL(metadata.client_id).origin, origin);
+    for (const uri of metadata.redirect_uris) assert.strictEqual(new URL(uri).origin, origin);
+  });
+
   it("names the collection that existing PDS records were written under", () => {
     assert.strictEqual(LEXICON_NSID, "app.navyfragen.message");
   });

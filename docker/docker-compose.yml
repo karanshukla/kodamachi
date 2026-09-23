@@ -163,7 +163,7 @@ services:
       # NF server, reached for the owner's customPrompt/touchpointLocale (#409).
       NF_SERVER_URL: "http://server:3000"
       # Public site origin used to build absolute og:image URLs for crawlers.
-      PUBLIC_URL: "${PUBLIC_URL:-https://navyfragen.app}"
+      PUBLIC_URL: "${PUBLIC_URL:-https://kodamachi.app}"
       PORT: "8080"
     volumes:
       - og-image-cache:/data/og-cache
