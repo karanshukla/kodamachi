@@ -1,6 +1,6 @@
 # Caddy Proxy
 
-The single public entry point for `navyfragen.app`. It fans one domain out to two
+The single public entry point for `kodamachi.app`. It fans one domain out to two
 upstream chains: `/api/*` to a regional kodamachi server, everything else to the
 WAF. It also owns the site's security headers and cache policy.
 
@@ -56,6 +56,18 @@ isn't persistent anyway), and `auto_https off` (Railway terminates TLS at its ed
 Runtime and access logs are both JSON, which is what the Axiom log drain expects.
 `trusted_proxies static private_ranges` trusts Railway's proxy so `{remote_host}`
 is the real client IP rather than the edge.
+
+## The `navyfragen.app` redirect
+
+Both domains are attached to this service on Railway. Requests for `navyfragen.app`
+get a `308` to the same path and query on `kodamachi.app`, so old share links and
+answer-image URLs keep resolving. `308` rather than `301` keeps the method, so a
+stale client's `POST /api/*` is not turned into a `GET`. The domain stays attached
+here, and not on a registrar redirect, because `.app` is HSTS-preloaded and the
+redirect needs a valid certificate, which Railway's edge already provides.
+
+The Docker smoke test pins both halves: the old host redirects with its path and
+query intact, and the new host is proxied rather than redirected.
 
 ## Regional `/api/*` routing
 

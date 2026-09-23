@@ -4,7 +4,7 @@
 
 <img width="1200" height="630" alt="kodamachi link card: the mark, the wordmark, and “Ask me anything, anonymously”" src="client/public/og.png" />
 
-> **Formerly Navyfragen.** The brand changed with the redesign in `docs/design/kodamachi-handoff/`; the repository name, the `navyfragen.app` / `fragen.navy` domains and the `app.navyfragen.message` lexicon are unchanged until the cutover tracked in [#388](https://github.com/karanshukla/navyfragen-app/issues/388).
+> **Formerly Navyfragen.** The brand changed with the redesign in `docs/design/kodamachi-handoff/`; the app lives at `kodamachi.app`, and `navyfragen.app` redirects there. The `fragen.navy` short links and the `app.navyfragen.message` lexicon are unchanged; see [#388](https://github.com/karanshukla/navyfragen-app/issues/388).
 
 [![Tests](https://github.com/karanshukla/navyfragen-app/actions/workflows/Tests.yml/badge.svg)](https://github.com/karanshukla/navyfragen-app/actions/workflows/Tests.yml)
 [![Coverage Status](https://coveralls.io/repos/github/karanshukla/navyfragen-app/badge.svg?branch=main)](https://coveralls.io/github/karanshukla/navyfragen-app?branch=main)
