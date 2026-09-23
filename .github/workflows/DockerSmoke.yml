@@ -100,6 +100,25 @@ jobs:
           [ "$STATUS" != "000" ] || { echo "No response on port 8081"; exit 1; }
           echo "Port 8081 → HTTP $STATUS"
 
+      - name: Smoke test — navyfragen.app redirects to kodamachi.app (port 8082)
+        run: |
+          read -r STATUS LOCATION < <(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' \
+            -H "Host: navyfragen.app" --max-redirs 0 \
+            --retry 5 --retry-delay 3 --retry-connrefused \
+            "http://localhost:8082/profile/alice.bsky.social?ref=post")
+          [ "$STATUS" = "308" ] || { echo "Expected 308, got $STATUS"; exit 1; }
+          [ "$LOCATION" = "https://kodamachi.app/profile/alice.bsky.social?ref=post" ] \
+            || { echo "Wrong target: $LOCATION"; exit 1; }
+          echo "navyfragen.app → $LOCATION"
+
+      - name: Smoke test — kodamachi.app is served, not redirected (port 8082)
+        run: |
+          STATUS=$(curl -s -o /dev/null -w '%{http_code}' \
+            -H "Host: kodamachi.app" --max-redirs 0 \
+            http://localhost:8082/robots.txt)
+          [ "$STATUS" = "200" ] || { echo "Expected 200, got $STATUS"; exit 1; }
+          echo "kodamachi.app → HTTP $STATUS"
+
       # The templates are ~5900 files cloned from GitHub anonymously on every run,
       # so an unrelated rate-limit or network blip failed the job and read as "this
       # PR broke the build" — it already did once. The key rolls weekly, so the scan
