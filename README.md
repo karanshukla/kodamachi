@@ -4,7 +4,7 @@
 
 <img width="1200" height="630" alt="kodamachi link card: the mark, the wordmark, and “Ask me anything, anonymously”" src="client/public/og.png" />
 
-> **Formerly Navyfragen.** The brand changed with the redesign in `docs/design/kodamachi-handoff/`; the app lives at `kodamachi.app`, and `navyfragen.app` redirects there. The `fragen.navy` short links and the `app.navyfragen.message` lexicon are unchanged; see [#388](https://github.com/karanshukla/navyfragen-app/issues/388).
+> **Formerly Navyfragen.** The brand changed with the redesign in `docs/design/kodamachi-handoff/`; the app lives at `kodamachi.app`, and `navyfragen.app` redirects there. Short links moved from `fragen.navy` to `kodamachi.online` (both still work), and the `app.navyfragen.message` lexicon is unchanged; see [#388](https://github.com/karanshukla/navyfragen-app/issues/388).
 
 [![Tests](https://github.com/karanshukla/navyfragen-app/actions/workflows/Tests.yml/badge.svg)](https://github.com/karanshukla/navyfragen-app/actions/workflows/Tests.yml)
 [![Coverage Status](https://coveralls.io/repos/github/karanshukla/navyfragen-app/badge.svg?branch=main)](https://coveralls.io/github/karanshukla/navyfragen-app?branch=main)
@@ -170,9 +170,9 @@ CloudFront can also be used in place of Caddy.
 
 ### Short Links
 
-Users share a short link to their public inbox (e.g. `fragen.navy/user123` -> `navyfragen.app/profile/user123`). Any URL-prefix-preserving redirect service works, for example [`docker-redirector`](https://github.com/Intellection/docker-redirector).
+Users share a short link to their public inbox (e.g. `kodamachi.online/user123` -> `kodamachi.app/profile/user123`). Any URL-prefix-preserving redirect service works, for example [`docker-redirector`](https://github.com/Intellection/docker-redirector).
 
-Set the shortlink base in the client's `VITE_SHORTLINK_URL` (e.g. `fragen.navy`).
+Set the shortlink base in the client's `VITE_SHORTLINK_URL` (e.g. `kodamachi.online`).
 
 ---
 

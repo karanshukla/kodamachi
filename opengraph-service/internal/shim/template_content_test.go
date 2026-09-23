@@ -78,12 +78,12 @@ func TestBuildOGTemplate_LeavesNoUnfilledSlots(t *testing.T) {
 }
 
 // The footer carries the link a reader is meant to act on. It has to be the
-// short share URL the app hands out (fragen.navy/<handle>), not the
+// short share URL the app hands out (kodamachi.online/<handle>), not the
 // /profile/<handle> path the crawler happened to fetch.
 func TestBuildOGTemplate_FooterShowsTheUsersShareLink(t *testing.T) {
 	html := BuildOGTemplate(OGInput{DisplayName: "Alice", Handle: "alice.bsky.social"})
 	chip := between(html, `<div class="chip">`, "</div>")
-	if !strings.Contains(chip, "fragen.navy/") {
+	if !strings.Contains(chip, "kodamachi.online/") {
 		t.Fatalf("footer should carry the share domain, got %q", chip)
 	}
 	if !strings.Contains(chip, "alice.bsky.social") {
@@ -98,7 +98,7 @@ func TestBuildOGTemplate_FooterShowsTheUsersShareLink(t *testing.T) {
 func TestBuildOGTemplate_ShareLinkUsesTheTrimmedHandle(t *testing.T) {
 	html := BuildOGTemplate(OGInput{DisplayName: "Alice", Handle: "@alice.bsky.social"})
 	chip := between(html, `<div class="chip">`, "</div>")
-	if strings.Contains(chip, "fragen.navy/@") {
+	if strings.Contains(chip, "kodamachi.online/@") {
 		t.Fatalf("share link should not carry the handle's leading @, got %q", chip)
 	}
 }

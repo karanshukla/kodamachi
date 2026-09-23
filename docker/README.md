@@ -11,7 +11,7 @@ This stack is used for **local integration testing and smoke tests** (and option
 | `server`        | Bun.serve + Hono API                                                            | 3000     |
 | `client`        | React SPA served by `serve`                                                     | internal |
 | `html-to-image` | Puppeteer image renderer                                                        | internal |
-| `redirector`    | Short-URL redirector (fragen.navy equivalent)                                   | 8081     |
+| `redirector`    | Short-URL redirector (kodamachi.online equivalent)                              | 8081     |
 | `postgres`      | PostgreSQL 16                                                                   | internal |
 
 `caddy` and `server` are published directly so the stack works out of the box for local dev with no extra setup — see "Caveats" for why `anubis` isn't the default entry point locally even though it is in production.

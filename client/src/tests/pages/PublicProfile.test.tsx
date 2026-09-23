@@ -193,7 +193,7 @@ describe("PublicProfile page", () => {
     // At minimum: copy + send — verify one of them is present
     expect(buttons.length).toBeGreaterThan(0);
     // The breadcrumb URL text is present
-    expect(screen.getByText(/fragen\.navy\//i)).toBeInTheDocument();
+    expect(screen.getByText(/kodamachi\.online\//i)).toBeInTheDocument();
   });
 
   it("replaces the composer with a confirmation after a successful send", async () => {

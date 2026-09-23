@@ -260,7 +260,7 @@ var promptMaxHeight = promptMaxLines * promptLineBox
 // PublicProfile.tsx builds and ProfileUrlBar.tsx displays. The OG card shows
 // the same string so the link someone reads off a preview is the link they were
 // given, not the /profile/:handle path the crawler happened to fetch.
-const shareDomain = "fragen.navy"
+const shareDomain = "kodamachi.online"
 
 // brandMark is the app's mark inlined as SVG: the navy tile with the glyph.
 // Inlining keeps it independent of the network: an OG render that cannot
@@ -399,7 +399,7 @@ const ogTemplate = `<!DOCTYPE html>
   .wordmark {
     font-size: 30px; font-weight: 600; letter-spacing: -0.03em; line-height: 1;
   }
-  /* The share link, in the same "fragen.navy/<handle>" pill the profile page
+  /* The share link, in the same "kodamachi.online/<handle>" pill the profile page
      uses (client/src/components/profile/ProfileUrlBar.tsx): bordered, domain
      muted and the handle emphasised, because the handle is the part a reader
      has to retype. */

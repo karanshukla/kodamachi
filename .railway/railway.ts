@@ -249,7 +249,7 @@ export default defineRailway(() => {
     source: image("zappi/redirector", { autoUpdates: { schedule: [{ day: 0, endHour: 24, startHour: 0 }, { day: 6, endHour: 24, startHour: 0 }], type: "patch" } }),
     build: { builder: "NIXPACKS" },
     replicas: { "europe-west4-drams3a": 1 },
-    domains: ["fragen.navy"],
+    domains: ["fragen.navy", { domain: "kodamachi.online", port: 8080 }],
     networking: { privateNetworkEndpoint: "redirector" },
     env: {
       IGNORE_REQUEST_URI: preserve(),

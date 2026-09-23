@@ -10,7 +10,7 @@ import ShareButton from "../ShareButton";
 import * as styles from "./InboxLinkCard.styles";
 
 interface InboxLinkCardProps {
-  /** Display form, e.g. "fragen.navy/karan.bsky.social". */
+  /** Display form, e.g. "kodamachi.online/karan.bsky.social". */
   shortUrl: string;
   fullUrl: string;
   /** Whose OG card to warm — copying or sharing means a crawler is coming. */
