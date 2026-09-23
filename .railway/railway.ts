@@ -205,7 +205,7 @@ export default defineRailway(() => {
     source: github("karanshukla/navyfragen-feed", { checkSuites: true }),
     replicas: { "europe-west4-drams3a": 1 },
     deploy: { limitOverride: { containers: { cpu: 8, memoryBytes: 8000000000 } }, sleepApplication: true },
-    domains: [{ domain: "feed.navyfragen.app", port: 3000 }],
+    domains: [{ domain: "feed.kodamachi.app", port: 3000 }],
     networking: { privateNetworkEndpoint: "navyfragen-feed" },
     volumeMounts: {
       "/data": navyfragenFeedVolumeGZRf,
