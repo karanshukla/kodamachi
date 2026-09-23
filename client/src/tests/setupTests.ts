@@ -1,4 +1,4 @@
-import "@testing-library/jest-dom";
+import "@testing-library/jest-dom/vitest";
 
 // Mantine components use ResizeObserver internally; happy-dom doesn't provide it.
 global.ResizeObserver = class ResizeObserver {
