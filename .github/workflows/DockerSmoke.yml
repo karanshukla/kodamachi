@@ -102,7 +102,7 @@ jobs:
 
       - name: Smoke test — navyfragen.app redirects to kodamachi.app (port 8082)
         run: |
-          read -r STATUS LOCATION < <(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' \
+          read -r STATUS LOCATION < <(curl -s -o /dev/null -w '%{http_code} %{redirect_url}\n' \
             -H "Host: navyfragen.app" --max-redirs 0 \
             --retry 5 --retry-delay 3 --retry-connrefused \
             "http://localhost:8082/profile/alice.bsky.social?ref=post")
