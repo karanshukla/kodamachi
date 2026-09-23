@@ -6,7 +6,7 @@ import { BrandMark } from "../../components/BrandMark";
 import { APP_NAME, MARK_GLYPH_PATH } from "../../lib/brand";
 
 describe("BrandMark", () => {
-  it("renders the 木 tile without crashing with default props", () => {
+  it("renders the mark tile without crashing with default props", () => {
     const { container } = render(<BrandMark />);
     const svg = container.querySelector("svg");
     expect(svg).not.toBeNull();

@@ -9,8 +9,8 @@ interface BrandMarkProps {
 }
 
 /**
- * 木 (Noto Serif JP, weight 600) as an outline, so the mark needs no webfont
- * and renders identically as a favicon, in the app header, and on the OG card.
+ * The interim "k" tile (Schibsted Grotesk, weight 600) as an outline, so it
+ * needs no webfont and renders identically as a favicon and on the OG card.
  */
 export function BrandMark({
   size = 40,

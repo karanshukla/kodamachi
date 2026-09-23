@@ -27,7 +27,7 @@ package shim
 
 const AppName = %q
 
-// MarkTileRadius and MarkGlyphPath draw the 木 mark in a 160x160 viewBox.
+// MarkTileRadius and MarkGlyphPath draw the mark in a 160x160 viewBox.
 const MarkTileRadius = %v
 
 const MarkGlyphPath = %q

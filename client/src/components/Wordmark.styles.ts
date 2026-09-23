@@ -2,12 +2,6 @@ import type { CSSProperties } from "react";
 
 import { textDefault } from "../styles/tokens";
 
-export const lockup: CSSProperties = {
-  display: "inline-flex",
-  alignItems: "center",
-  gap: 10,
-};
-
 export const name = (size: number): CSSProperties => ({
   fontFamily: "var(--ds-font-sans)",
   fontWeight: 600,

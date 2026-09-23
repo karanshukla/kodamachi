@@ -6,7 +6,6 @@ import { Link, useNavigate, useLocation } from "react-router";
 import { apiClient } from "../api/apiClient";
 import { authKeys } from "../api/authService";
 import { AuthPanel } from "../components/AuthPanel";
-import { BrandMark } from "../components/BrandMark";
 import { useTranslations } from "../lib/i18n";
 import { resolveApiErrorMessage } from "../lib/i18n/apiErrors";
 import { dangerText } from "../styles/tokens";
@@ -41,10 +40,6 @@ export default function OAuthCallback() {
   return (
     <Box maw={480} mx="auto" mt="xl">
       <AuthPanel>
-        <Box ta="center">
-          <BrandMark size={56} />
-        </Box>
-
         {loading ? (
           <>
             <Title order={1} fw={600} fz={22} ta="center">

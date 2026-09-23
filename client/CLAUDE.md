@@ -50,8 +50,9 @@ from "./Thing.styles"`). Anything computed from props is a named function there,
 - **Palette keys are named for their role, not their hue** — `primary`, `accent`,
   `ink`, `danger`. `color="sunshine"` was a claim about a hue that a repaint would
   falsify.
-- **The mark is 木.** `BrandMark` draws the glyph as an outline (no serif webfont).
-  The handoff's mascot slots stay empty until there is real artwork; do not draw
+- **The mark is an interim "k" tile.** `BrandMark` draws it as an outline (no
+  webfont), and the header shows the wordmark alone. The handoff's 木 is retired;
+  a new logo comes with the mascot. The handoff's mascot slots stay empty until there is real artwork; do not draw
   one in code. The design source is `docs/design/kodamachi-handoff/`.
 - **No component calls `useComputedColorScheme` to choose a colour** — light values
   sit on `:root`, dark under `:root[data-mantine-color-scheme="dark"]`, and the

@@ -2,7 +2,7 @@
 
 > FOSS, AT Protocol-native anonymous Q&A. Receive questions anonymously and answer directly to your Bluesky feed.
 
-<img width="1200" height="630" alt="kodamachi link card: 木 mark, the wordmark, and “Ask me anything, anonymously”" src="client/public/og.png" />
+<img width="1200" height="630" alt="kodamachi link card: the mark, the wordmark, and “Ask me anything, anonymously”" src="client/public/og.png" />
 
 > **Formerly Navyfragen.** The brand changed with the redesign in `docs/design/kodamachi-handoff/`; the repository name, the `navyfragen.app` / `fragen.navy` domains and the `app.navyfragen.message` lexicon are unchanged until the cutover tracked in [#388](https://github.com/karanshukla/navyfragen-app/issues/388).
 
@@ -55,7 +55,7 @@ navyfragen-app/
 └── docs/               # Developer notes and the design handoff
 ```
 
-`brand.json` at the root holds the app name, domains and the 木 mark; the client, server and Go service all read it.
+`brand.json` at the root holds the app name, domains and the mark; the client, server and Go service all read it.
 
 ---
 
@@ -143,11 +143,11 @@ Set `EXPORT_HTML_URL=http://localhost:3033/` in `server/.env` (this is the defau
 
 Three themes are available when responding to a message:
 
-| Theme        | Description                                                                    |
-| ------------ | ------------------------------------------------------------------------------ |
-| `default`    | **Quote** — white card on the navy fill (the design's default)                 |
-| `compressed` | **Compact** — white-ruled block on midnight, for feeds read in the dark        |
-| `twitter`    | **Post** — a paper post from the app's own account, with the 木 mark as avatar |
+| Theme        | Description                                                                 |
+| ------------ | --------------------------------------------------------------------------- |
+| `default`    | **Quote** — white card on the navy fill (the design's default)              |
+| `compressed` | **Compact** — white-ruled block on midnight, for feeds read in the dark     |
+| `twitter`    | **Post** — a paper post from the app's own account, with the mark as avatar |
 
 Users pick a theme in the Image theme card on the Messages page; it is stored per-user in the database.
 

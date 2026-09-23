@@ -31,11 +31,11 @@ Exempt from the ladder: Go doc comments on exported identifiers, and coverage pr
 
 ## Brand
 
-The product is **kodamachi**: white paper, dark-blue ink, no gradients, 木 as the
-mark. The source of truth is the Claude Design handoff vendored at
+The product is **kodamachi**: white paper, dark-blue ink, no gradients. The mark is
+an interim lowercase "k" tile until the new logo arrives with the mascot. The source of truth is the Claude Design handoff vendored at
 `docs/design/kodamachi-handoff/` (read `Kodamachi Foundations.dc.html` first);
 `docs/design-tokens.md` says how it maps onto the token layers. Brand strings and the
-木 outline come from the root `brand.json`; the domains in it are deployment-tier and
+mark outline come from the root `brand.json`; the domains in it are deployment-tier and
 still point at the current host until the cutover in #388.
 
 ## What this app does

@@ -1,4 +1,4 @@
-import { Alert, Box, Button, Center, Text, TextInput, Title } from "@mantine/core";
+import { Alert, Box, Button, Text, TextInput, Title } from "@mantine/core";
 import { useRef, useState } from "react";
 import { useLocation } from "react-router";
 import { useHaptic } from "use-haptic";
@@ -10,7 +10,6 @@ import { useLogin } from "../api/authService";
 import { AuthPanel } from "../components/AuthPanel";
 import { E2ELoginPanel } from "../components/login/E2ELoginPanel";
 import { HandleSuggestions } from "../components/login/HandleSuggestions";
-import { BrandMark } from "../components/BrandMark";
 import { APP_DOMAIN, APP_NAME } from "../lib/brand";
 import { useTranslations } from "../lib/i18n";
 import { usePageTitle } from "../lib/usePageTitle";
@@ -68,9 +67,6 @@ function LoginForm() {
   return (
     <Box maw={480} mx="auto">
       <AuthPanel>
-        <Center>
-          <BrandMark size={56} />
-        </Center>
         <Box ta="center">
           <Title order={1} fw={600} fz={22}>
             {messages.loginPage.logInToPrefix}
