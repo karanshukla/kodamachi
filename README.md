@@ -2,8 +2,6 @@
 
 > FOSS, AT Protocol-native anonymous Q&A. Receive questions anonymously and answer directly to your Bluesky feed.
 
-<img width="1200" height="630" alt="kodamachi link card: the mark, the wordmark, and “Ask me anything, anonymously”" src="client/public/og.png" />
-
 > **Formerly Navyfragen.** The brand changed with the redesign in `docs/design/kodamachi-handoff/`; the app lives at `kodamachi.app`, and `navyfragen.app` redirects there. Short links moved from `fragen.navy` to `kodamachi.online` (both still work), and the `app.navyfragen.message` lexicon is unchanged; see [#388](https://github.com/karanshukla/navyfragen-app/issues/388).
 
 [![Tests](https://github.com/karanshukla/navyfragen-app/actions/workflows/Tests.yml/badge.svg)](https://github.com/karanshukla/navyfragen-app/actions/workflows/Tests.yml)
@@ -19,7 +17,7 @@
 
 kodamachi lets Bluesky users receive anonymous questions via a public inbox link and post answers (optionally with a styled image card) directly to their Bluesky feed. Bluesky (AT Protocol) serves as both the identity provider (OAuth) and a secondary data store via PDS sync.
 
-The companion [navyfragen-feed](https://github.com/karanshukla/navyfragen-feed) repo is a Bluesky custom feed generator that surfaces answered questions on the network.
+The companion [kodamachi-feed](https://github.com/karanshukla/kodamachi-feed) repo is a Bluesky custom feed generator that surfaces answered questions on the network.
 
 ---
 
