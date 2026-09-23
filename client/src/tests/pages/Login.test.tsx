@@ -353,6 +353,38 @@ describe("Login page", () => {
       expect((getHandleInput() as HTMLInputElement).value).toBe("ali.bsky.social");
     });
 
+    it("keeps the picked profile at the suggestion's inset, so choosing it shifts nothing", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              actors: [{ did: "did:plc:abc", handle: "ali.bsky.social", displayName: "Ali" }],
+            }),
+        })
+      );
+      mockUseLogin.mockReturnValue({ mutate: vi.fn(), isPending: false } as any);
+      renderWithProviders(<Login />);
+      const paddedAncestors = () => {
+        let padded = 0;
+        for (let el = screen.getByText("Ali").parentElement; el?.tagName !== "FORM";) {
+          if (el!.style.paddingInline) padded += 1;
+          el = el!.parentElement;
+        }
+        return padded;
+      };
+
+      fireEvent.change(getHandleInput(), { target: { value: "al" } });
+      const suggestionRow = await screen.findByRole("option", {}, { timeout: 2000 });
+      const insetAsSuggestion = paddedAncestors();
+      fireEvent.click(suggestionRow);
+
+      expect(screen.queryByRole("option")).not.toBeInTheDocument();
+      expect(insetAsSuggestion).toBe(1);
+      expect(paddedAncestors()).toBe(insetAsSuggestion);
+    });
+
     it("offers the typed handle directly when there are no search results", async () => {
       vi.stubGlobal(
         "fetch",

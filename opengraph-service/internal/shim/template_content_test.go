@@ -90,7 +90,7 @@ func TestBuildOGTemplate_FooterShowsTheUsersShareLink(t *testing.T) {
 		t.Fatalf("footer link should name the profile, got %q", chip)
 	}
 	// The brand text sits alongside the link rather than being replaced by it.
-	if !strings.Contains(html, AppNameWordmarkHTML) {
+	if !strings.Contains(html, `<div class="wordmark">`+AppName+`</div>`) {
 		t.Fatal("the wordmark should still be in the footer")
 	}
 }

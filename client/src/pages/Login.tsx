@@ -1,4 +1,4 @@
-import { Alert, Box, Button, Center, Text, TextInput, Title } from "@mantine/core";
+import { Alert, Box, Button, Text, TextInput, Title } from "@mantine/core";
 import { useRef, useState } from "react";
 import { useLocation } from "react-router";
 import { useHaptic } from "use-haptic";
@@ -8,15 +8,13 @@ import * as z from "zod";
 
 import { useLogin } from "../api/authService";
 import { AuthPanel } from "../components/AuthPanel";
-import * as panelStyles from "../components/AuthPanel.styles";
 import { E2ELoginPanel } from "../components/login/E2ELoginPanel";
 import { HandleSuggestions } from "../components/login/HandleSuggestions";
-import { WinkMark } from "../components/WinkMark";
 import { APP_DOMAIN, APP_NAME } from "../lib/brand";
 import { useTranslations } from "../lib/i18n";
+import { usePageTitle } from "../lib/usePageTitle";
 import { resolveApiErrorMessage } from "../lib/i18n/apiErrors";
 import { useHandleSearch } from "../lib/useHandleSearch";
-import { BRAND_GRADIENT } from "../styles/tokens";
 
 function LoginForm() {
   const location = useLocation();
@@ -69,11 +67,8 @@ function LoginForm() {
   return (
     <Box maw={480} mx="auto">
       <AuthPanel>
-        <Center>
-          <WinkMark size={60} sparkle style={panelStyles.mark} />
-        </Center>
         <Box ta="center">
-          <Title order={1} fw={800} fz={24}>
+          <Title order={1} fw={600} fz={22}>
             {messages.loginPage.logInToPrefix}
             {APP_NAME}
           </Title>
@@ -121,10 +116,10 @@ function LoginForm() {
             mt="xs"
             fullWidth
             loading={isPending || isRedirecting}
-            variant="gradient"
-            gradient={BRAND_GRADIENT}
+            variant="filled"
             size="md"
             radius="md"
+            aria-disabled={!search.isHandleReady}
             style={{
               opacity: search.isHandleReady ? 1 : 0.45,
               cursor: search.isHandleReady ? undefined : "not-allowed",
@@ -149,6 +144,7 @@ function LoginForm() {
 // The build-time constant leaves exactly one branch reachable, so the hooks in
 // each panel are never conditional.
 export default function Login() {
+  usePageTitle(useTranslations().common.shortcuts.login);
   if (import.meta.env.VITE_E2E_TESTING === "true") {
     return <E2ELoginPanel />;
   }

@@ -1,9 +1,11 @@
 import type { CSSProperties } from "react";
 
-import { radiusControl, surfaceGhost } from "../styles/tokens";
+import { border, radiusControl, surface } from "../styles/tokens";
 
+/** The anonymity note sits in its own paper card under the ask card. */
 export const disclaimer: CSSProperties = {
-  background: surfaceGhost,
+  background: surface,
+  border,
   borderRadius: radiusControl,
-  padding: "12px 14px",
+  padding: "14px 16px",
 };

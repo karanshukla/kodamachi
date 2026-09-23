@@ -1,6 +1,7 @@
 {
-  "appName": "Navyfragen",
+  "appName": "kodamachi",
   "appDomain": "navyfragen.app",
   "shareDomain": "fragen.navy",
-  "wordmark": ["navy", "fragen"]
+  "markTileRadius": 36.67,
+  "markGlyphPath": "M49.71 125V35H64.58V86.7L91.68 60.2H109.52L84.21 84.59L110.29 125H93.44L74.02 94.76L64.58 103.87V125Z"
 }

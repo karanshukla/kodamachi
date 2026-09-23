@@ -14,7 +14,7 @@ const EXPAND_SCROLL_DELAY_MS = 150;
 interface QuestionGridProps {
   messages: Message[];
   thread: ThreadRoot;
-  gradient: boolean;
+  ink: boolean;
   /** Which card has its composer open. Owned by the page, which also closes it. */
   respondingTid: string | null;
   onExpand: (tid: string) => void;
@@ -46,7 +46,7 @@ interface QuestionGridProps {
 export function QuestionGrid({
   messages,
   thread,
-  gradient,
+  ink,
   respondingTid,
   onExpand,
   onCollapse,
@@ -118,7 +118,7 @@ export function QuestionGrid({
           <QuestionCard
             key={message.tid}
             message={message}
-            gradient={gradient}
+            ink={ink}
             pinned={pinned}
             focused={focusedIndex === index}
             expanded={expanded}

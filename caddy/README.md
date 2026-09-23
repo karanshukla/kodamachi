@@ -1,7 +1,7 @@
 # Caddy Proxy
 
 The single public entry point for `navyfragen.app`. It fans one domain out to two
-upstream chains: `/api/*` to a regional Navyfragen server, everything else to the
+upstream chains: `/api/*` to a regional kodamachi server, everything else to the
 WAF. It also owns the site's security headers and cache policy.
 
 The [`Caddyfile`](Caddyfile) is deliberately comment-free. Everything that used to
@@ -27,16 +27,16 @@ via `docker/docker-compose.e2e.yml`, for the same reason.
 
 ## Environment variables
 
-| Variable | Production value | Purpose |
-|---|---|---|
-| `PORT` | injected by Railway | The site block's listen port. |
-| `FRONTEND_DOMAIN` | `test-anubis.railway.internal` | Upstream for `/*`. Points at **Anubis**, not the client. |
-| `FRONTEND_PORT` | `8080` | |
-| `BACKEND_NA_DOMAIN` | `navyfragen-server-na.railway.internal` | `/api/*` upstream for `nf-region=us`. |
-| `BACKEND_NA_PORT` | `8080` (default `3000`) | |
-| `BACKEND_EU_DOMAIN` | `navyfragen-server.railway.internal` | `/api/*` upstream for everyone else. |
-| `BACKEND_EU_PORT` | `8080` (default `3000`) | |
-| `BACKEND_DOMAIN` / `BACKEND_PORT` | set, but unused by the Caddyfile | Legacy. Keep them set: [`entrypoint.sh`](entrypoint.sh) runs under `set -u` and dereferences them (falling back to `BACKEND_HOST`) before Caddy starts, so unsetting both crashes the container on boot. |
+| Variable                          | Production value                        | Purpose                                                                                                                                                                                                  |
+| --------------------------------- | --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `PORT`                            | injected by Railway                     | The site block's listen port.                                                                                                                                                                            |
+| `FRONTEND_DOMAIN`                 | `test-anubis.railway.internal`          | Upstream for `/*`. Points at **Anubis**, not the client.                                                                                                                                                 |
+| `FRONTEND_PORT`                   | `8080`                                  |                                                                                                                                                                                                          |
+| `BACKEND_NA_DOMAIN`               | `navyfragen-server-na.railway.internal` | `/api/*` upstream for `nf-region=us`.                                                                                                                                                                    |
+| `BACKEND_NA_PORT`                 | `8080` (default `3000`)                 |                                                                                                                                                                                                          |
+| `BACKEND_EU_DOMAIN`               | `navyfragen-server.railway.internal`    | `/api/*` upstream for everyone else.                                                                                                                                                                     |
+| `BACKEND_EU_PORT`                 | `8080` (default `3000`)                 |                                                                                                                                                                                                          |
+| `BACKEND_DOMAIN` / `BACKEND_PORT` | set, but unused by the Caddyfile        | Legacy. Keep them set: [`entrypoint.sh`](entrypoint.sh) runs under `set -u` and dereferences them (falling back to `BACKEND_HOST`) before Caddy starts, so unsetting both crashes the container on boot. |
 
 `BACKEND_PATH` overrides the `/api` prefix and defaults to `/api`. Nothing sets it.
 
@@ -117,17 +117,17 @@ the Caddy version banner. These are asserted by the Nuclei DAST scan in
 
 ## Caching
 
-| Path | `Cache-Control` |
-|---|---|
-| `/assets/*` | `public, max-age=31536000, immutable` |
-| `/api/*`, `/og-cache/*` | untouched, the upstream decides |
-| everything else | `no-cache, no-store, must-revalidate` |
+| Path                    | `Cache-Control`                       |
+| ----------------------- | ------------------------------------- |
+| `/assets/*`             | `public, max-age=31536000, immutable` |
+| `/api/*`, `/og-cache/*` | untouched, the upstream decides       |
+| everything else         | `no-cache, no-store, must-revalidate` |
 
 Vite emits content-hashed filenames under `/assets/`, so those can be cached forever.
 `index.html`, the manifest, and the service worker must revalidate on every load or a
 deploy strands clients on a stale bundle.
 
-`/og-cache/*` is excluded from the catch-all because the `header` directive *replaces*
+`/og-cache/*` is excluded from the catch-all because the `header` directive _replaces_
 the header rather than merging: the opengraph shim varies it deliberately, a long
 `max-age` for a stored render and a short one for the fallback it serves while a
 render is still in flight. Flattening both to "never cache" would defeat the cache for

@@ -4,8 +4,9 @@ package shim
 
 //go:generate go run ../../cmd/genbrand -in ../../../brand.json -out brand.go
 
-const AppName = "Navyfragen"
+const AppName = "kodamachi"
 
-// AppNameWordmarkHTML is the footer's two-tone lockup — first syllable in the
-// body colour, second in {{TEXT_ACCENT}}.
-const AppNameWordmarkHTML = "navy<span>fragen</span>"
+// MarkTileRadius and MarkGlyphPath draw the mark in a 160x160 viewBox.
+const MarkTileRadius = 36.67
+
+const MarkGlyphPath = "M49.71 125V35H64.58V86.7L91.68 60.2H109.52L84.21 84.59L110.29 125H93.44L74.02 94.76L64.58 103.87V125Z"

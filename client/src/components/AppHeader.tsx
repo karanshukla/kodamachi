@@ -17,7 +17,7 @@ import { useHaptic } from "use-haptic";
 import { useLogout, useSession } from "../api/authService";
 import { useTranslations } from "../lib/i18n";
 import { useHasBounceGap } from "../lib/useHasBounceGap";
-import { BRAND_GRADIENT, surface, textDefault } from "../styles/tokens";
+import { border } from "../styles/tokens";
 
 import { useBounceLogos } from "./BounceLogosContext";
 import { UserMenu } from "./header/UserMenu";
@@ -31,7 +31,8 @@ interface AppHeaderProps {
   onNavClose: () => void;
 }
 
-const chipStyle = { background: surface, color: textDefault, border: "none" };
+/** Header controls are outlined squares, never filled — the header stays paper. */
+const chipStyle = { border, background: "transparent" };
 
 export function AppHeader({ opened, onBurgerToggle, burgerRef, onNavClose }: AppHeaderProps) {
   const messages = useTranslations();
@@ -57,7 +58,7 @@ export function AppHeader({ opened, onBurgerToggle, burgerRef, onNavClose }: App
   };
 
   return (
-    <Group h="100%" px="md">
+    <Group h="100%" px="md" gap="sm" wrap="nowrap">
       <Burger
         ref={burgerRef}
         opened={opened}
@@ -67,18 +68,19 @@ export function AppHeader({ opened, onBurgerToggle, burgerRef, onNavClose }: App
         }}
         hiddenFrom="sm"
         size="sm"
+        aria-label={messages.appHeader.toggleNavigation}
       />
       <Box
         component={Link}
         to="/"
         style={{ textDecoration: "none", display: "flex", alignItems: "center" }}
       >
-        <Wordmark size={18} />
+        <Wordmark size={17} />
       </Box>
 
-      <UpdateAvailableButton />
-
       <Flex gap="sm" justify="flex-end" align="center" style={{ flexGrow: 1 }}>
+        <UpdateAvailableButton />
+
         {hasBounceGap && (
           <Button
             onClick={() => {
@@ -87,7 +89,7 @@ export function AppHeader({ opened, onBurgerToggle, burgerRef, onNavClose }: App
             }}
             variant="default"
             size="xs"
-            radius="xl"
+            radius="md"
             style={chipStyle}
           >
             {bounceLogosEnabled
@@ -112,9 +114,9 @@ export function AppHeader({ opened, onBurgerToggle, burgerRef, onNavClose }: App
           <Button
             component={Link}
             to="/login"
-            variant="gradient"
-            gradient={BRAND_GRADIENT}
+            variant="filled"
             size="xs"
+            radius="xl"
             onClick={() => {
               triggerHaptic();
               onNavClose();
@@ -141,9 +143,9 @@ function ColorSchemeToggle() {
         toggleColorScheme();
       }}
       aria-label={messages.appHeader.toggleColorScheme}
-      size={36}
-      radius="xl"
-      variant="transparent"
+      size={34}
+      radius="md"
+      variant="default"
       style={chipStyle}
     >
       {isDark ? <IconSun size={18} /> : <IconMoon size={18} />}

@@ -1,5 +1,5 @@
 {
-  "name": "navyfragen-monorepo",
+  "name": "kodamachi-monorepo",
   "private": true,
   "workspaces": [
     "client",

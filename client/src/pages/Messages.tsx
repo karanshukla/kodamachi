@@ -1,5 +1,6 @@
-import { Alert, Box, Button, Center, Group, Loader, SimpleGrid, Text, Title } from "@mantine/core";
+import { Alert, Box, Button, Center, Loader, Paper, Text, Title } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
+import { IconMailOpened } from "@tabler/icons-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useHaptic } from "use-haptic";
 
@@ -14,18 +15,18 @@ import {
 } from "../api/messageService";
 import { useUserSettings, useUpdateUserSettings } from "../api/settingsService";
 import { ConfirmationModal } from "../components/ConfirmationModal";
-import { ImageThemePicker } from "../components/messages/ImageThemePicker";
 import { InboxLinkCard } from "../components/messages/InboxLinkCard";
-import { PostingPreferences } from "../components/messages/PostingPreferences";
+import { MessagePreferencesBar } from "../components/messages/MessagePreferencesBar";
 import { QuestionGrid } from "../components/messages/QuestionGrid";
 import { postedAnswerLink } from "../lib/waypointClients";
 import { resolveApiErrorMessage } from "../lib/i18n/apiErrors";
 import { useTranslations } from "../lib/i18n";
+import { usePageTitle } from "../lib/usePageTitle";
 import { getTouchpointTranslations } from "../lib/touchpointTranslations";
 import { useMessagePreferences } from "../lib/useMessagePreferences";
 import { useReplyComposer } from "../lib/useReplyComposer";
 import { useThreadRoot } from "../lib/useThreadRoot";
-import { highlightButton } from "../styles/tokens";
+import * as styles from "./Messages.styles";
 
 const SHORTLINK_URL = import.meta.env.VITE_SHORTLINK_URL || "localhost:5173/profile";
 
@@ -41,6 +42,7 @@ const quotedQuestion = (message: string) =>
 export default function Messages() {
   const { triggerHaptic } = useHaptic(1);
   const messages = useTranslations();
+  usePageTitle(messages.messagesPage.heading);
   const { data: session, isLoading: sessionLoading } = useSession();
   const prefs = useMessagePreferences();
   const { appendProfileLink, useGradients, includeQuestionAsImage, confirmBeforeDelete } =
@@ -187,14 +189,9 @@ export default function Messages() {
 
   return (
     <Box maw={1080}>
-      <Group justify="space-between" align="flex-end" mb="lg" wrap="wrap" gap="sm">
-        <Box>
-          <Title order={1} style={{ letterSpacing: "-0.03em" }}>
-            {messages.messagesPage.heading}
-          </Title>
-          {!messagesLoading && <MessageCount count={messageCount} />}
-        </Box>
-      </Group>
+      <Title order={1} mb="lg">
+        {messages.messagesPage.heading}
+      </Title>
 
       <InboxLinkCard
         shortUrl={shortUrl}
@@ -213,24 +210,19 @@ export default function Messages() {
         </Center>
       ) : messageCount > 0 ? (
         <>
-          <SimpleGrid
-            cols={{ base: 1, md: 2 }}
-            spacing="md"
-            mb="lg"
-            style={{ alignItems: "start" }}
-          >
-            <PostingPreferences state={prefs} />
-            <ImageThemePicker
-              selected={settingsLoading ? null : (userSettings?.imageTheme ?? null)}
-              disabled={settingsLoading || updateSettings.isSaving("imageTheme")}
-              onSelect={(imageTheme) => updateSettings.save({ imageTheme })}
+          <Box mb="lg">
+            <MessagePreferencesBar
+              state={prefs}
+              imageTheme={settingsLoading ? null : (userSettings?.imageTheme ?? null)}
+              imageThemeDisabled={settingsLoading || updateSettings.isSaving("imageTheme")}
+              onSelectImageTheme={(imageTheme) => updateSettings.save({ imageTheme })}
             />
-          </SimpleGrid>
+          </Box>
 
           <QuestionGrid
             messages={thread.ordered}
             thread={thread}
-            gradient={useGradients}
+            ink={useGradients}
             respondingTid={composer.respondingTid}
             onExpand={composer.open}
             onCollapse={composer.close}
@@ -252,25 +244,29 @@ export default function Messages() {
           />
         </>
       ) : (
-        <Alert color="primary" title={messages.messagesPage.noMessagesTitle}>
-          <Text fz="sm" mb="sm">
+        <Paper withBorder p={40} ta="center">
+          <div style={styles.emptyIcon}>
+            <IconMailOpened size={26} stroke={1.5} />
+          </div>
+          <Text fw={600} fz={18}>
+            {messages.messagesPage.noMessagesTitle}
+          </Text>
+          <Text c="dimmed" fz={14} mt={6} maw={340} mx="auto" style={styles.emptyBody}>
             {messages.messagesPage.noMessagesBody}
           </Text>
           <Button
+            mt={22}
             onClick={() => {
               triggerHaptic();
               handleAddExampleMessages();
             }}
             loading={examplesLoading}
-            size="xs"
             radius="md"
-            color="highlight"
-            variant="filled"
-            style={highlightButton}
+            variant="outline"
           >
             {messages.messagesPage.addExampleMessages}
           </Button>
-        </Alert>
+        </Paper>
       )}
 
       <ConfirmationModal
@@ -290,24 +286,6 @@ export default function Messages() {
         loading={deletingTid !== null && deletingTid === messageIdToDelete}
       />
     </Box>
-  );
-}
-
-function MessageCount({ count }: { count: number }) {
-  const messages = useTranslations();
-  return (
-    <Text fz={11} c="dimmed" mt={6} style={{ letterSpacing: "0.05em" }}>
-      {count > 0 ? (
-        <>
-          <span style={{ color: "var(--ds-attention-bg)" }} aria-hidden>
-            ●
-          </span>{" "}
-          {messages.messagesPage.newMessagesCount(count)}
-        </>
-      ) : (
-        messages.messagesPage.noMessagesCount
-      )}
-    </Text>
   );
 }
 

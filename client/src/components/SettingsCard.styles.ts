@@ -1,15 +1,11 @@
 import type { CSSProperties } from "react";
 
-import { surface } from "../styles/tokens";
-
 export const card: CSSProperties = {
   width: "100%",
   height: "100%",
   display: "flex",
   flexDirection: "column",
-  borderRadius: 14,
   padding: 20,
-  background: surface,
 };
 
 /** Fixed height so titles line up whether or not the card carries a control. */
@@ -25,7 +21,7 @@ export const body: CSSProperties = {
 };
 
 export const description: CSSProperties = {
-  lineHeight: 1.5,
+  lineHeight: 1.55,
 };
 
 export const note: CSSProperties = {

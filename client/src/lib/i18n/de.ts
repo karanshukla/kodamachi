@@ -17,7 +17,9 @@ function pluralize(count: number, singular: string, plural: string): string {
 
 export const de = {
   common: {
+    skipToContent: "Zum Inhalt springen",
     cancel: "Abbrechen",
+    close: "Schließen",
     confirm: "Bestätigen",
     delete: "Löschen",
     retry: "Erneut versuchen",
@@ -57,12 +59,8 @@ export const de = {
     notLoggedInTitle: "Nicht angemeldet",
     notLoggedInMessage: "Bitte melde dich an, um deine Nachrichten zu sehen.",
     heading: "Nachrichten",
-    noMessagesCount: "keine Nachrichten",
-    newMessagesCount: (count: number) =>
-      `${numberFormat.format(count)} ${pluralize(count, "neu", "neu")}`,
-    noMessagesTitle: "Keine Nachrichten",
-    noMessagesBody:
-      "Du hast noch keine Nachrichten. Teile deinen Posteingangslink, um anonyme Fragen zu erhalten.",
+    noMessagesTitle: "Noch keine Fragen",
+    noMessagesBody: "Teile deinen Link, und die erste anonyme Frage landet hier.",
     addExampleMessages: "Beispielnachrichten hinzufügen",
     deleteConfirmTitle: "Löschen bestätigen",
     deleteConfirmMessage:
@@ -73,20 +71,22 @@ export const de = {
     welcomeBackMessage: "Du hast dich erfolgreich angemeldet.",
   },
   inboxLinkCard: {
-    eyebrow: "Dein Posteingangslink · öffentlich zugänglich",
+    eyebrow: "Dein Posteingangslink · öffentlich",
   },
   postingPreferences: {
     title: "Veröffentlichungseinstellungen",
     appendProfileLink: {
       label: "Posteingangslink automatisch anhängen",
+      shortLabel: "Posteingangslink",
       description: "Fügt deinen Link an jeden Beitrag an. Verringert das Zeichenbudget.",
     },
     useGradients: {
-      label: "Farbverlauf-Hintergründe",
-      description: "Hübsch für Screenshots. Für mehr Kontrast deaktivieren.",
+      label: "Tinten-Hintergründe",
+      description: "Dunkelblaue Fragekarten mit weißem Text. Ausschalten für Papierkarten.",
     },
     includeQuestionAsImage: {
       label: "Frage als Bild",
+      shortLabel: "Frage als Bild",
       description: "Erstellt ein teilbares Bild mit automatischem Alt-Text.",
     },
     confirmBeforeDelete: {
@@ -97,8 +97,6 @@ export const de = {
       label: "Automatisch zu Nachrichten scrollen",
       description: "Scrollt neue Nachrichten beim Laden in den sichtbaren Bereich.",
     },
-    summary: (enabled: number, total: number) =>
-      `${numberFormat.format(enabled)} von ${numberFormat.format(total)} aktiv`,
   },
   questionCard: {
     cannotDeleteThreadRootTooltip: "Thread zuerst lösen",
@@ -141,20 +139,23 @@ export const de = {
     replyToThread: "Auf Thread antworten",
     reply: "Antworten",
   },
+  preferencesBar: {
+    open: "Weitere Einstellungen",
+  },
   imageThemePicker: {
     title: "Bild-Theme",
   },
   themes: {
     image: {
-      default: "Standard",
-      compressed: "Komprimiert",
-      twitter: "Twitter-Stil",
+      default: "Zitat",
+      compressed: "Kompakt",
+      twitter: "Beitrag",
     },
     profileCard: {
-      royal: "Königlich",
-      aurora: "Aurora",
-      ember: "Glut",
-      verdant: "Sattgrün",
+      royal: "Tinte",
+      aurora: "Stahl",
+      ember: "Mitternacht",
+      verdant: "Papier",
     },
   },
   nav: {
@@ -180,6 +181,7 @@ export const de = {
     disableAnimations: "Animationen deaktivieren",
     enableAnimations: "Animationen aktivieren",
     toggleColorScheme: "Farbschema wechseln",
+    toggleNavigation: "Navigation ein- oder ausblenden",
   },
   customisePage: {
     heading: "Anpassen",
@@ -225,6 +227,7 @@ export const de = {
     recipientNotFoundMessage: "Nachricht kann nicht gesendet werden: Nutzer-DID nicht gefunden.",
     messageSentTitle: "Nachricht gesendet!",
     messageSentBody: "Deine anonyme Nachricht ist unterwegs.",
+    sendAnother: "Noch eine senden",
     sendFailedTitle: "Senden fehlgeschlagen",
     noBlueskyAccountTitle: "Kein Bluesky-Konto gefunden",
     noBlueskyAccountBody:
@@ -323,7 +326,6 @@ export const de = {
     ariaLabel: "Update verfügbar — zum Anwenden neu laden",
     buttonLabel: "Update",
     applyingAriaLabel: "Update wird angewendet — die Seite wird neu geladen",
-    applyingLabel: "Aktualisiere…",
   },
   userMenu: {
     switchAccountErrorTitle: "Konto konnte nicht gewechselt werden",
@@ -334,20 +336,21 @@ export const de = {
     logOut: (handle: string | undefined) => `@${handle} abmelden`,
   },
   home: {
-    titleSuffix: " - Anonyme Fragen und Antworten auf Bluesky",
-    subtitle: "Empfange Fragen aus dem Web und veröffentliche die Antworten direkt auf Bluesky.",
+    title: "Anonyme Fragen, beantwortet auf Bluesky.",
+    subtitle:
+      "Teile einen Link, sammle Fragen von allen und veröffentliche deine Antworten direkt in deinem Feed.",
     sellingPoints: {
       fastAndFree: {
         title: "Schnell und kostenlos",
-        body: "Kein Download nötig – melde dich einfach mit deinen Bluesky-Zugangsdaten an und teile deinen Posteingangslink",
+        body: "Kein Download. Melde dich mit Bluesky an und teile deinen Posteingangslink.",
       },
       spamProtection: {
         title: "Spam-Schutz ohne Captchas",
-        body: "Geschützt durch Anubis, einen leistungsstarken Bot-Erkennungsdienst",
+        body: "Geschützt durch Anubis-Bot-Erkennung – Besucher müssen nie ein Rätsel lösen.",
       },
       openSource: {
         title: "Open Source",
-        body: "Trage direkt zum Projekt bei, oder hoste deine eigene Version, wenn du möchtest!",
+        body: "Trage zum Projekt bei oder hoste deine eigene Instanz.",
       },
     },
     questionsFeedback: "Fragen? Feedback?",
@@ -457,7 +460,10 @@ export const de = {
     generic: "Etwas ist schiefgelaufen. Bitte versuche es erneut.",
   },
   notFoundPage: {
-    title: "404 - Nicht gefunden",
-    message: "Die angeforderte Ressource wurde nicht gefunden.",
+    title: "404 — nicht gefunden",
+    message:
+      "Diese Seite existiert nicht. Der Link ist vielleicht veraltet, oder der Nutzername hat sich geändert.",
+    goHome: "Zur Startseite",
+    yourMessages: "Deine Nachrichten",
   },
 } satisfies Messages;

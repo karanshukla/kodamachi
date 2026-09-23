@@ -1,4 +1,4 @@
-import { Anchor, Container, Group, Text } from "@mantine/core";
+import { Anchor, Group, Text } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { useState, useRef, useEffect } from "react";
 import { useParams } from "react-router";
@@ -7,6 +7,7 @@ import { useSendMessage } from "../api/messageService";
 import { useResolveHandle, usePublicProfile } from "../api/profileService";
 import { useUserSettings } from "../api/settingsService";
 import { withMarks } from "../lib/atmosphereApps";
+import { SHARE_DOMAIN } from "../lib/brand";
 import { dbBoolean } from "../lib/dbBoolean";
 import { clientDestinationFor } from "../lib/waypointClients";
 import { profileWaypointTargetFor } from "../lib/waypointTarget";
@@ -18,9 +19,10 @@ import { ProfileSkeleton } from "../components/profile/ProfileSkeleton";
 import { ProfileUrlBar } from "../components/profile/ProfileUrlBar";
 import { APP_NAME } from "../lib/brand";
 import { useTranslations } from "../lib/i18n";
+import { usePageTitle } from "../lib/usePageTitle";
 import { resolveApiErrorMessage } from "../lib/i18n/apiErrors";
 import type { Messages } from "../lib/i18n/types";
-import { profileCardGradient } from "../lib/themes";
+import { profileCardFill } from "../lib/themes";
 import { getTouchpointTranslations } from "../lib/touchpointTranslations";
 import * as styles from "./PublicProfile.styles";
 
@@ -29,9 +31,12 @@ const MAX_MESSAGE_LENGTH = 150;
 export default function PublicProfile() {
   const messages = useTranslations();
   const { handle } = useParams<{ handle: string }>();
+  usePageTitle(handle && `@${handle}`);
   const [message, setMessage] = useState("");
   const [modalOpened, setModalOpened] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [sendError, setSendError] = useState<string | null>(null);
+  const [sent, setSent] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const askCardRef = useRef<HTMLDivElement>(null);
 
@@ -56,6 +61,7 @@ export default function PublicProfile() {
 
   const handleSend = () => {
     setFormError(null);
+    setSendError(null);
     if (!message.trim()) {
       setFormError(messages.publicProfilePage.messageEmptyError);
       return;
@@ -77,20 +83,12 @@ export default function PublicProfile() {
       { recipient: profileData.profile.did, message },
       {
         onSuccess: () => {
-          notifications.show({
-            title: messages.publicProfilePage.messageSentTitle,
-            message: messages.publicProfilePage.messageSentBody,
-            color: "green",
-          });
           setMessage("");
+          setSent(true);
           setModalOpened(false);
         },
         onError: (err: unknown) => {
-          notifications.show({
-            title: messages.publicProfilePage.sendFailedTitle,
-            message: sendFailureMessage(messages, err),
-            color: "red",
-          });
+          setSendError(sendFailureMessage(messages, err));
           setModalOpened(false);
         },
       }
@@ -149,10 +147,10 @@ export default function PublicProfile() {
 
   const t = getTouchpointTranslations(profileData?.touchpointLocale ?? null);
   const ownerName = profile.displayName || profile.handle || "";
-  const profileUrl = `https://fragen.navy/${profile.handle}`;
+  const profileUrl = `https://${SHARE_DOMAIN}/${profile.handle}`;
 
   return (
-    <Container>
+    <>
       <ProfileUrlBar
         handle={profile.handle!}
         url={profileUrl}
@@ -167,7 +165,7 @@ export default function PublicProfile() {
       />
 
       <AskCard
-        gradient={profileCardGradient(profileData?.profileCardTheme ?? null)}
+        fill={profileCardFill(profileData?.profileCardTheme ?? null)}
         headline={profileData?.customPrompt || t.headline(ownerName)}
         maxLength={MAX_MESSAGE_LENGTH}
         value={message}
@@ -176,8 +174,14 @@ export default function PublicProfile() {
         sending={sendLoading}
         // The server sends a real boolean; undefined means the field was absent.
         open={profileData?.inboxEnabled !== false}
-        error={formError}
-        onDismissError={() => setFormError(null)}
+        sent={sent}
+        onSendAnother={() => setSent(false)}
+        error={formError ?? sendError}
+        sendFailed={sendError !== null}
+        onDismissError={() => {
+          setFormError(null);
+          setSendError(null);
+        }}
         translations={t}
         cardRef={askCardRef}
         textareaRef={textareaRef}
@@ -198,7 +202,7 @@ export default function PublicProfile() {
         confirmLabel={messages.publicProfilePage.sendMessage}
         cancelLabel={messages.common.cancel}
       />
-    </Container>
+    </>
   );
 }
 

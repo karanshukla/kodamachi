@@ -1,17 +1,19 @@
 import type { CSSProperties } from "react";
 
-import { border, radiusPill, surfaceGhost, textDefault, textDimmed } from "../../styles/tokens";
+import { border, radiusPill, surface, textDefault, textDimmed } from "../../styles/tokens";
 
 export const pill: CSSProperties = {
   display: "inline-flex",
   alignItems: "center",
   gap: 8,
-  background: surfaceGhost,
+  background: surface,
   border,
-  padding: "6px 12px 6px 10px",
+  height: 32,
+  padding: "0 14px",
   borderRadius: radiusPill,
-  fontSize: 12,
+  fontSize: 13,
   color: textDimmed,
+  letterSpacing: "0.01em",
 };
 
 export const pillHandle: CSSProperties = {
@@ -20,7 +22,7 @@ export const pillHandle: CSSProperties = {
 };
 
 export const action: CSSProperties = {
-  background: surfaceGhost,
+  background: surface,
   border,
   color: textDimmed,
 };

@@ -22,7 +22,7 @@ Protocol `Agent` through `initializeAgentFromHonoSession()` in
 `src/hono/session-agent-hono.ts` (a thin wrapper over `initializeAgentForDid`).
 
 The session is intentionally thin — Bluesky OAuth is the authorization proxy, so an
-expired Bluesky session invalidates the Navyfragen session too. The cookie is Hono's
+expired Bluesky session invalidates the kodamachi session too. The cookie is Hono's
 signed-cookie (single `nf-session`, HMAC-SHA256), not wire-compatible with the former
 cookie-session/keygrip scheme.
 

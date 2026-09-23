@@ -30,20 +30,30 @@ Rules; reasoning in `docs/design-tokens.md`.
 
 - **Structure and style are separate files.** A `.tsx` holds structure and
   behaviour; its CSS objects live in a sibling `*.styles.ts` (`import * as styles
-  from "./Thing.styles"`). Anything computed from props is a named function there,
+from "./Thing.styles"`). Anything computed from props is a named function there,
   not an inline ternary. If a style function needs a business rule, the rule belongs
   in the component or a hook.
 - **`src/index.css` is the single source of truth for colour**, in three layers:
-  brand primitives → semantic tokens (`--ds-surface`, `--ds-link`, …) → on-gradient
-  tokens (`--ds-on-grad*`, deliberately not scheme-aware). Components read only from
-  the last two.
+  brand primitives → semantic tokens (`--ds-surface`, `--ds-link`, `--ds-hero`,
+  …) → fixed foregrounds for the ask-card presets (`--ds-on-fill*`,
+  `--ds-on-paper*`). Components read only from the last two.
+- **Dark mode is the inverse of light.** Navy and white swap roles: navy paper
+  with white ink, and hero surfaces turn off-white with navy ink. Only the
+  ask-card presets and the image-theme previews keep their colour.
 - **The brand palette (layer 1a) is off-limits outside `index.css`.** A component
-  spelling `var(--ds-primary)` survives a repaint as the old colour, so the contrast
-  suite fails on it; give it a semantic token instead. Gradients (1b) and the
+  spelling `var(--ds-navy)` survives a repaint as the old colour, so the contrast
+  suite fails on it; give it a semantic token instead. Fills (1b) and the
   type/motion/radius primitives (1c) are free to use.
+- **No gradients, no third hue.** Navy and Link carry every state, danger is the one
+  exception, and `contrast.test.ts` fails on any `gradient(` in the stylesheet.
+  Success and warning are an icon plus navy text.
 - **Palette keys are named for their role, not their hue** — `primary`, `accent`,
-  `ink`, `highlight`, `danger`. `color="sunshine"` was a claim about a hue that a
-  repaint would falsify.
+  `ink`, `danger`. `color="sunshine"` was a claim about a hue that a repaint would
+  falsify.
+- **The mark is an interim "k" tile.** `BrandMark` draws it as an outline (no
+  webfont), and the header shows the wordmark alone. The handoff's 木 is retired;
+  a new logo comes with the mascot. The handoff's mascot slots stay empty until there is real artwork; do not draw
+  one in code. The design source is `docs/design/kodamachi-handoff/`.
 - **No component calls `useComputedColorScheme` to choose a colour** — light values
   sit on `:root`, dark under `:root[data-mantine-color-scheme="dark"]`, and the
   browser picks. Reaching for an `isDark` prop means you want a token.

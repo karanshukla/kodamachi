@@ -133,10 +133,12 @@ describe("BouncingLogos", () => {
     cafSpy.mockRestore();
   });
 
-  it("applies the slow-spin class to the sparkle variant only", () => {
+  it("drifts the mark without spinning it: one glyph at three opacities", () => {
     renderWithBounceProvider("true");
-    const spinning = document.querySelectorAll(".ds-bounce-spin");
-    // One spin variant per side.
-    expect(spinning).toHaveLength(2);
+    expect(document.querySelectorAll(".ds-bounce-spin")).toHaveLength(0);
+    const opacities = Array.from(
+      document.querySelectorAll<HTMLElement>("[data-testid='bouncing-logo']")
+    ).map((el) => el.style.opacity);
+    expect(new Set(opacities).size).toBe(3);
   });
 });

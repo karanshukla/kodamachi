@@ -26,7 +26,9 @@ export interface ErrorMessages {
 }
 
 export interface CommonMessages {
+  skipToContent: string;
   cancel: string;
+  close: string;
   confirm: string;
   delete: string;
   retry: string;
@@ -67,8 +69,6 @@ export interface MessagesPageMessages {
   notLoggedInTitle: string;
   notLoggedInMessage: string;
   heading: string;
-  noMessagesCount: string;
-  newMessagesCount: (count: number) => string;
   noMessagesTitle: string;
   noMessagesBody: string;
   addExampleMessages: string;
@@ -86,12 +86,28 @@ export interface InboxLinkCardMessages {
 
 export interface PostingPreferencesMessages {
   title: string;
-  appendProfileLink: { label: string; description: string };
-  useGradients: { label: string; description: string };
-  includeQuestionAsImage: { label: string; description: string };
-  confirmBeforeDelete: { label: string; description: string };
-  autoScrollToMessages: { label: string; description: string };
-  summary: (enabled: number, total: number) => string;
+  appendProfileLink: PostPreferenceCopy;
+  useGradients: PreferenceCopy;
+  includeQuestionAsImage: PostPreferenceCopy;
+  confirmBeforeDelete: PreferenceCopy;
+  autoScrollToMessages: PreferenceCopy;
+}
+
+export interface PreferenceCopy {
+  label: string;
+  description: string;
+}
+
+/**
+ * A preference the bar carries as a chip, which needs a label short enough to
+ * read at a glance. Only the two that change the post being published do.
+ */
+export interface PostPreferenceCopy extends PreferenceCopy {
+  shortLabel: string;
+}
+
+export interface PreferencesBarMessages {
+  open: string;
 }
 
 export interface QuestionCardMessages {
@@ -160,10 +176,11 @@ export interface AppHeaderMessages {
   disableAnimations: string;
   enableAnimations: string;
   toggleColorScheme: string;
+  toggleNavigation: string;
 }
 
 export interface HomeMessages {
-  titleSuffix: string;
+  title: string;
   subtitle: string;
   sellingPoints: {
     fastAndFree: { title: string; body: string };
@@ -244,6 +261,7 @@ export interface PublicProfilePageMessages {
   recipientNotFoundMessage: string;
   messageSentTitle: string;
   messageSentBody: string;
+  sendAnother: string;
   sendFailedTitle: string;
   noBlueskyAccountTitle: string;
   noBlueskyAccountBody: string;
@@ -348,7 +366,6 @@ export interface UpdateAvailableButtonMessages {
   ariaLabel: string;
   buttonLabel: string;
   applyingAriaLabel: string;
-  applyingLabel: string;
 }
 
 export interface UserMenuMessages {
@@ -369,6 +386,7 @@ export interface Messages {
   questionCard: QuestionCardMessages;
   openInPicker: OpenInPickerMessages;
   replyComposer: ReplyComposerMessages;
+  preferencesBar: PreferencesBarMessages;
   imageThemePicker: ImageThemePickerMessages;
   themes: ThemesMessages;
   nav: NavMessages;
@@ -396,4 +414,6 @@ export interface Messages {
 export interface NotFoundPageMessages {
   title: string;
   message: string;
+  goHome: string;
+  yourMessages: string;
 }

@@ -16,7 +16,9 @@ function pluralize(count: number, singular: string, plural: string): string {
 
 export const pt = {
   common: {
+    skipToContent: "Saltar para o conteúdo",
     cancel: "Cancelar",
+    close: "Fechar",
     confirm: "Confirmar",
     delete: "Excluir",
     retry: "Tentar novamente",
@@ -56,12 +58,8 @@ export const pt = {
     notLoggedInTitle: "Você não está logado",
     notLoggedInMessage: "Faça login para ver suas mensagens.",
     heading: "Mensagens",
-    noMessagesCount: "sem mensagens",
-    newMessagesCount: (count: number) =>
-      `${numberFormat.format(count)} ${pluralize(count, "nova", "novas")}`,
-    noMessagesTitle: "Sem mensagens",
-    noMessagesBody:
-      "Você ainda não tem mensagens. Compartilhe o link da sua caixa de entrada para receber perguntas anônimas.",
+    noMessagesTitle: "Nenhuma pergunta ainda",
+    noMessagesBody: "Compartilhe seu link e a primeira pergunta anônima vai chegar aqui.",
     addExampleMessages: "Adicionar mensagens de exemplo",
     deleteConfirmTitle: "Confirmar exclusão",
     deleteConfirmMessage:
@@ -72,20 +70,22 @@ export const pt = {
     welcomeBackMessage: "Você fez login com sucesso.",
   },
   inboxLinkCard: {
-    eyebrow: "Link da sua caixa de entrada · acesso público",
+    eyebrow: "Link da sua caixa de entrada · público",
   },
   postingPreferences: {
     title: "Preferências de publicação",
     appendProfileLink: {
       label: "Anexar link da caixa de entrada automaticamente",
+      shortLabel: "Link da caixa",
       description: "Adiciona seu link a cada publicação. Reduz o limite de caracteres.",
     },
     useGradients: {
-      label: "Fundos em gradiente",
-      description: "Bonito para capturas de tela. Desative para mais contraste.",
+      label: "Fundos de tinta",
+      description: "Cartões azul-marinho com texto branco. Desative para cartões de papel.",
     },
     includeQuestionAsImage: {
       label: "Pergunta como imagem",
+      shortLabel: "Pergunta como imagem",
       description: "Gera uma imagem compartilhável com texto alternativo automático.",
     },
     confirmBeforeDelete: {
@@ -96,8 +96,6 @@ export const pt = {
       label: "Rolagem automática até as mensagens",
       description: "Rola as mensagens novas para a tela quando são carregadas.",
     },
-    summary: (enabled: number, total: number) =>
-      `${numberFormat.format(enabled)} de ${numberFormat.format(total)} ativas`,
   },
   questionCard: {
     cannotDeleteThreadRootTooltip: "Desafixe o tópico primeiro",
@@ -140,20 +138,23 @@ export const pt = {
     replyToThread: "Responder ao tópico",
     reply: "Responder",
   },
+  preferencesBar: {
+    open: "Mais configurações",
+  },
   imageThemePicker: {
     title: "Tema da imagem",
   },
   themes: {
     image: {
-      default: "Padrão",
-      compressed: "Compactado",
-      twitter: "Estilo Twitter",
+      default: "Citação",
+      compressed: "Compacto",
+      twitter: "Publicação",
     },
     profileCard: {
-      royal: "Real",
-      aurora: "Aurora",
-      ember: "Brasa",
-      verdant: "Verdejante",
+      royal: "Tinta",
+      aurora: "Aço",
+      ember: "Meia-noite",
+      verdant: "Papel",
     },
   },
   nav: {
@@ -179,6 +180,7 @@ export const pt = {
     disableAnimations: "Desativar animações",
     enableAnimations: "Ativar animações",
     toggleColorScheme: "Alternar esquema de cores",
+    toggleNavigation: "Mostrar ou ocultar a navegação",
   },
   customisePage: {
     heading: "Personalizar",
@@ -225,6 +227,7 @@ export const pt = {
     recipientNotFoundMessage: "Não é possível enviar a mensagem: DID do usuário não encontrado.",
     messageSentTitle: "Mensagem enviada!",
     messageSentBody: "Sua mensagem anônima está a caminho.",
+    sendAnother: "Enviar outra",
     sendFailedTitle: "Falha ao enviar",
     noBlueskyAccountTitle: "Nenhuma conta do Bluesky encontrada",
     noBlueskyAccountBody: "não existe no Bluesky. Verifique o usuário e tente novamente.",
@@ -321,7 +324,6 @@ export const pt = {
     ariaLabel: "Atualização disponível — recarregue para aplicar",
     buttonLabel: "Atualizar",
     applyingAriaLabel: "Aplicando a atualização — a página será recarregada",
-    applyingLabel: "Atualizando…",
   },
   userMenu: {
     switchAccountErrorTitle: "Não foi possível trocar de conta",
@@ -332,20 +334,21 @@ export const pt = {
     logOut: (handle: string | undefined) => `Sair @${handle}`,
   },
   home: {
-    titleSuffix: " - Perguntas e respostas anônimas no Bluesky",
-    subtitle: "Receba perguntas da web e publique as respostas diretamente no Bluesky.",
+    title: "Perguntas anônimas, respondidas no Bluesky.",
+    subtitle:
+      "Compartilhe um link, receba perguntas de qualquer pessoa e publique suas respostas direto no seu feed.",
     sellingPoints: {
       fastAndFree: {
         title: "Rápido e gratuito",
-        body: "Nenhum download necessário, basta fazer login com suas credenciais do Bluesky e compartilhar o link da sua caixa de entrada",
+        body: "Sem downloads. Faça login com o Bluesky e compartilhe o link da sua caixa de entrada.",
       },
       spamProtection: {
         title: "Proteção contra spam, sem captchas",
-        body: "Protegido pelo Anubis, um poderoso serviço de detecção de bots",
+        body: "Protegido pela detecção de bots do Anubis, sem quebra-cabeças para os visitantes.",
       },
       openSource: {
         title: "Código aberto",
-        body: "Contribua diretamente para o projeto, ou hospede sua própria versão se quiser!",
+        body: "Contribua com o projeto ou hospede sua própria instância.",
       },
     },
     questionsFeedback: "Perguntas? Comentários?",
@@ -444,7 +447,10 @@ export const pt = {
     generic: "Algo deu errado. Tente novamente.",
   },
   notFoundPage: {
-    title: "404 - Não encontrado",
-    message: "O recurso solicitado não foi encontrado.",
+    title: "404 — não encontrado",
+    message:
+      "Essa página não existe. O link pode estar desatualizado ou o usuário pode ter mudado.",
+    goHome: "Ir para o início",
+    yourMessages: "Suas mensagens",
   },
 } satisfies Messages;

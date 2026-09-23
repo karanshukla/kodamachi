@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 
-import { gradMark } from "../../styles/tokens";
+import { profileCardFill } from "../../lib/themes";
 
 import { card } from "./AskCard.styles";
 
@@ -9,5 +9,5 @@ export const body: CSSProperties = {
   position: "relative",
 };
 
-/** Same geometry as the real ask card, on the default brand gradient. */
-export const askCard: CSSProperties = card(gradMark);
+/** Same geometry as the real ask card, on the default fill. */
+export const askCard: CSSProperties = card(profileCardFill(null), false);

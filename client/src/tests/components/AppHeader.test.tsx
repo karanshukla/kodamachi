@@ -197,7 +197,7 @@ describe("AppHeader", () => {
     expect(onNavClose).toHaveBeenCalled();
   });
 
-  it("calls onNavigate when 'View Profile' menu item is clicked", async () => {
+  it("calls onNavigate when 'View profile' menu item is clicked", async () => {
     const onNavClose = vi.fn();
     mockUseLogout.mockReturnValue({ mutate: vi.fn() } as any);
     mockUseSession.mockReturnValue({
@@ -221,7 +221,7 @@ describe("AppHeader", () => {
     }
   });
 
-  it("uses fallback 'User Avatar' alt text when displayName is null", () => {
+  it("uses fallback 'User avatar' alt text when displayName is null", () => {
     mockUseLogout.mockReturnValue({ mutate: vi.fn() } as any);
     mockUseSession.mockReturnValue({
       data: {
@@ -231,9 +231,9 @@ describe("AppHeader", () => {
       isLoading: false,
     } as any);
     renderWithProviders(<AppHeader {...defaultProps} />);
-    // Avatar renders with alt="User Avatar" when displayName is null
+    // Avatar renders with alt="User avatar" when displayName is null
     const avatar = document.querySelector("img, [role='img']") as HTMLElement;
-    // Component renders without crash; coverage of line 168 (displayName || "User Avatar")
+    // Component renders without crash; coverage of line 168 (displayName || "User avatar")
     expect(document.body).toBeInTheDocument();
   });
 

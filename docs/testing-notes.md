@@ -101,14 +101,6 @@ These client sites carried `/* v8 ignore */` markers that istanbul does not need
 
 **What it would take to test:** Not possible — this is a V8 JIT internal; no user-written test can exercise the "object not initialised" branch.
 
-### `server/src/lib/image-generator.ts` — `LOGO_DATA_URL` ternary false branch in `generateTwitterHtml`
-
-**Line:** the `"NF"` false branch of `LOGO_DATA_URL ? \`<img src="${LOGO_DATA_URL}" ... />\` : "NF"` inside the HTML template literal.
-
-**Why ignored:** `LOGO_DATA_URL` is a module-level constant populated by reading and base64-encoding the logo PNG at import time. It is always a non-empty string when the module loads successfully; the `"NF"` fallback is a dead code path under any realistic execution. V8 counts each arm of the ternary as a branch, so the false arm shows as uncovered.
-
-**What it would take to test:** Mock the `fs.readFileSync` call at module load time to return an empty buffer (so `LOGO_DATA_URL` becomes `""`), then re-import the module. This requires `mock.module` wrapping the Node.js `fs` module before the dynamic import of `image-generator.ts`.
-
 ### `client/src/utils/parseRichText.tsx` — protocol-prefix guard for auto-detected domain links
 
 **Line:** `if (!/^https?:\/\//.test(href)) { href = "https://" + href; }` inside the `text`-segment auto-linking loop in `parseRichText`.
@@ -354,7 +346,7 @@ The following files are excluded from coverage metrics entirely. See the root-le
 The frontend refactor split rendering from styling: a component's CSS objects live
 in a sibling `Thing.styles.ts` that the `.tsx` imports as a namespace. These files
 export style constants and the pure functions that select between them
-(`card({ gradient, pinned, focused })` → a `CSSProperties`), so they are the same
+(`card({ ink, pinned, focused })` → a `CSSProperties`), so they are the same
 category as `src/styles/tokens.ts` — declarative values with no behaviour, where an
 assertion could only restate the literal it is reading.
 
@@ -373,9 +365,10 @@ differently and more usefully — see below.
 `contrast.test.ts` is not excluded; it is the reason several of these files can be.
 It parses `client/src/index.css`, resolves `var()` indirection per colour scheme, and
 asserts WCAG AA on every text/background pair the UI actually renders — including
-alpha-composited surfaces, every sampled point along each gradient ramp (not just the
-declared stops, which is how the old cyan and emerald ask-card presets looked
-compliant at 2.4:1), and every `Alert` tone against its own tint in both schemes.
+alpha-composited surfaces, every brand fill in both schemes (the old gradient presets
+were sampled along their whole ramp, which is how the cyan and emerald ones were
+caught at 2.4:1; the redesign has no ramps, and a test now fails on any `gradient(`
+in the stylesheet), and every `Alert` tone against the paper it sits on.
 
 It also enforces token hygiene in both directions: a declared `--ds-*` token that no
 source references fails, and a referenced token that nothing declares fails. The

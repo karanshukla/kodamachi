@@ -10,9 +10,10 @@ import { registerSW } from "virtual:pwa-register";
 import { queryClient } from "./api/queryClient";
 import { AppLayout } from "./AppLayout";
 import { BounceLogosProvider } from "./components/BounceLogosContext";
+import { LocalisedDefaults } from "./components/LocalisedDefaults";
 import { I18nProvider } from "./lib/i18n";
 import { markUpdateReady, setUpdateApplier } from "./lib/swUpdate";
-import navyfragenTheme from "./Theme";
+import appTheme from "./Theme";
 
 import "@mantine/core/styles.css";
 import "@mantine/notifications/styles.css";
@@ -20,7 +21,7 @@ import "./index.css";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <MantineProvider defaultColorScheme="auto" theme={navyfragenTheme}>
+    <MantineProvider defaultColorScheme="auto" theme={appTheme}>
       <BrowserRouter>
         <QueryClientProvider client={queryClient}>
           <I18nProvider>
@@ -30,11 +31,13 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
                 context from its position in the tree, not from where the
                 content was created — so it has to sit inside I18nProvider,
                 not beside it. */}
-            <Notifications position="bottom-right" autoClose={5000} limit={3} />
-            <BounceLogosProvider>
-              <AppLayout />
-              <ReactQueryDevtools initialIsOpen={false} />
-            </BounceLogosProvider>
+            <LocalisedDefaults>
+              <Notifications position="bottom-right" autoClose={5000} limit={3} />
+              <BounceLogosProvider>
+                <AppLayout />
+                <ReactQueryDevtools initialIsOpen={false} />
+              </BounceLogosProvider>
+            </LocalisedDefaults>
           </I18nProvider>
         </QueryClientProvider>
       </BrowserRouter>

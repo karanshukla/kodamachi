@@ -17,7 +17,9 @@ function pluralize(count: number, singular: string, plural: string): string {
 
 export const es = {
   common: {
+    skipToContent: "Saltar al contenido",
     cancel: "Cancelar",
+    close: "Cerrar",
     confirm: "Confirmar",
     delete: "Eliminar",
     retry: "Reintentar",
@@ -57,12 +59,8 @@ export const es = {
     notLoggedInTitle: "No has iniciado sesión",
     notLoggedInMessage: "Inicia sesión para ver tus mensajes.",
     heading: "Mensajes",
-    noMessagesCount: "sin mensajes",
-    newMessagesCount: (count: number) =>
-      `${numberFormat.format(count)} ${pluralize(count, "nuevo", "nuevos")}`,
-    noMessagesTitle: "Sin mensajes",
-    noMessagesBody:
-      "Todavía no tienes mensajes. Comparte el enlace de tu bandeja para recibir preguntas anónimas.",
+    noMessagesTitle: "Todavía no hay preguntas",
+    noMessagesBody: "Comparte tu enlace y la primera pregunta anónima llegará aquí.",
     addExampleMessages: "Añadir mensajes de ejemplo",
     deleteConfirmTitle: "Confirmar eliminación",
     deleteConfirmMessage:
@@ -73,20 +71,22 @@ export const es = {
     welcomeBackMessage: "Has iniciado sesión correctamente.",
   },
   inboxLinkCard: {
-    eyebrow: "Enlace de tu bandeja · acceso público",
+    eyebrow: "Enlace de tu bandeja · público",
   },
   postingPreferences: {
     title: "Preferencias de publicación",
     appendProfileLink: {
       label: "Añadir enlace de bandeja automáticamente",
+      shortLabel: "Enlace de bandeja",
       description: "Añade tu enlace a cada publicación. Reduce el límite de caracteres.",
     },
     useGradients: {
-      label: "Fondos degradados",
-      description: "Bonitos para capturas de pantalla. Desactívalo para más contraste.",
+      label: "Fondos de tinta",
+      description: "Tarjetas azul marino con texto blanco. Desactívalo para tarjetas de papel.",
     },
     includeQuestionAsImage: {
       label: "Pregunta como imagen",
+      shortLabel: "Pregunta como imagen",
       description: "Genera una imagen compartible con texto alternativo automático.",
     },
     confirmBeforeDelete: {
@@ -97,8 +97,6 @@ export const es = {
       label: "Desplazamiento automático a mensajes",
       description: "Desplaza los mensajes nuevos a la vista cuando se cargan.",
     },
-    summary: (enabled: number, total: number) =>
-      `${numberFormat.format(enabled)} de ${numberFormat.format(total)} activas`,
   },
   questionCard: {
     cannotDeleteThreadRootTooltip: "Desancla el hilo primero",
@@ -141,20 +139,23 @@ export const es = {
     replyToThread: "Responder al hilo",
     reply: "Responder",
   },
+  preferencesBar: {
+    open: "Más ajustes",
+  },
   imageThemePicker: {
     title: "Tema de imagen",
   },
   themes: {
     image: {
-      default: "Predeterminado",
-      compressed: "Comprimido",
-      twitter: "Estilo Twitter",
+      default: "Cita",
+      compressed: "Compacto",
+      twitter: "Publicación",
     },
     profileCard: {
-      royal: "Real",
-      aurora: "Aurora",
-      ember: "Ascua",
-      verdant: "Frondoso",
+      royal: "Tinta",
+      aurora: "Acero",
+      ember: "Medianoche",
+      verdant: "Papel",
     },
   },
   nav: {
@@ -181,6 +182,7 @@ export const es = {
     disableAnimations: "Desactivar animaciones",
     enableAnimations: "Activar animaciones",
     toggleColorScheme: "Cambiar esquema de color",
+    toggleNavigation: "Mostrar u ocultar la navegación",
   },
   customisePage: {
     heading: "Personalizar",
@@ -226,6 +228,7 @@ export const es = {
     recipientNotFoundMessage: "No se puede enviar el mensaje: no se encontró el DID del usuario.",
     messageSentTitle: "¡Mensaje enviado!",
     messageSentBody: "Tu mensaje anónimo está en camino.",
+    sendAnother: "Enviar otro",
     sendFailedTitle: "Error al enviar",
     noBlueskyAccountTitle: "No se encontró ninguna cuenta de Bluesky",
     noBlueskyAccountBody: "no existe en Bluesky. Verifica el usuario e inténtalo de nuevo.",
@@ -321,7 +324,6 @@ export const es = {
     ariaLabel: "Actualización disponible — recarga para aplicarla",
     buttonLabel: "Actualizar",
     applyingAriaLabel: "Aplicando la actualización — la página se recargará",
-    applyingLabel: "Actualizando…",
   },
   userMenu: {
     switchAccountErrorTitle: "No se pudo cambiar de cuenta",
@@ -332,20 +334,21 @@ export const es = {
     logOut: (handle: string | undefined) => `Cerrar sesión @${handle}`,
   },
   home: {
-    titleSuffix: " - Preguntas y respuestas anónimas en Bluesky",
-    subtitle: "Recibe preguntas desde la web y publica las respuestas directamente en Bluesky.",
+    title: "Preguntas anónimas, respondidas en Bluesky.",
+    subtitle:
+      "Comparte un enlace, recibe preguntas de cualquiera y publica tus respuestas directamente en tu feed.",
     sellingPoints: {
       fastAndFree: {
         title: "Rápido y gratis",
-        body: "No necesitas descargar nada, solo inicia sesión con tus credenciales de Bluesky y comparte el enlace de tu bandeja",
+        body: "Sin descargas. Inicia sesión con Bluesky y comparte el enlace de tu bandeja.",
       },
       spamProtection: {
         title: "Protección contra spam, sin captchas",
-        body: "Protegido por Anubis, un potente servicio de detección de bots",
+        body: "Protegido por la detección de bots de Anubis, sin acertijos para los visitantes.",
       },
       openSource: {
         title: "Código abierto",
-        body: "Contribuye directamente al proyecto, ¡o aloja tu propia versión si quieres!",
+        body: "Contribuye al proyecto o aloja tu propia instancia.",
       },
     },
     questionsFeedback: "¿Preguntas? ¿Comentarios?",
@@ -444,7 +447,10 @@ export const es = {
     generic: "Algo salió mal. Inténtalo de nuevo.",
   },
   notFoundPage: {
-    title: "404 - No encontrado",
-    message: "No se encontró el recurso solicitado.",
+    title: "404 — no encontrado",
+    message:
+      "Esa página no existe. Puede que el enlace sea antiguo o que el usuario haya cambiado.",
+    goHome: "Ir al inicio",
+    yourMessages: "Tus mensajes",
   },
 } satisfies Messages;

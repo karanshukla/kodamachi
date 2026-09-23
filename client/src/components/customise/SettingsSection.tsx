@@ -13,9 +13,7 @@ interface SettingsSectionProps {
 export function SettingsSection({ eyebrow, help, last, children }: SettingsSectionProps) {
   return (
     <div style={styles.section(last)}>
-      <Text tt="uppercase" fw={700} fz={12} c="dimmed" style={styles.eyebrow}>
-        {eyebrow}
-      </Text>
+      <Text style={styles.eyebrow}>{eyebrow}</Text>
       <Text c="dimmed" fz={13} mb="md">
         {help}
       </Text>

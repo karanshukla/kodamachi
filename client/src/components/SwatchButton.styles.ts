@@ -1,16 +1,16 @@
 import type { CSSProperties } from "react";
 
-import { borderColor, selectedBg, selectedBorder, textDefault } from "../styles/tokens";
+import { selectedChrome } from "../styles/controls.styles";
+import { textDefault } from "../styles/tokens";
 
 export const button = (selected: boolean, disabled?: boolean): CSSProperties => ({
-  background: selected ? selectedBg : "transparent",
-  border: `1.5px solid ${selected ? selectedBorder : borderColor}`,
+  ...selectedChrome(selected),
   borderRadius: 10,
   padding: 8,
   cursor: disabled ? "default" : "pointer",
   display: "flex",
   flexDirection: "column",
-  gap: 6,
+  gap: 7,
   flex: 1,
   minWidth: 0,
   transition: "border-color var(--ds-dur-fast) var(--ds-ease)",
@@ -18,14 +18,17 @@ export const button = (selected: boolean, disabled?: boolean): CSSProperties => 
 
 export const preview = (aspectRatio: string): CSSProperties => ({
   aspectRatio,
-  borderRadius: 5,
+  borderRadius: 6,
   overflow: "hidden",
 });
 
 export const label: CSSProperties = {
   color: textDefault,
-  // A long single-word preset name (pt "Verdejante") is narrower than its
-  // swatch on every viewport but the smallest phones, where it breaks rather
-  // than spilling over the neighbouring swatch.
+  fontSize: 12,
+  fontWeight: 600,
+  // Four swatches share a phone-width card, where the button's own padding is
+  // what forces "Midnight" onto two lines; the label takes most of it back. A
+  // longer name (de "Mitternacht") still breaks rather than spilling over.
+  margin: "0 -7px",
   overflowWrap: "break-word",
 };

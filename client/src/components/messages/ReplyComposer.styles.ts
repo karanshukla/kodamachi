@@ -8,11 +8,13 @@ export const panel: CSSProperties = {
   border: "1.5px solid var(--ds-compose-border)",
 };
 
+/** Borderless inside the panel; the expanded card's border is its focus state. */
 export const textarea = {
   input: {
     background: "transparent",
     color: "var(--ds-compose-fg)",
     border: "none",
+    outline: "none",
     padding: 0,
   },
 } as const;

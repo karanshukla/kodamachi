@@ -18,7 +18,13 @@ describe("ProfileThemeSwatches", () => {
 
   it("previews a colour as a band, not as the image picker's card mockup", () => {
     renderWithProviders(<ProfileThemeSwatches value="royal" disabled={false} onPick={() => {}} />);
-    const preview = screen.getByRole("button", { name: "Royal" }).firstChild as HTMLElement;
-    expect(preview.style.aspectRatio.replace(/\s/g, "")).toBe("16/9");
+    const preview = screen.getByRole("button", { name: "Ink" }).firstChild as HTMLElement;
+    expect(preview.style.aspectRatio.replace(/\s/g, "")).toBe("4/3");
+  });
+
+  it("marks the paper preset with the mark tile so a white swatch does not read as empty", () => {
+    renderWithProviders(<ProfileThemeSwatches value="royal" disabled={false} onPick={() => {}} />);
+    expect(screen.getByRole("button", { name: "Paper" }).querySelector("svg")).not.toBeNull();
+    expect(screen.getByRole("button", { name: "Ink" }).querySelector("svg")).toBeNull();
   });
 });

@@ -177,7 +177,7 @@ describe("Messages page — pinning and threaded replies", () => {
       });
     });
 
-    // Pinned message response shows "Response Sent!" (not "Added to thread!" which is for replies-to-thread)
+    // Pinned message response shows "Response sent!" (not "Added to thread!" which is for replies-to-thread)
     await waitFor(() => {
       expect(screen.getByText(en.messagesPage.responseSentTitle)).toBeInTheDocument();
     });

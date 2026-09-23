@@ -1,166 +1,267 @@
-import { Alert, Notification, createTheme, MantineColorsTuple } from "@mantine/core";
-
-const primary: MantineColorsTuple = [
-  "#EEF2FF",
-  "#D9E0FF",
-  "#B0BEFF",
-  "#849BFF",
-  "#6178FF",
-  "#4A65FF",
-  "#3B5BFF",
-  "#2A47E6",
-  "#1F38C2",
-  "#142899",
-];
-
-const accent: MantineColorsTuple = [
-  "#F3EEFF",
-  "#E2D5FF",
-  "#C7B0FE",
-  "#AC8AFD",
-  "#9C72FA",
-  "#9162F8",
-  "#8B5CF6",
-  "#7847E0",
-  "#6638C4",
-  "#522BA3",
-];
-
-const ink: MantineColorsTuple = [
-  "#EDEBF7",
-  "#D5D1EA",
-  "#A8A2D0",
-  "#7D74B6",
-  "#594F9A",
-  "#3F367D",
-  "#2E2A6B",
-  "#1E1B4B",
-  "#14123A",
-  "#0B0A24",
-];
-
-const highlight: MantineColorsTuple = [
-  "#FFF9E0",
-  "#FFF1B8",
-  "#FFE57A",
-  "#FCD848",
-  "#FBD129",
-  "#FACC15",
-  "#E0B70F",
-  "#B89409",
-  "#8F7206",
-  "#665104",
-];
+import {
+  Alert,
+  Button,
+  Menu,
+  Modal,
+  Notification,
+  Paper,
+  Select,
+  TextInput,
+  Title,
+  createTheme,
+  virtualColor,
+  MantineColorsTuple,
+} from "@mantine/core";
 
 /**
- * Destructive actions. Was once spelled `color="crimson"` — a CSS named colour
- * rather than a Mantine palette entry, so it had no hover, light or outline
- * variants. Destructive intent is a role, so the key is named for the role.
+ * Navy — the one fill, and the primary colour in light mode. Shade 6 is the
+ * brand navy every filled control uses.
  */
-const danger: MantineColorsTuple = [
-  "#FFF0F0",
-  "#FFD8D8",
-  "#F5A9A9",
-  "#E97C7C",
-  "#DC5A5A",
-  "#D13F3F",
-  "#C92A2A",
-  "#A82121",
-  "#8A1B1B",
-  "#6B1414",
-];
-
-// Dark mode surface colors — body=#0B0A24 (void), Paper/card=#15192B
-const dark: MantineColorsTuple = [
-  "#C4C0DC", // [0] light text
-  "#A9A5C8", // [1]
-  "#8B87B5", // [2] dimmed text
-  "#6E6A9E", // [3] placeholder
-  "#3A3660", // [4] subtle border
-  "#252040", // [5] hover
-  "#15192B", // [6] Paper / card bg
-  "#0B0A24", // [7] body bg (void)
-  "#080718", // [8]
-  "#050412", // [9]
+const navy: MantineColorsTuple = [
+  "#EDF2FB",
+  "#C9D5EA",
+  "#9BB4E6",
+  "#6A8BC7",
+  "#3E63A8",
+  "#234B94",
+  "#10224A",
+  "#0D1C3D",
+  "#0B1428",
+  "#070E1C",
 ];
 
 /**
- * Semantic tones for `Alert`. One row per colour instead of three parallel
- * lookup tables, so a tone cannot be half-defined. The tints are alpha over
- * whatever the page background is, which reads correctly in both schemes; the
- * title colour cannot be, so it comes from a scheme-aware token.
+ * The primary colour in dark mode, where filled controls invert to a pale fill
+ * with a navy label. Not a ramp: in dark mode Mantine reads shade 6 for the
+ * fill, 7 for its hover, 2 for outlines, 4 for links and 0 for light-variant
+ * text, so each index holds the value that role needs on the navy card.
+ */
+const inverse: MantineColorsTuple = [
+  "#F4F7FC",
+  "#E3E8F0",
+  "#C9D5EA",
+  "#B4C6E8",
+  "#9BB4E6",
+  "#DCE4F3",
+  "#EDF2FB",
+  "#DCE4F3",
+  "#1A3163",
+  "#10224A",
+];
+
+/** Link — the second hue, for inline links and the composing-card border. */
+const accent: MantineColorsTuple = [
+  "#EDF2FB",
+  "#D6E0F3",
+  "#B4C6E8",
+  "#8AA5D8",
+  "#5F82C2",
+  "#3D63AB",
+  "#234B94",
+  "#1B3A73",
+  "#142B56",
+  "#0E1D3B",
+];
+
+/** Text ink and its greys; shade 7 is the body ink, 4–6 the muted steps. */
+const ink: MantineColorsTuple = [
+  "#F7F9FC",
+  "#E3E8F0",
+  "#C9D5EA",
+  "#94A1B8",
+  "#7684A0",
+  "#63708C",
+  "#46536E",
+  "#111C36",
+  "#0B1428",
+  "#070E1C",
+];
+
+/** Destructive actions: the one hue outside navy and link. */
+const danger: MantineColorsTuple = [
+  "#FBF3F3",
+  "#F3E0E0",
+  "#E1C9C9",
+  "#D19E9E",
+  "#C07474",
+  "#B45050",
+  "#A93636",
+  "#8E2C2C",
+  "#7A2727",
+  "#5E1D1D",
+];
+
+// Dark mode steps. Cards are the brand navy, which is the --ds-surface token
+// rather than a shade here; the page (body) is midnight.
+const dark: MantineColorsTuple = [
+  "#F4F7FC", // [0] text
+  "#C6D0E3", // [1] body text
+  "#9BA9C4", // [2] dimmed text
+  "#8798B8", // [3] placeholder
+  "#2E447A", // [4] border
+  "#213875", // [5] hover
+  "#1A3163", // [6] raised: default controls, disabled fills
+  "#0B1428", // [7] body (midnight page)
+  "#08101F", // [8]
+  "#050A15", // [9]
+];
+
+const DANGER_TONE = {
+  rule: "var(--ds-danger-fg)",
+  edge: "var(--ds-danger-border)",
+  title: "var(--ds-tone-red)",
+};
+const NAVY_TONE = {
+  rule: "var(--ds-accent-text)",
+  edge: "var(--mantine-color-default-border)",
+  title: "var(--ds-accent-text)",
+};
+const LINK_TONE = { ...NAVY_TONE, rule: "var(--ds-link)", title: "var(--ds-link)" };
+
+/**
+ * Tones for `Alert` and `Notification`, keyed by the Mantine colour a caller
+ * passes: a coloured left rule on a paper card. Success, warning and info are
+ * navy, accent is the link blue, and danger is the one exception.
  *
  * @see [contrast.test.ts](./tests/theme/contrast.test.ts): pins every title
- * colour against its own tint at WCAG AA.
+ * colour against the paper it sits on at WCAG AA.
  */
 export const ALERT_TONES = {
-  red: { rgb: "220,38,38", title: "var(--ds-tone-red)" },
-  danger: { rgb: "201,42,42", title: "var(--ds-tone-red)" },
-  green: { rgb: "34,197,94", title: "var(--ds-tone-green)" },
-  yellow: { rgb: "250,204,21", title: "var(--ds-tone-yellow)" },
-  primary: { rgb: "59,91,255", title: "var(--ds-tone-primary)" },
-  accent: { rgb: "139,92,246", title: "var(--ds-tone-accent)" },
+  red: DANGER_TONE,
+  danger: DANGER_TONE,
+  green: NAVY_TONE,
+  yellow: NAVY_TONE,
+  primary: NAVY_TONE,
+  accent: LINK_TONE,
 } as const;
 
-const DEFAULT_ALERT_TONE = ALERT_TONES.primary;
+function toneFor(color: unknown) {
+  return ALERT_TONES[color as keyof typeof ALERT_TONES] ?? NAVY_TONE;
+}
+
+/** The card `Alert` and `Notification` share: paper, a hairline, a toned left rule. */
+function toneCard(tone: typeof NAVY_TONE) {
+  return {
+    root: {
+      background: "var(--ds-surface)",
+      border: `1px solid ${tone.edge}`,
+      borderLeft: `3px solid ${tone.rule}` /* i18n-allow */,
+    },
+    title: { fontWeight: 600, color: tone.title },
+  };
+}
+
+/** Elevation is scarce: only things that float — menus, modals, toasts. */
+const FLOATING_SHADOW = "0 16px 34px -22px rgba(16,34,74,0.5)"; /* i18n-allow */
+const MODAL_SHADOW = "0 24px 50px -24px rgba(16,34,74,0.4)"; /* i18n-allow */
+const TOAST_SHADOW = "0 10px 24px -18px rgba(16,34,74,0.5)"; /* i18n-allow */
 
 const appTheme = createTheme({
   primaryColor: "primary",
-  // Flat rather than {light: 6, dark: 4}: shade 4 as a filled background puts
-  // white button labels at 3.6:1. Text keeps its own per-scheme token below.
   primaryShade: 6,
-  colors: { primary, accent, ink, highlight, danger, dark },
-  white: "#FDF8FF",
-  black: "#1E1B4B",
+  // A filled primary control's label comes from --mantine-color-primary-contrast,
+  // which Mantine only computes per scheme with autoContrast on.
+  autoContrast: true,
+  colors: {
+    navy,
+    inverse,
+    primary: virtualColor({ name: "primary", light: "navy", dark: "inverse" }),
+    accent,
+    ink,
+    danger,
+    dark,
+  },
+  white: "#FFFFFF",
+  black: "#111C36",
 
   fontFamily: "var(--ds-font-sans)",
+  lineHeights: { xs: "1.4", sm: "1.45", md: "1.5", lg: "1.55", xl: "1.6" },
 
   headings: {
     fontFamily: "var(--ds-font-sans)",
-    fontWeight: "800",
+    fontWeight: "600",
     sizes: {
-      h1: { fontSize: "42px", lineHeight: "1.1", fontWeight: "800" },
-      h2: { fontSize: "28px", lineHeight: "1.15", fontWeight: "700" },
-      h3: { fontSize: "22px", lineHeight: "1.2", fontWeight: "700" },
-      h4: { fontSize: "17px", lineHeight: "1.3", fontWeight: "600" },
+      h1: { fontSize: "34px", lineHeight: "1.15", fontWeight: "600" },
+      h2: { fontSize: "22px", lineHeight: "1.25", fontWeight: "600" },
+      h3: { fontSize: "17px", lineHeight: "1.25", fontWeight: "600" },
+      h4: { fontSize: "15px", lineHeight: "1.3", fontWeight: "600" },
     },
   },
 
   defaultRadius: "md",
-  radius: { xs: "4px", sm: "8px", md: "12px", lg: "16px", xl: "22px" },
+  radius: { xs: "4px", sm: "6px", md: "10px", lg: "12px", xl: "14px" },
   spacing: { xs: "8px", sm: "12px", md: "16px", lg: "24px", xl: "32px" },
 
   shadows: {
-    xs: "0 1px 2px rgba(20,18,58,.06)" /* i18n-allow */,
-    sm: "0 1px 2px rgba(20,18,58,.06), 0 1px 3px rgba(20,18,58,.04)" /* i18n-allow */,
-    md: "0 4px 12px -2px rgba(20,18,58,.08), 0 2px 4px rgba(20,18,58,.04)" /* i18n-allow */,
-    lg: "0 12px 30px -8px rgba(20,18,58,.18), 0 4px 10px rgba(20,18,58,.06)" /* i18n-allow */,
-    xl: "0 30px 60px -20px rgba(20,18,58,.35)" /* i18n-allow */,
+    xs: "none",
+    sm: "none",
+    md: FLOATING_SHADOW,
+    lg: FLOATING_SHADOW,
+    xl: MODAL_SHADOW,
   },
 
   components: {
-    Alert: Alert.extend({
-      styles: (_theme, props) => {
-        const tone = ALERT_TONES[props.color as keyof typeof ALERT_TONES] ?? DEFAULT_ALERT_TONE;
-        return {
-          root: {
-            borderRadius: "var(--ds-radius-control)",
-            background: `rgba(${tone.rgb},0.09)`,
-            border: `1px solid rgba(${tone.rgb},0.22)`,
-          },
-          title: {
-            fontFamily: "var(--ds-font-sans)",
-            fontWeight: 700,
-            color: tone.title,
-          },
-        };
+    Button: Button.extend({
+      styles: { root: { fontWeight: 600 }, label: { letterSpacing: "-0.01em" } },
+    }),
+
+    Title: Title.extend({
+      styles: (_theme, { order }) => ({
+        root: order === 1 ? { letterSpacing: "-0.03em" } : {},
+      }),
+    }),
+
+    Paper: Paper.extend({
+      defaultProps: { radius: "lg" },
+      styles: {
+        root: {
+          backgroundColor: "var(--ds-surface)",
+          borderColor: "var(--mantine-color-default-border)",
+        },
       },
     }),
 
-    Notification: Notification.extend({
+    TextInput: TextInput.extend({
+      styles: { label: { fontWeight: 500, marginBottom: 7 }, input: { minHeight: 44 } },
+    }),
+
+    Select: Select.extend({ styles: { input: { minHeight: 40 } } }),
+
+    Menu: Menu.extend({
       styles: {
-        root: { borderRadius: "var(--ds-radius-control)" },
-        title: { fontFamily: "var(--ds-font-sans)", fontWeight: 700 },
+        dropdown: {
+          borderRadius: "var(--ds-radius-card)",
+          border: "1px solid var(--mantine-color-default-border)",
+          padding: 6,
+        },
+        item: { borderRadius: 9 },
+        label: { textTransform: "uppercase", letterSpacing: "0.08em", fontSize: 11 },
+      },
+    }),
+
+    Modal: Modal.extend({
+      styles: {
+        content: { borderRadius: "var(--ds-radius-card)" },
+        title: { fontWeight: 600, fontSize: 17 },
+      },
+    }),
+
+    Alert: Alert.extend({
+      styles: (_theme, props) => ({
+        ...toneCard(toneFor(props.color)),
+        message: { color: "var(--mantine-color-dimmed)" },
+      }),
+    }),
+
+    Notification: Notification.extend({
+      styles: (_theme, props) => {
+        const tone = toneFor(props.color);
+        const card = toneCard(tone);
+        return {
+          ...card,
+          root: { ...card.root, boxShadow: TOAST_SHADOW, "--notification-color": tone.rule },
+          description: { color: "var(--mantine-color-dimmed)" },
+        };
       },
     }),
   },

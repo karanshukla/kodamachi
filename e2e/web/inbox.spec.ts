@@ -2,6 +2,7 @@ import { test, expect, type Page } from "@playwright/test";
 
 import { en } from "../../client/src/lib/i18n/en";
 import { escapeRegex } from "../helpers/i18n";
+import { flipSettingsSwitch, settingsSwitch } from "../helpers/settings-switch";
 
 test.use({ storageState: "e2e/.auth/user.json" });
 
@@ -79,17 +80,13 @@ test("pin and unpin a thread root is local state only", async ({ page }) => {
 test("posting-preferences switch toggles state", async ({ page }) => {
   const seeded = await ensureExampleMessages(page);
 
-  const header = page.getByText(en.postingPreferences.title);
-  const autoScroll = page.getByRole("switch", {
-    name: en.postingPreferences.autoScrollToMessages.label,
-  });
-  if (!(await autoScroll.isVisible().catch(() => false))) {
-    await header.click();
-  }
+  // The switches live in the preferences bar's popover, not on the page.
+  await page.getByRole("button", { name: en.preferencesBar.open }).click();
+  const autoScroll = settingsSwitch(page, en.postingPreferences.autoScrollToMessages.label);
   await expect(autoScroll).toBeVisible({ timeout: 5_000 });
 
   const before = await autoScroll.isChecked();
-  await autoScroll.click();
+  await flipSettingsSwitch(autoScroll);
   if (before) {
     await expect(autoScroll).not.toBeChecked({ timeout: 5_000 });
   } else {
@@ -132,16 +129,16 @@ async function ensureExampleMessages(page: Page): Promise<boolean> {
 
   // Neither is present while loading, so this waits for the query to settle.
   const cards = page.locator('[id^="message-card-"]');
-  const emptyAlert = page.getByRole("alert").filter({ hasText: en.messagesPage.noMessagesTitle });
+  const addExamples = page.getByRole("button", { name: en.messagesPage.addExampleMessages });
   await expect(async () => {
     const hasCards = (await cards.count()) > 0;
-    const hasEmpty = await emptyAlert.isVisible().catch(() => false);
+    const hasEmpty = await addExamples.isVisible().catch(() => false);
     expect(hasCards || hasEmpty).toBeTruthy();
   }).toPass({ timeout: 15_000 });
 
   if ((await cards.count()) > 0) return false; // already populated — don't touch it
 
-  await page.getByRole("button", { name: en.messagesPage.addExampleMessages }).click();
+  await addExamples.click();
   await expect(cards.first()).toBeVisible({ timeout: 15_000 });
   return true;
 }

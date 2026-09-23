@@ -10,6 +10,7 @@ import {
   mockUseUserSettings,
   resetMessagesPage,
   setupMocks,
+  togglePreference,
 } from "./messagesHarness";
 
 import { screen, fireEvent, waitFor, act } from "@testing-library/react";
@@ -93,7 +94,7 @@ describe("Messages page — composing and posting a reply", () => {
     expect(mockRespondMutate).not.toHaveBeenCalled();
   });
 
-  it("sending an empty response shows 'Empty Response' notification", async () => {
+  it("sending an empty response shows 'Empty response' notification", async () => {
     setupMocks();
     renderWithProviders(<Messages />);
 
@@ -206,8 +207,7 @@ describe("Messages page — composing and posting a reply", () => {
 
     expect(screen.getByText("0/277")).toBeInTheDocument();
 
-    const appendSwitch = screen.getByLabelText(/auto-append inbox link/i);
-    fireEvent.click(appendSwitch);
+    await togglePreference(en.postingPreferences.appendProfileLink.label);
 
     await waitFor(() => {
       expect(screen.queryByText("0/277")).toBeNull();
@@ -252,6 +252,15 @@ describe("Messages page — composing and posting a reply", () => {
         ).toBeNull();
       });
     }
+  });
+
+  it("pressing Enter on a button inside a card leaves the card closed", () => {
+    setupMocks();
+    renderWithProviders(<Messages />);
+
+    const pin = screen.getAllByRole("button", { name: en.questionCard.setAsThreadRootLabel })[0];
+    fireEvent.keyDown(pin, { key: "Enter" });
+    expect(screen.queryByRole("textbox", { name: en.replyComposer.responseAriaLabel })).toBeNull();
   });
 
   it("clicking the card while it is expanded collapses it", async () => {

@@ -27,6 +27,7 @@ import type { OAuthClient } from "@atproto/oauth-client-node";
 import type { BidirectionalResolver } from "./lib/id-resolver";
 
 import { createClient } from "#/auth/client";
+import { APP_NAME } from "#/lib/brand";
 import { env } from "#/lib/env";
 
 // Windows hangs on DNS TXT lookups via the system resolver, so name resolution
@@ -52,7 +53,7 @@ function createLogger(): pino.Logger {
   const { AXIOM_TOKEN, AXIOM_DATASET } = env;
   const redact = USER_CONTENT_REDACT_PATHS;
   if (!AXIOM_TOKEN || !AXIOM_DATASET) {
-    return pino({ name: "navyfragen", redact });
+    return pino({ name: APP_NAME, redact });
   }
   const transport = pino.transport({
     targets: [
@@ -64,7 +65,7 @@ function createLogger(): pino.Logger {
       { target: "pino/file", options: { destination: 1 }, level: "info" },
     ],
   });
-  return pino({ name: "navyfragen", redact }, transport);
+  return pino({ name: APP_NAME, redact }, transport);
 }
 
 export type AppContext = {

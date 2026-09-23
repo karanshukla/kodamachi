@@ -14,7 +14,7 @@ Playwright tests run against the full Docker stack using a real Bluesky account.
 
 ### 1. Create an app password
 
-In your PDS account settings, create an app password named something like `navyfragen-e2e`. Copy it — you won't see it again.
+In your PDS account settings, create an app password named something like `kodamachi-e2e`. Copy it — you won't see it again.
 
 ### 2. Add credentials to `docker/.env`
 
@@ -71,11 +71,11 @@ docker compose \
 
 `.github/workflows/E2E.yml` runs on every push/PR. Add two repository secrets at **Settings → Secrets and variables → Actions**:
 
-| Secret | Value |
-|--------|-------|
-| `E2E_PDS_URL` | PDS URL for the test account (e.g. `https://bsky.social`) |
-| `E2E_HANDLE` | `yourhandle.bsky.social` |
-| `E2E_APP_PASSWORD` | App password from Bluesky settings |
+| Secret             | Value                                                     |
+| ------------------ | --------------------------------------------------------- |
+| `E2E_PDS_URL`      | PDS URL for the test account (e.g. `https://bsky.social`) |
+| `E2E_HANDLE`       | `yourhandle.bsky.social`                                  |
+| `E2E_APP_PASSWORD` | App password from Bluesky settings                        |
 
 `OAUTH_TOKEN_SECRET` and `COOKIE_SECRET` are generated fresh each run. If `E2E_PDS_URL` is not set as a secret it falls back to `https://bsky.social` — only set it if using a non-bsky.social PDS.
 
@@ -101,11 +101,11 @@ The `setup` project in `playwright.config.ts` runs `auth.setup.ts` first; all ot
 
 `playwright.config.ts` defines three projects:
 
-| Project | Viewport | Matches |
-|---------|----------|---------|
-| `setup` | — | `*.setup.ts` (auth) |
-| `chromium` | Desktop Chrome | `*.spec.ts` at the `e2e/` root and under `e2e/web/` |
-| `mobile-chromium` | Pixel 7 (412×732) | `*.spec.ts` under `e2e/mobile/` |
+| Project           | Viewport          | Matches                                             |
+| ----------------- | ----------------- | --------------------------------------------------- |
+| `setup`           | —                 | `*.setup.ts` (auth)                                 |
+| `chromium`        | Desktop Chrome    | `*.spec.ts` at the `e2e/` root and under `e2e/web/` |
+| `mobile-chromium` | Pixel 7 (412×732) | `*.spec.ts` under `e2e/mobile/`                     |
 
 Put desktop/web tests in `e2e/web/` and mobile-viewport tests in `e2e/mobile/`. The
 mobile project runs the same auth setup, so specs there reuse the saved session too.
@@ -136,7 +136,7 @@ assertions. For tests that write data:
 #### Cross-file isolation on the shared inbox
 
 `playwright.config.ts` sets `fullyParallel: false`, which serialises tests
-*within* a file but still runs different spec files concurrently across workers.
+_within_ a file but still runs different spec files concurrently across workers.
 Two specs touch the same `E2E_HANDLE` inbox — `e2e/web/inbox.spec.ts` and
 `e2e/web/profile-send-message.spec.ts` — so a row one of them creates can land
 while the other is mid-check.
@@ -147,7 +147,7 @@ To stay robust against that race:
   empty (an assumption that previously made it `test.skip` itself into a
   silent green run, #289). Instead it seeds a single marker'd message via
   `POST /messages/send` (`seedOwnedMessage`), targets only that card by its
-  marker text, asserts only *that* card disappears (not a count delta — also
+  marker text, asserts only _that_ card disappears (not a count delta — also
   racy), and best-effort cleans the marker up via the API in a `finally`
   (`deleteMessagesByText`). A populated inbox is never a reason to skip.
 - **Tests that don't care which card they touch** (expand/reply, pin/unpin,

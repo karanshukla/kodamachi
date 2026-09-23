@@ -22,7 +22,7 @@ import { test, describe, beforeAll, afterEach, mock, spyOn } from "bun:test";
   cleanup: `mock.clearAllMocks()` (call history) and `mock.restore()` (restore all
   spies).
 - Spy on a method (e.g. `globalThis.fetch`): `spyOn(globalThis,
-  "fetch").mockImplementation(impl)` — `spyOn` takes no implementation arg; chain the
+"fetch").mockImplementation(impl)` — `spyOn` takes no implementation arg; chain the
   impl on. `mock.method(target, name, impl)` from the old shim maps to this.
 - `bun:test` uses `beforeAll`/`afterAll` (not `before`/`after`) for the
   once-per-file hooks.
@@ -45,7 +45,9 @@ beforeAll(async () => {
   const realSessionAgent = await import("../auth/session-agent");
   mock.module("../auth/session-agent", () => ({
     ...realSessionAgent,
-    initializeAgentForDid: async (ctx, did) => { /* ... */ return mockAgent; },
+    initializeAgentForDid: async (ctx, did) => {
+      /* ... */ return mockAgent;
+    },
   }));
   // Register the mock BEFORE importing the module under test so its
   // transitive import of session-agent picks up the fakes.

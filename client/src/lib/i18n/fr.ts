@@ -16,7 +16,9 @@ function pluralize(count: number, singular: string, plural: string): string {
 
 export const fr = {
   common: {
+    skipToContent: "Aller au contenu",
     cancel: "Annuler",
+    close: "Fermer",
     confirm: "Confirmer",
     delete: "Supprimer",
     retry: "Réessayer",
@@ -56,12 +58,8 @@ export const fr = {
     notLoggedInTitle: "Non connecté",
     notLoggedInMessage: "Connecte-toi pour voir tes messages.",
     heading: "Messages",
-    noMessagesCount: "aucun message",
-    newMessagesCount: (count: number) =>
-      `${numberFormat.format(count)} ${pluralize(count, "nouveau", "nouveaux")}`,
-    noMessagesTitle: "Aucun message",
-    noMessagesBody:
-      "Tu n'as pas encore de messages. Partage le lien de ta boîte de réception pour recevoir des questions anonymes.",
+    noMessagesTitle: "Pas encore de questions",
+    noMessagesBody: "Partage ton lien et la première question anonyme arrivera ici.",
     addExampleMessages: "Ajouter des messages d'exemple",
     deleteConfirmTitle: "Confirmer la suppression",
     deleteConfirmMessage:
@@ -72,21 +70,23 @@ export const fr = {
     welcomeBackMessage: "Tu t'es connecté avec succès.",
   },
   inboxLinkCard: {
-    eyebrow: "Lien de ta boîte de réception · accès public",
+    eyebrow: "Lien de ta boîte de réception · public",
   },
   postingPreferences: {
     title: "Préférences de publication",
     appendProfileLink: {
       label: "Ajouter automatiquement le lien de la boîte de réception",
+      shortLabel: "Lien de la boîte",
       description:
         "Ajoute ton lien à chaque publication. Réduit le nombre de caractères disponibles.",
     },
     useGradients: {
-      label: "Arrière-plans en dégradé",
-      description: "Joli pour les captures d'écran. Désactive pour plus de contraste.",
+      label: "Fonds encre",
+      description: "Cartes bleu marine au texte blanc. Désactive pour des cartes papier.",
     },
     includeQuestionAsImage: {
       label: "Question sous forme d'image",
+      shortLabel: "Question en image",
       description: "Génère une image partageable avec un texte alternatif automatique.",
     },
     confirmBeforeDelete: {
@@ -97,8 +97,6 @@ export const fr = {
       label: "Défilement automatique vers les messages",
       description: "Fait défiler les nouveaux messages à l'écran quand ils se chargent.",
     },
-    summary: (enabled: number, total: number) =>
-      `${numberFormat.format(enabled)} sur ${numberFormat.format(total)} actives`,
   },
   questionCard: {
     cannotDeleteThreadRootTooltip: "Détache d'abord le fil",
@@ -141,20 +139,23 @@ export const fr = {
     replyToThread: "Répondre au fil",
     reply: "Répondre",
   },
+  preferencesBar: {
+    open: "Plus de réglages",
+  },
   imageThemePicker: {
     title: "Thème de l'image",
   },
   themes: {
     image: {
-      default: "Par défaut",
-      compressed: "Compressé",
-      twitter: "Style Twitter",
+      default: "Citation",
+      compressed: "Compact",
+      twitter: "Publication",
     },
     profileCard: {
-      royal: "Royal",
-      aurora: "Aurore",
-      ember: "Braise",
-      verdant: "Verdoyant",
+      royal: "Encre",
+      aurora: "Acier",
+      ember: "Minuit",
+      verdant: "Papier",
     },
   },
   nav: {
@@ -181,6 +182,7 @@ export const fr = {
     disableAnimations: "Désactiver les animations",
     enableAnimations: "Activer les animations",
     toggleColorScheme: "Changer le thème de couleur",
+    toggleNavigation: "Afficher ou masquer la navigation",
   },
   customisePage: {
     heading: "Personnaliser",
@@ -226,6 +228,7 @@ export const fr = {
     recipientNotFoundMessage: "Impossible d'envoyer le message : DID de l'utilisateur introuvable.",
     messageSentTitle: "Message envoyé !",
     messageSentBody: "Ton message anonyme est en route.",
+    sendAnother: "En envoyer un autre",
     sendFailedTitle: "Échec de l'envoi",
     noBlueskyAccountTitle: "Aucun compte Bluesky trouvé",
     noBlueskyAccountBody: "n'existe pas sur Bluesky. Vérifie le nom d'utilisateur et réessaie.",
@@ -323,7 +326,6 @@ export const fr = {
     ariaLabel: "Mise à jour disponible — recharge pour l'appliquer",
     buttonLabel: "Mettre à jour",
     applyingAriaLabel: "Application de la mise à jour — la page va être rechargée",
-    applyingLabel: "Mise à jour…",
   },
   userMenu: {
     switchAccountErrorTitle: "Impossible de changer de compte",
@@ -334,20 +336,21 @@ export const fr = {
     logOut: (handle: string | undefined) => `Se déconnecter @${handle}`,
   },
   home: {
-    titleSuffix: " - Questions et réponses anonymes sur Bluesky",
-    subtitle: "Reçois des questions depuis le web et publie les réponses directement sur Bluesky.",
+    title: "Des questions anonymes, des réponses sur Bluesky.",
+    subtitle:
+      "Partage un lien, reçois des questions de n'importe qui et publie tes réponses directement sur ton fil.",
     sellingPoints: {
       fastAndFree: {
         title: "Rapide et gratuit",
-        body: "Aucun téléchargement requis, connecte-toi simplement avec tes identifiants Bluesky et partage le lien de ta boîte de réception",
+        body: "Aucun téléchargement. Connecte-toi avec Bluesky et partage le lien de ta boîte de réception.",
       },
       spamProtection: {
         title: "Protection anti-spam, sans captchas",
-        body: "Protégé par Anubis, un puissant service de détection de bots",
+        body: "Protégé par la détection de bots Anubis, sans casse-tête pour les visiteurs.",
       },
       openSource: {
         title: "Open source",
-        body: "Contribue directement au projet, ou héberge ta propre version si tu veux !",
+        body: "Contribue au projet ou héberge ta propre instance.",
       },
     },
     questionsFeedback: "Des questions ? Des retours ?",
@@ -446,7 +449,9 @@ export const fr = {
     generic: "Une erreur s'est produite. Réessaie.",
   },
   notFoundPage: {
-    title: "404 - Introuvable",
-    message: "La ressource demandée est introuvable.",
+    title: "404 — introuvable",
+    message: "Cette page n'existe pas. Le lien est peut-être ancien, ou l'identifiant a changé.",
+    goHome: "Retour à l'accueil",
+    yourMessages: "Tes messages",
   },
 } satisfies Messages;

@@ -215,3 +215,18 @@ export async function queueSendOnAStuckRender(
   expect(respondMutate).not.toHaveBeenCalled();
   return textarea;
 }
+
+/**
+ * Flips a posting preference the way a reader does now: the switches live behind
+ * the preferences bar's button rather than on the page, so the panel has to be
+ * opened and shut around the click.
+ */
+export async function togglePreference(label: string) {
+  const openPanel = () =>
+    fireEvent.click(screen.getByRole("button", { name: en.preferencesBar.open }));
+
+  openPanel();
+  fireEvent.click(await screen.findByRole("switch", { name: label }));
+  openPanel();
+  await waitFor(() => expect(screen.queryByRole("switch", { name: label })).toBeNull());
+}

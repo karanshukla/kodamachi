@@ -15,14 +15,14 @@ import { useLocale, useTranslations } from "../../lib/i18n";
 import type { ThreadLink } from "../../lib/useThreadRoot";
 import { postedAnswerLink } from "../../lib/waypointClients";
 import { postWaypointTargetFor } from "../../lib/waypointTarget";
-import { highlightButton } from "../../styles/tokens";
 
 import { OpenInModal } from "./OpenInModal";
 import * as styles from "./QuestionCard.styles";
 
 interface QuestionCardProps {
   message: Message;
-  gradient: boolean;
+  /** Painted with the navy fill; the "ink backgrounds" preference. */
+  ink: boolean;
   pinned: boolean;
   focused: boolean;
   expanded: boolean;
@@ -51,7 +51,7 @@ interface QuestionCardProps {
 
 export function QuestionCard({
   message,
-  gradient,
+  ink,
   pinned,
   focused,
   expanded,
@@ -93,18 +93,18 @@ export function QuestionCard({
       id={`message-card-${message.tid}`}
       ref={cardRef}
       tabIndex={0}
-      role="button"
-      aria-expanded={expanded}
-      radius="lg"
+      role="article"
+      aria-labelledby={`message-text-${message.tid}`}
       onFocus={onFocus}
       onKeyDown={(e) => {
+        if (e.target !== e.currentTarget) return;
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
           onToggleExpanded();
         }
       }}
       className={justPinned ? "ds-pinned-card-enter" : undefined}
-      style={styles.card({ gradient, pinned, focused })}
+      style={styles.card({ ink, pinned, focused })}
       onClick={() => {
         triggerHaptic();
         onToggleExpanded();
@@ -173,7 +173,7 @@ export function QuestionCard({
         </Group>
 
         <Box style={styles.bodyWrap}>
-          <Text fw={600} style={styles.body}>
+          <Text id={`message-text-${message.tid}`} fw={600} style={styles.body}>
             {message.message}
           </Text>
         </Box>
@@ -233,10 +233,9 @@ export function QuestionCard({
                 }}
                 fullWidth
                 radius="md"
-                color="highlight"
-                variant="filled"
-                fw={700}
-                style={{ ...highlightButton, ...styles.replyButton(blocked) }}
+                variant={styles.replyButtonVariant(ink, inThread)}
+                fw={600}
+                style={styles.replyButton(blocked, ink)}
               >
                 {inThread ? messages.questionCard.replyToThread : messages.questionCard.reply}
               </Button>

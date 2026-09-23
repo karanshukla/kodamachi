@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-import { APP_NAME_WORDMARK } from "../../client/src/lib/brand";
+import { APP_NAME } from "../../client/src/lib/brand";
 import { en } from "../../client/src/lib/i18n/en";
 import { escapeRegex } from "../helpers/i18n";
 
@@ -12,13 +12,7 @@ const handle = () => {
   return h;
 };
 
-// "navy" and "fragen" are separate spans, so the accessible name has a space
-// between them; built from the wordmark itself so a brand-copy edit can't
-// desync this from what actually renders.
-const wordmarkName = new RegExp(
-  `${escapeRegex(APP_NAME_WORDMARK[0])}.*${escapeRegex(APP_NAME_WORDMARK[1])}`,
-  "i"
-);
+const wordmarkName = new RegExp(escapeRegex(APP_NAME), "i");
 // The name may carry an unread badge ("Messages 3"), hence the trailing \b.
 const messagesLinkName = new RegExp(`^${escapeRegex(en.common.shortcuts.messages)}\\b`);
 
@@ -34,7 +28,7 @@ test("header wordmark returns home", async ({ page }) => {
 test("sidebar navigates between home, messages, and settings", async ({ page }) => {
   await page.goto("/");
 
-  // The navbar scope avoids the home hero's "View Your Messages" link, which
+  // The navbar scope avoids the home hero's "View your messages" link, which
   // carries the same "Messages" substring.
   const navbar = page.locator("nav").first();
   await navbar.getByRole("link", { name: messagesLinkName }).click();

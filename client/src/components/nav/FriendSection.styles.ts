@@ -1,6 +1,11 @@
 import type { CSSProperties } from "react";
 
-/** Sticky so the group label stays put while its list scrolls under it. */
+import { eyebrow, surface, textDimmed } from "../../styles/tokens";
+
+/**
+ * Sticky so the group label stays put while its list scrolls under it, and
+ * painted the sidebar's own surface so the list does not show through.
+ */
 export const header: CSSProperties = {
   display: "flex",
   alignItems: "center",
@@ -10,12 +15,17 @@ export const header: CSSProperties = {
   position: "sticky",
   top: 0,
   zIndex: 1,
-  background: "var(--mantine-color-body)",
+  background: surface,
   paddingTop: "var(--mantine-spacing-lg)",
 };
 
+export const label: CSSProperties = {
+  ...eyebrow,
+  flex: 1,
+};
+
 export const chevron = (open: boolean): CSSProperties => ({
-  color: "var(--mantine-color-dimmed)",
+  color: textDimmed,
   transition: "transform var(--ds-dur-fast) var(--ds-ease)",
   transform: open ? "rotate(0deg)" : "rotate(-90deg)",
   flexShrink: 0,

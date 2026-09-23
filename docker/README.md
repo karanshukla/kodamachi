@@ -4,15 +4,15 @@ This stack is used for **local integration testing and smoke tests** (and option
 
 ## Services
 
-| Service | Description | Port |
-|---------|-------------|------|
-| `caddy` | Reverse proxy: `/*` → client, `/api/*` → server. **Default local entry point.** | 8082 |
-| `anubis` | Bot-protection WAF, production topology (Anubis → Caddy) | 8080 |
-| `server` | Bun.serve + Hono API | 3000 |
-| `client` | React SPA served by `serve` | internal |
-| `html-to-image` | Puppeteer image renderer | internal |
-| `redirector` | Short-URL redirector (fragen.navy equivalent) | 8081 |
-| `postgres` | PostgreSQL 16 | internal |
+| Service         | Description                                                                     | Port     |
+| --------------- | ------------------------------------------------------------------------------- | -------- |
+| `caddy`         | Reverse proxy: `/*` → client, `/api/*` → server. **Default local entry point.** | 8082     |
+| `anubis`        | Bot-protection WAF, production topology (Anubis → Caddy)                        | 8080     |
+| `server`        | Bun.serve + Hono API                                                            | 3000     |
+| `client`        | React SPA served by `serve`                                                     | internal |
+| `html-to-image` | Puppeteer image renderer                                                        | internal |
+| `redirector`    | Short-URL redirector (fragen.navy equivalent)                                   | 8081     |
+| `postgres`      | PostgreSQL 16                                                                   | internal |
 
 `caddy` and `server` are published directly so the stack works out of the box for local dev with no extra setup — see "Caveats" for why `anubis` isn't the default entry point locally even though it is in production.
 
@@ -38,12 +38,12 @@ All secrets go in `docker/.env` — see [`.env.example`](.env.example) for the f
 
 All Docker-related files live here to keep Railway from auto-detecting them in the service directories:
 
-| File | Purpose |
-|------|---------|
-| `docker-compose.yml` | Full local stack |
-| `Dockerfile.client` | React SPA image (build context: repo root) |
-| `Dockerfile.server` | Bun.serve + Hono API image (build context: repo root) |
-| `.env.example` | Secret template — copy to `.env` before running |
+| File                 | Purpose                                               |
+| -------------------- | ----------------------------------------------------- |
+| `docker-compose.yml` | Full local stack                                      |
+| `Dockerfile.client`  | React SPA image (build context: repo root)            |
+| `Dockerfile.server`  | Bun.serve + Hono API image (build context: repo root) |
+| `.env.example`       | Secret template — copy to `.env` before running       |
 
 `client/Dockerfile` and `server/Dockerfile` are intentionally absent — all Docker-related files live under `docker/` to keep the service directories clean. Railway is explicitly pinned to `docker/Dockerfile.client` / `docker/Dockerfile.server` in `.railway/railway.ts` (see `CLAUDE.md` → "Deployment (Railway)"), so it doesn't rely on auto-detection either way.
 

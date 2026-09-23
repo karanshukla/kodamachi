@@ -1,13 +1,14 @@
-import { AppShell, Container, Paper, Text, Title } from "@mantine/core";
+import { AppShell, Button, Container, Group, Paper, Text, Title } from "@mantine/core";
 import { showNotification } from "@mantine/notifications";
 import React, { useEffect, useRef } from "react";
-import { Route, Routes } from "react-router";
+import { Link, Route, Routes } from "react-router";
 
-import { useSwitchAccount } from "./api/authService";
+import { useSession, useSwitchAccount } from "./api/authService";
 import { AppHeader } from "./components/AppHeader";
 import { BouncingLogos } from "./components/BouncingLogos";
 import { buildAccountSwitchUrl, consumeAccountSwitchToast } from "./lib/accountSwitchToast";
 import { useTranslations } from "./lib/i18n";
+import { usePageTitle } from "./lib/usePageTitle";
 import { consumeNotificationSwitchRequest } from "./lib/notificationSwitch";
 import { Navigation } from "./Navigation";
 import Customise from "./pages/Customise";
@@ -17,7 +18,8 @@ import Messages from "./pages/Messages";
 import OAuthCallback from "./pages/OAuthCallback";
 import PublicProfile from "./pages/PublicProfile";
 import Settings from "./pages/Settings";
-import { dangerText } from "./styles/tokens";
+
+import * as styles from "./AppLayout.styles";
 
 export function AppLayout() {
   const [navOpen, setNavOpen] = React.useState(false);
@@ -71,6 +73,9 @@ export function AppLayout() {
   return (
     <>
       <BouncingLogos />
+      <a href="#main" className="skip-link">
+        {t.common.skipToContent}
+      </a>
       <div className="app-shell-boundary">
         <AppShell
           header={{ height: 60 }}
@@ -94,7 +99,7 @@ export function AppLayout() {
             <Navigation onLinkClick={() => setNavOpen(false)} />
           </AppShell.Navbar>
 
-          <AppShell.Main pt={70}>
+          <AppShell.Main id="main" tabIndex={-1} pt={70}>
             <Container pt="md">
               <Routes>
                 <Route path="/" element={<Home />} />
@@ -117,16 +122,26 @@ export function AppLayout() {
 
 function NotFoundPage() {
   const messages = useTranslations();
+  usePageTitle(messages.notFoundPage.title);
+  const { data: session } = useSession();
   return (
-    <Container>
-      <Paper p="xl" radius="md" withBorder shadow="xs">
-        <Title order={2} style={{ color: dangerText }}>
-          {messages.notFoundPage.title}
-        </Title>
-        <Text c="dimmed" mt="md">
-          {messages.notFoundPage.message}
-        </Text>
-      </Paper>
-    </Container>
+    <Paper p={40} radius="xl" withBorder ta="center">
+      <Title order={1} fz={26} style={styles.notFoundTitle}>
+        {messages.notFoundPage.title}
+      </Title>
+      <Text c="dimmed" mt={8} maw={300} mx="auto">
+        {messages.notFoundPage.message}
+      </Text>
+      <Group justify="center" gap={8} mt={24}>
+        <Button component={Link} to="/" variant="filled">
+          {messages.notFoundPage.goHome}
+        </Button>
+        {session?.isLoggedIn && (
+          <Button component={Link} to="/messages" variant="outline">
+            {messages.notFoundPage.yourMessages}
+          </Button>
+        )}
+      </Group>
+    </Paper>
   );
 }
