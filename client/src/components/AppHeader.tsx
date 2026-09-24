@@ -21,6 +21,7 @@ import { border } from "../styles/tokens";
 
 import { useBounceLogos } from "./BounceLogosContext";
 import { UserMenu } from "./header/UserMenu";
+import { BrandMark } from "./BrandMark";
 import { UpdateAvailableButton } from "./UpdateAvailableButton";
 import { Wordmark } from "./Wordmark";
 
@@ -73,8 +74,9 @@ export function AppHeader({ opened, onBurgerToggle, burgerRef, onNavClose }: App
       <Box
         component={Link}
         to="/"
-        style={{ textDecoration: "none", display: "flex", alignItems: "center" }}
+        style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 8 }}
       >
+        <BrandMark size={26} aria-hidden />
         <Wordmark size={17} />
       </Box>
 

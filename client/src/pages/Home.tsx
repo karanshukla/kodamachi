@@ -2,6 +2,7 @@ import {
   Button,
   CopyButton,
   Divider,
+  Flex,
   Group,
   Paper,
   SimpleGrid,
@@ -18,6 +19,7 @@ import { Link } from "react-router";
 
 import { useSession } from "../api/authService";
 import { useSyncMessages } from "../api/messageService";
+import { Mascot } from "../components/Mascot";
 import { ShortcutList, type Shortcut } from "../components/ShortcutList";
 import { APP_DOMAIN, APP_NAME } from "../lib/brand";
 import { useTranslations } from "../lib/i18n";
@@ -163,6 +165,7 @@ function WelcomeBack({ profile }: { profile: SessionProfile }) {
 
   return (
     <Paper style={styles.hero}>
+      <Mascot pose="greeting" size={132} style={{ marginBottom: 18 }} />
       <Text fw={600} fz={24} style={styles.greeting}>
         {messages.home.welcomeBackGreetingPrefix} {name}
       </Text>
@@ -217,26 +220,29 @@ function SignedOutHero() {
   const messages = useTranslations();
   return (
     <Paper p={32} withBorder>
-      <Stack gap={22}>
-        {sellingPoints(messages).map(({ title, body }) => (
-          <div key={title} style={styles.sellingPoint}>
-            <span style={styles.bullet} aria-hidden />
-            <div>
-              <Text fw={600} fz={16}>
-                {title}
-              </Text>
-              <Text c="dimmed" fz={14} style={styles.sellingPointBody}>
-                {body}
-              </Text>
-            </div>
-          </div>
-        ))}
-      </Stack>
-      <Center mt={32}>
-        <Button component={Link} to="/login" size="md" radius="md" variant="filled">
-          {messages.home.getStarted}
-        </Button>
-      </Center>
+      <Flex direction={{ base: "column-reverse", sm: "row" }} align="center" gap={32}>
+        <div style={styles.signedOutCopy}>
+          <Stack gap={22}>
+            {sellingPoints(messages).map(({ title, body }) => (
+              <div key={title} style={styles.sellingPoint}>
+                <span style={styles.bullet} aria-hidden />
+                <div>
+                  <Text fw={600} fz={16}>
+                    {title}
+                  </Text>
+                  <Text c="dimmed" fz={14} style={styles.sellingPointBody}>
+                    {body}
+                  </Text>
+                </div>
+              </div>
+            ))}
+          </Stack>
+          <Button component={Link} to="/login" size="md" radius="md" variant="filled" mt={32}>
+            {messages.home.getStarted}
+          </Button>
+        </div>
+        <Mascot pose="idle" size={280} style={styles.signedOutMascot} />
+      </Flex>
     </Paper>
   );
 }

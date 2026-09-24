@@ -58,3 +58,15 @@ export const contactLink: CSSProperties = {
   color: link,
   textDecoration: "none",
 };
+
+export const signedOutCopy: CSSProperties = {
+  flex: 1,
+  minWidth: 0,
+};
+
+export const signedOutMascot: CSSProperties = {
+  width: "clamp(160px, 28vw, 280px)",
+  height: "clamp(160px, 28vw, 280px)",
+  margin: 0,
+  flexShrink: 0,
+};

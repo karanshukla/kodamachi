@@ -3,41 +3,33 @@ import React from "react";
 import { describe, it, expect } from "vitest";
 
 import { BrandMark } from "../../components/BrandMark";
-import { APP_NAME, MARK_GLYPH_PATH } from "../../lib/brand";
+import { APP_NAME } from "../../lib/brand";
 
 describe("BrandMark", () => {
-  it("renders the mark tile without crashing with default props", () => {
+  it("renders the bare sprout bulb with no tile behind it", () => {
     const { container } = render(<BrandMark />);
-    const svg = container.querySelector("svg");
-    expect(svg).not.toBeNull();
-    expect(container.querySelector("path")!.getAttribute("d")).toBe(MARK_GLYPH_PATH);
+    expect(container.querySelector("img")!.getAttribute("src")).toBe("/mascot/sprout-mark.webp");
+    expect(container.querySelector("svg, rect")).toBeNull();
   });
 
   it("applies the size prop to width and height attributes", () => {
     const { container } = render(<BrandMark size={64} />);
-    const svg = container.querySelector("svg");
-    expect(svg!.getAttribute("width")).toBe("64");
-    expect(svg!.getAttribute("height")).toBe("64");
+    const img = container.querySelector("img")!;
+    expect(img.getAttribute("width")).toBe("64");
+    expect(img.getAttribute("height")).toBe("64");
   });
 
-  it("paints the tile and glyph from the scheme-aware mark tokens, not literal hues", () => {
+  it("is announced as the app name when aria-hidden is not set", () => {
     const { container } = render(<BrandMark />);
-    expect(container.querySelector("rect")!.getAttribute("fill")).toBe("var(--ds-mark-bg)");
-    expect(container.querySelector("path")!.getAttribute("fill")).toBe("var(--ds-mark-fg)");
+    const img = container.querySelector("img")!;
+    expect(img.getAttribute("alt")).toBe(APP_NAME);
+    expect(img.getAttribute("aria-hidden")).toBeNull();
   });
 
-  it("sets role=img and aria-label when aria-hidden is not set", () => {
-    const { container } = render(<BrandMark />);
-    const svg = container.querySelector("svg");
-    expect(svg!.getAttribute("role")).toBe("img");
-    expect(svg!.getAttribute("aria-label")).toBe(APP_NAME);
-  });
-
-  it("omits role and aria-label when aria-hidden is true", () => {
+  it("is silent when aria-hidden is true", () => {
     const { container } = render(<BrandMark aria-hidden />);
-    const svg = container.querySelector("svg");
-    expect(svg!.getAttribute("role")).toBeNull();
-    expect(svg!.getAttribute("aria-label")).toBeNull();
-    expect(svg!.getAttribute("aria-hidden")).toBe("true");
+    const img = container.querySelector("img")!;
+    expect(img.getAttribute("alt")).toBe("");
+    expect(img.getAttribute("aria-hidden")).toBe("true");
   });
 });

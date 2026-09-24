@@ -5,6 +5,7 @@ import { Link, Route, Routes } from "react-router";
 
 import { useSession, useSwitchAccount } from "./api/authService";
 import { AppHeader } from "./components/AppHeader";
+import { Mascot } from "./components/Mascot";
 import { BouncingLogos } from "./components/BouncingLogos";
 import { buildAccountSwitchUrl, consumeAccountSwitchToast } from "./lib/accountSwitchToast";
 import { useTranslations } from "./lib/i18n";
@@ -126,6 +127,7 @@ function NotFoundPage() {
   const { data: session } = useSession();
   return (
     <Paper p={40} radius="xl" withBorder ta="center">
+      <Mascot pose="empty-handed" size={148} style={{ marginBottom: 16 }} />
       <Title order={1} fz={26} style={styles.notFoundTitle}>
         {messages.notFoundPage.title}
       </Title>

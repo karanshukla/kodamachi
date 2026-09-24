@@ -1,8 +1,9 @@
 import { ActionIcon, Alert, Button, Group, Paper, Stack, Text, Textarea } from "@mantine/core";
-import { IconCircleCheck, IconSend, IconX } from "@tabler/icons-react";
+import { IconSend, IconX } from "@tabler/icons-react";
 import { useHaptic } from "use-haptic";
 
 import { useTranslations } from "../../lib/i18n";
+import { Mascot } from "../Mascot";
 import type { ProfileCardFill } from "../../lib/themes";
 import type { TouchpointTranslations } from "../../lib/touchpointTranslations";
 import { useNumberFormat } from "../../lib/useNumberFormat";
@@ -76,12 +77,15 @@ export function AskCard({
           </Alert>
         )}
         {!open ? (
-          <Text ta="center" fz={14} style={styles.closedNotice}>
-            {translations.inboxClosed}
-          </Text>
+          <>
+            <Mascot pose="empty-handed" size={120} />
+            <Text ta="center" fz={14} style={styles.closedNotice}>
+              {translations.inboxClosed}
+            </Text>
+          </>
         ) : sent ? (
           <div role="status" style={styles.sentState}>
-            <IconCircleCheck size={32} stroke={1.5} aria-hidden />
+            <Mascot pose="greeting" size={120} hop />
             <Text fw={600} fz={18}>
               {messages.publicProfilePage.messageSentTitle}
             </Text>
