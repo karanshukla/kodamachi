@@ -35,6 +35,15 @@ test("settings page renders key cards", async ({ page }) => {
   ).toBeVisible();
 });
 
+test("feed card links to the kodamachi feed on Bluesky", async ({ page }) => {
+  const link = page.getByRole("link", { name: en.settingsPage.openFeedOnBluesky, exact: true });
+  await expect(link).toHaveAttribute(
+    "href",
+    "https://bsky.app/profile/kodamachi.app/feed/kodamachi"
+  );
+  await expect(link).toHaveAttribute("target", "_blank");
+});
+
 test("PDS sync toggle flips and is restored afterwards", async ({ page }) => {
   const sync = settingsSwitch(page, en.settingsPage.pdsSync);
   await expect(sync).toBeVisible({ timeout: 10_000 });
