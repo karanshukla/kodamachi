@@ -2,8 +2,6 @@
 
 > FOSS, AT Protocol-native anonymous Q&A. Receive questions anonymously and answer directly to your Bluesky feed.
 
-> **Formerly Navyfragen.** The brand changed with the redesign in `docs/design/kodamachi-handoff/`; the app lives at `kodamachi.app`, and `navyfragen.app` redirects there. Short links moved from `fragen.navy` to `kodamachi.online` (both still work), and the `app.navyfragen.message` lexicon is unchanged; see [#388](https://github.com/karanshukla/navyfragen-app/issues/388).
-
 [![Tests](https://github.com/karanshukla/navyfragen-app/actions/workflows/Tests.yml/badge.svg)](https://github.com/karanshukla/navyfragen-app/actions/workflows/Tests.yml)
 [![Coverage Status](https://coveralls.io/repos/github/karanshukla/navyfragen-app/badge.svg?branch=main)](https://coveralls.io/github/karanshukla/navyfragen-app?branch=main)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -66,11 +64,9 @@ navyfragen-app/
 - A modern web browser
 - [Node.js](https://nodejs.org) — **only** if you want to run the Playwright E2E suite locally
 
-> **Runtime note:** Bun is the installer and the runtime for every workspace. The server has been Bun-only since #268/#288; the client's Vite dev server, build, lint, tests, and coverage now run on Bun too. Client coverage uses Vitest's istanbul provider rather than v8; v8 coverage needed a `node:inspector` API Bun only implemented in 1.4, and istanbul stays because it needs no inspector at all. See `client/README.md`.
->
 > Node is needed for exactly one thing: **Playwright**, which cannot load our E2E specs under Bun. Install it only if you plan to run `bun run test:e2e` locally. Everything else works with Bun alone.
 
-> **Windows users:** You may need the [C++ build tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/) (required by `sharp`). WSL2 is recommended for the best experience. (`better-sqlite3` was removed in #288 when the Node code path was retired — SQLite now runs through `bun:sqlite`, which ships inside the Bun runtime and needs no native build.)
+> **Windows users:** You may need the [C++ build tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/) (required by `sharp`). WSL2 is recommended for the best experience.
 
 ### Installation
 
@@ -231,8 +227,6 @@ git commit --no-verify -m "your message"
 ### Local Development: 127.0.0.1 vs localhost
 
 AT Protocol's OAuth implementation follows [RFC 8252](https://www.rfc-editor.org/rfc/rfc8252) loopback rules: a local client's `redirect_uri` must use the IP literal `127.0.0.1`, not the hostname `localhost`. `server/src/auth/client.ts` already hardcodes the OAuth `redirect_uri` to `http://127.0.0.1:<PORT>` for local dev, so if the server itself is bound to `localhost` instead of `127.0.0.1`, the OAuth callback silently fails — `localhost` and `127.0.0.1` can resolve to different addresses (`::1` vs `127.0.0.1`), so the server ends up listening on one while the callback hits the other.
-
-Cookies are also host-specific: a session cookie set for `127.0.0.1` will not be sent by the browser to `localhost`, even though both point at the same machine. So every layer needs to agree on `127.0.0.1`:
 
 1. **`server/.env`** (the template's defaults):
    ```bash
