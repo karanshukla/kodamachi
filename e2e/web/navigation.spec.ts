@@ -51,6 +51,14 @@ test("sidebar navigates between home, messages, and settings", async ({ page }) 
   await expect(page).toHaveURL(/\/$/);
 });
 
+test("tab title is the app name at home and names inner pages", async ({ page }) => {
+  await page.goto("/");
+  await expect(page).toHaveTitle(APP_NAME);
+
+  await page.goto("/settings");
+  await expect(page).toHaveTitle(`${en.settingsPage.heading} · ${APP_NAME}`);
+});
+
 test("keyboard shortcuts navigate the app", async ({ page }) => {
   await page.goto("/messages");
   await expect(page).toHaveURL(/\/messages/);
