@@ -42,7 +42,7 @@
     "dotenv": "^17.4.2",
     "envalid": "^8.2.0",
     "hono": "^4.13.8",
-    "hono-rate-limiter": "^0.5.3",
+    "hono-rate-limiter": "^0.5.4",
     "kysely": "^0.29.5",
     "multiformats": "^14.0.5",
     "obscenity": "^0.4.6",
