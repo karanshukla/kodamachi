@@ -7,6 +7,7 @@ import { errorMessage } from "../lib/errors";
 import { getServerMessages } from "../lib/i18n";
 import { findProfanity } from "../lib/profanity";
 import type { ProfanityMatch } from "../lib/profanity";
+import { listLegacyRecords } from "../lib/legacy-records";
 import { withRetry } from "../lib/retry";
 import { ids } from "../lexicon/lexicons";
 import { type Record as MessageSchemaRecord } from "../lexicon/types/app/navyfragen/message";
@@ -20,9 +21,6 @@ export type { Message } from "./inbox-store";
 export interface ProfileResolver {
   resolveDidToHandle(did: string): Promise<string | undefined>;
 }
-
-/** What `com.atproto.repo.listRecords` accepts as its per-page maximum. */
-const PDS_PAGE_SIZE = 100;
 
 interface SyncOutcome {
   count: number;
@@ -375,34 +373,6 @@ export class MessageService {
     }
   }
 
-  private async listAllPdsMessages(
-    userDid: string,
-    agent: Agent
-  ): Promise<{ rkey: string; value: MessageSchemaRecord }[]> {
-    const pdsRecords: { rkey: string; value: MessageSchemaRecord }[] = [];
-    let cursor: string | undefined;
-    do {
-      const page = await withRetry(
-        () =>
-          agent.com.atproto.repo.listRecords({
-            repo: userDid,
-            collection: ids.AppNavyfragenMessage,
-            limit: PDS_PAGE_SIZE,
-            cursor,
-          }),
-        this.logger,
-        { did: userDid, op: "listRecords" }
-      );
-      if (!page.success) break;
-      for (const record of page.data.records) {
-        const rkey = record.uri.split("/").pop()!;
-        pdsRecords.push({ rkey, value: record.value as MessageSchemaRecord });
-      }
-      cursor = page.data.cursor;
-    } while (cursor);
-    return pdsRecords;
-  }
-
   private async pushMissingToPds(
     localMessages: Message[],
     pdsRecords: { rkey: string }[],
@@ -486,7 +456,7 @@ export class MessageService {
     errors?: { tid: string; error: string }[];
   }> {
     try {
-      const pdsRecords = await this.listAllPdsMessages(userDid, agent);
+      const pdsRecords = await listLegacyRecords(userDid, agent, this.logger);
       const localMessages = await this.inbox.list(userDid);
 
       const pushOutcome = await this.pushMissingToPds(localMessages, pdsRecords, agent);
