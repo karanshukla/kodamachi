@@ -22,18 +22,18 @@
   "devDependencies": {
     "@playwright/test": "^1.63.0",
     "@types/bun": "1.4.2",
-    "@types/node": "^26.2.0",
+    "@types/node": "^26.6.3",
     "concurrently": "^10.0.5",
     "dotenv": "^17.4.2",
     "happy-dom": "^20.14.5",
     "husky": "^9.1.7",
-    "lint-staged": "^17.3.0",
-    "prettier": "^3.9.6",
+    "lint-staged": "^17.6.0",
+    "prettier": "^3.9.9",
     "railway": "^3.11.0"
   },
   "dependencies": {
     "@types/ws": "^8.18.1",
-    "ws": "^8.21.3"
+    "ws": "^8.22.0"
   },
   "overrides": {
     "esbuild": ">=0.28.1",
