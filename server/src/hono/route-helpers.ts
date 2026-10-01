@@ -3,7 +3,7 @@ import type { ZodType } from "zod";
 import { zValidator } from "@hono/zod-validator";
 
 import { errorBody } from "#/lib/errors";
-import { getSession } from "./session-middleware";
+import { LIVE_DID_VAR } from "./session-middleware";
 
 /**
  * The shared `zValidator` failure hook: always 400 `{ errors: [...] }`.
@@ -39,5 +39,5 @@ export function sessionExpired(c: Context) {
 }
 
 export function sessionDid(c: Context): string | undefined {
-  return getSession(c)?.did;
+  return c.get(LIVE_DID_VAR) as string | undefined;
 }
