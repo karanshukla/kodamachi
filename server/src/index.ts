@@ -17,7 +17,7 @@ import { createMessageHono } from "./hono/message-routes";
 import { createNotificationHono } from "./hono/notification-routes";
 import { createProfileHono } from "./hono/profile-routes";
 import { createSettingsHono } from "./hono/settings-routes";
-import { sessionMiddleware, type SessionVars } from "./hono/session-middleware";
+import { liveDidMiddleware, sessionMiddleware, type SessionVars } from "./hono/session-middleware";
 
 import type { Database } from "./database/db";
 import type { IdResolver } from "@atproto/identity";
@@ -120,6 +120,7 @@ function buildApp(
     app.use("*", perIpRateLimiter(rateLimitMax));
   }
   app.use("*", sessionMiddleware);
+  app.use("*", liveDidMiddleware(ctx.db));
   app.use("*", noStore);
 
   mountDomainRoutes(app, ctx);
