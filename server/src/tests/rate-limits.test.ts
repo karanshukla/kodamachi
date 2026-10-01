@@ -35,11 +35,11 @@ async function sendUpToLimit(app: Hono, recipient: string): Promise<number> {
 }
 
 describe("sendRateLimiter", () => {
-  test("accepts a tenth question to one recipient", async () => {
+  test("accepts a fiftieth question to one recipient", async () => {
     assert.strictEqual(await sendUpToLimit(makeApp(), "did:plc:alice"), 200);
   });
 
-  test("rejects an eleventh", async () => {
+  test("rejects a fifty-first", async () => {
     const app = makeApp();
     await sendUpToLimit(app, "did:plc:alice");
 

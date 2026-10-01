@@ -8,10 +8,10 @@ const ONE_MINUTE_MS = 60 * 1000;
  * Per sender and recipient, on top of the global per-IP limit, since
  * `/messages/send` takes no session.
  *
- * @see [rate-limits.test.ts](../tests/rate-limits.test.ts): "accepts a tenth
- * question to one recipient" and "rejects an eleventh".
+ * @see [rate-limits.test.ts](../tests/rate-limits.test.ts): "accepts a fiftieth
+ * question to one recipient" and "rejects a fifty-first".
  */
-export const SEND_LIMIT_PER_RECIPIENT = 10;
+export const SEND_LIMIT_PER_RECIPIENT = 50;
 export const SEND_WINDOW_MS = 10 * ONE_MINUTE_MS;
 
 const TOO_MANY = "Too many requests, please try again later.";
