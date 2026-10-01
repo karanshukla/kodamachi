@@ -2,7 +2,7 @@ import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
 import fs from 'node:fs/promises';
-import { createApp, createBrowserPool, CHROMIUM_LAUNCH_ARGS, MAX_CONCURRENT_RENDERS } from './app.js';
+import { createApp, createBrowserPool, isAllowedRequest, CHROMIUM_LAUNCH_ARGS, MAX_CONCURRENT_RENDERS } from './app.js';
 
 function startServer(getBrowser, options) {
   return new Promise((resolve, reject) => {
@@ -28,10 +28,12 @@ function stopServer(server) {
 
 // Mock page writes dummy bytes so createReadStream succeeds.
 function makeMockBrowser({ failScreenshot = false } = {}) {
-  const calls = { setViewport: [], goto: [], evaluate: [], waitForFunction: [], screenshot: [] };
+  const calls = { setRequestInterception: [], requestHandlers: [], setViewport: [], setContent: [], evaluate: [], waitForFunction: [], screenshot: [] };
   const page = {
+    setRequestInterception: async (value) => { calls.setRequestInterception.push(value); },
+    on: (event, handler) => { if (event === 'request') calls.requestHandlers.push(handler); },
     setViewport: async (opts) => { calls.setViewport.push(opts); },
-    goto:        async (url)  => { calls.goto.push(url); },
+    setContent:  async (html) => { calls.setContent.push(html); },
     evaluate:    async (fn)   => { calls.evaluate.push(fn); return Promise.resolve(); },
     waitForFunction: async (fn, opts) => { calls.waitForFunction.push({ fn, opts }); return Promise.resolve(); },
     screenshot:  async (args) => {
@@ -199,8 +201,29 @@ describe('POST / HTML source', () => {
     assert.match(res.headers.get('content-type'), /image\/png/);
   });
 
-  test('always calls goto with file:// (never navigates to external URLs)', () => {
-    assert.match(calls.goto[0], /^file:\/\//);
+  test('renders the source in place rather than navigating to it', () => {
+    assert.equal(calls.setContent[0], '<h1>Hello</h1>');
+  });
+
+  test('intercepts requests before the source loads', () => {
+    assert.deepEqual(calls.setRequestInterception, [true]);
+    assert.equal(calls.requestHandlers.length, 1);
+  });
+
+  test('continues allowed requests and aborts the rest', () => {
+    const handle = calls.requestHandlers[0];
+    const outcomes = [];
+    const request = (url) => ({
+      url: () => url,
+      continue: () => outcomes.push(['continue', url]),
+      abort: () => outcomes.push(['abort', url]),
+    });
+    handle(request('https://cdn.bsky.app/a.jpg'));
+    handle(request('file:///etc/passwd'));
+    assert.deepEqual(outcomes, [
+      ['continue', 'https://cdn.bsky.app/a.jpg'],
+      ['abort', 'file:///etc/passwd'],
+    ]);
   });
 
   test('uses default viewport 1920x1080 when options omitted', () => {
@@ -262,8 +285,8 @@ describe('POST / HTML source', () => {
     const { browser, calls: c } = makeMockBrowser();
     const { server: s, url: u } = await startServer(async () => browser);
     try {
-      await post(u, { source: 'https://evil.com', format: 'png' });
-      assert.match(c.goto[0], /^file:\/\//);
+      await post(u, { source: 'https://example.com', format: 'png' });
+      assert.equal(c.setContent[0], 'https://example.com');
     } finally {
       await stopServer(s);
     }
@@ -271,8 +294,10 @@ describe('POST / HTML source', () => {
 
   test('a waitForFunction timeout (slow-loading images) does not fail the render', async () => {
     const page = {
+      setRequestInterception: async () => {},
+      on: () => {},
       setViewport: async () => {},
-      goto: async () => {},
+      setContent: async () => {},
       evaluate: async () => {},
       waitForFunction: async () => { throw new Error('timed out waiting for images'); },
       screenshot: async (args) => {
@@ -393,8 +418,10 @@ describe('POST / concurrency limiting', () => {
     const gate = new Promise((resolve) => { releaseGate = resolve; });
 
     const page = {
+      setRequestInterception: async () => {},
+      on: () => {},
       setViewport: async () => {},
-      goto: async () => {},
+      setContent: async () => {},
       evaluate: async () => {},
       waitForFunction: async () => {},
       screenshot: async (args) => {
@@ -740,5 +767,18 @@ describe('CHROMIUM_LAUNCH_ARGS', () => {
   test('keeps the container-required sandbox and shm flags', () => {
     assert.ok(CHROMIUM_LAUNCH_ARGS.includes('--no-sandbox'));
     assert.ok(CHROMIUM_LAUNCH_ARGS.includes('--disable-dev-shm-usage'));
+  });
+});
+
+describe('isAllowedRequest', () => {
+  test('lets data: and https: requests through', () => {
+    assert.equal(isAllowedRequest('data:image/png;base64,AAAA'), true);
+    assert.equal(isAllowedRequest('https://fonts.gstatic.com/s/notosans/v1/a.woff2'), true);
+  });
+
+  test('aborts file:, http: and other requests', () => {
+    for (const url of ['file:///etc/hosts', 'http://localhost:3000/', 'http://10.0.0.1/', 'chrome://version', 'ftp://example.com/']) {
+      assert.equal(isAllowedRequest(url), false, url);
+    }
   });
 });
