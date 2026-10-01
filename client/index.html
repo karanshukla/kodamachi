@@ -8,8 +8,6 @@
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=3" />
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=3" />
   <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=3" />
-  <!-- Schibsted Grotesk carries the UI, Noto Sans JP the Japanese copy. The
-       mark is an SVG outline, so it needs no webfont. -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
@@ -22,20 +20,14 @@
   <meta property="og:image" content="https://%APP_DOMAIN%/og.png" />
   <meta name="viewport"
     content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-visual" />
-  <!-- iOS standalone launch: "Add to Home Screen" opens without Safari's chrome.
-       viewport-fit=cover above enables env(safe-area-inset-*) in index.css. -->
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="mobile-web-app-capable" content="yes" />
-  <!-- "default" adapts to the active color scheme (dark text on the light-mode
-       header, light on the dark-mode header); black-translucent would force
-       always-white status-bar text, unreadable against the light header. -->
+  <!-- "default" follows the color scheme; black-translucent forces white text, unreadable on the light header. -->
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-  <!-- Chrome address bar matches light/dark scheme -->
   <meta name="theme-color" media="(prefers-color-scheme: light)" content="#FFFFFF" />
   <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0B1428" />
   <title>%APP_NAME%</title>
-  <!-- The <link rel="manifest"> is injected by vite-plugin-pwa, which generates
-       manifest.webmanifest from the VitePWA({ manifest }) config in vite.config.ts. -->
+  <!-- The manifest link is injected by vite-plugin-pwa. -->
   <script type="application/ld+json">
       {
         "@context": "https://schema.org",

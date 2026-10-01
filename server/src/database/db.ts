@@ -11,9 +11,7 @@ export type { Database, DatabaseSchema } from "./schema";
 
 export const createDb = async (location: string): Promise<Database> => {
   if (env.POSTGRESQL_URL) {
-    // statement_timeout is applied per-connection via the `options` parameter
-    // (libpq's runtime options string), so every pooled connection inherits it
-    // without a round-trip per checkout. An empty string leaves it unset.
+    // Per-connection via libpq `options`, so pooled connections inherit it without a round-trip. Empty leaves it unset.
     const statementTimeout = env.PG_STATEMENT_TIMEOUT_MS;
     const poolConfig: { [key: string]: unknown } = {
       connectionString: env.POSTGRESQL_URL,

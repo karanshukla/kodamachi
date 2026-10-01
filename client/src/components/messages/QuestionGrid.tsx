@@ -15,7 +15,6 @@ interface QuestionGridProps {
   messages: Message[];
   thread: ThreadRoot;
   ink: boolean;
-  /** Which card has its composer open. Owned by the page, which also closes it. */
   respondingTid: string | null;
   onExpand: (tid: string) => void;
   onCollapse: () => void;
@@ -32,17 +31,10 @@ interface QuestionGridProps {
   deletingTid: string | null;
   onDelete: (tid: string) => void;
   onTogglePin: (tid: string) => void;
-  /** The answering account, so a destination reads as a handle and not a DID. */
   handle?: string;
-  /** The client picked on /customise, which each answered card's link points at. */
   defaultClientId: string | null;
 }
 
-/**
- * The question grid, and the roving focus that walks it. Card contents are
- * QuestionCard's problem; this owns only which card is focused and the effects
- * that follow from expanding one.
- */
 export function QuestionGrid({
   messages,
   thread,

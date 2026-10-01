@@ -3,13 +3,11 @@ import { profileWaypointTargetFor } from "./waypointTarget";
 
 export interface MentionLink {
   href: string;
-  /** True for an in-app route, which navigates without a page load. */
   internal: boolean;
 }
 
 export type MentionLinkResolver = (handle: string) => MentionLink;
 
-/** This app's own page for an account, which needs no Atmosphere client at all. */
 function inAppProfilePath(handle: string): string {
   return `/profile/${handle}`;
 }

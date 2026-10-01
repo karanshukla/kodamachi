@@ -13,8 +13,7 @@ export const createClient = async (db: Database) => {
   const publicUrl = env.PUBLIC_URL;
   const url = publicUrl || `http://127.0.0.1:${env.PORT}`;
 
-  // In production the frontend addresses the API behind Caddy at /api, so the
-  // redirect URI must carry that prefix; local dev is served from the root.
+  // Production serves the API behind Caddy at /api; local dev at the root.
   const urlWithAPI = publicUrl ? `${url}/api` : url;
   const enc = encodeURIComponent;
   return withFetchNodePatchDiagnostic(

@@ -153,8 +153,7 @@ migrations["007"] = {
 
 migrations["008"] = {
   async up(db: Kysely<unknown>) {
-    // SQLite cannot ALTER a constraint, so the table is rebuilt. Existing
-    // subscriptions go with it; re-enabling notifications is a one-tap fix.
+    // SQLite cannot ALTER a constraint: the table is rebuilt, dropping existing subscriptions.
     await db.schema.dropIndex("push_subscription_did_idx").ifExists().execute();
     await db.schema.dropTable("push_subscription").ifExists().execute();
 
@@ -251,8 +250,7 @@ migrations["012"] = {
   },
 };
 
-// Added with a default rather than as a nullable column: every existing row has
-// to read as "on", and the client's `on()` reads a NULL as false.
+// Default, not nullable: existing rows must read as "on" and the client's `on()` reads NULL as false.
 migrations["013"] = {
   async up(db: Kysely<unknown>) {
     await db.schema
@@ -265,10 +263,8 @@ migrations["013"] = {
   },
 };
 
-// Default-on like 013, and for the same reason: the column has to read as "on"
-// for every row that predates it. Unlike 013 this one is the profile owner's
-// setting rather than the viewer's, so it is public — see
-// `profile-service.ts`'s `readPubliclyVisibleSettings`.
+// Default-on like 013; unlike 013 this is the owner's setting, so it is public
+// (`readPubliclyVisibleSettings` in profile-service.ts).
 migrations["014"] = {
   async up(db: Kysely<unknown>) {
     await db.schema

@@ -2,7 +2,6 @@ import { themeLayout } from "../layout";
 import { BASE_CSS, NOTO_LINK, NOTO_STACK, PRECONNECT } from "../shared-css";
 import type { RenderedTemplate } from "../templates";
 
-/** "Compact": a white-ruled block on midnight, for feeds read in the dark. */
 export function renderCompressedCard(
   escapedMessage: string,
   footerText: string,

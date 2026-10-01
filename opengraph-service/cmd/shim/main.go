@@ -1,19 +1,6 @@
-// Command shim is the opengraph-service reverse proxy. It sits between Caddy
-// and the client. The fast path (everything except Bluesky Cardyb on
-// /profile/:handle) is proxied via an embedded Caddy reverse-proxy engine
-// (see internal/shim/caddyproxy.go) rather than a hand-rolled
-// httputil.ReverseProxy. The generate path (Cardyb + profile) resolves the
-// handle via indigo, renders a per-profile OG image via html-to-image,
-// caches it by DID, and serves a rewritten HTML response whose og:image
-// points at the cached PNG.
-//
-// Cache-serving is a shim responsibility: GET /og-cache/:did.png returns the
-// stored image directly from the volume.
-//
-// The HTTP wiring lives in internal/shim.Handler so the full request path can
-// be exercised by an in-process integration test with the external deps
-// (indigo, html-to-image) stubbed. main.go constructs the Handler with real
-// dependencies and serves it.
+// Command shim is the opengraph-service reverse proxy. Everything except
+// Bluesky Cardyb on /profile/:handle is proxied to the client; Cardyb gets a
+// per-profile OG image, cached by DID and served from /og-cache/:did.png.
 package main
 
 import (
@@ -63,15 +50,12 @@ func main() {
 	if err != nil {
 		log.Fatalf("build handler: %v", err)
 	}
-	// Renders outlive the request that scheduled them, so they hang off a
-	// process-lifetime context rather than any request's. Cancelling it stops
-	// renders that have not started; the ones already running are joined below.
+	// Renders outlive the request that scheduled them. Cancelling this stops
+	// renders not yet started; running ones are joined at shutdown.
 	backgroundCtx, stopBackground := context.WithCancel(context.Background())
 	defer stopBackground()
 	handler.BackgroundCtx = backgroundCtx
-	// Tunable because the ceiling that matters is Cardyb's own timeout, which is
-	// not published: the wait has to be shortened from the outside if a card ever
-	// starts failing outright rather than falling back.
+	// Tunable because Cardyb's own timeout is unpublished.
 	handler.PendingRenderWait = parseDurationOr(*pendingWait, shim.DefaultPendingRenderWait)
 
 	log.Printf("opengraph-service shim listening on %s, proxying to %s (cache %s, ttl %s)",
@@ -81,15 +65,11 @@ func main() {
 		Addr:              *addr,
 		Handler:           handler,
 		ReadHeaderTimeout: 5 * time.Second,
-		// No WriteTimeout on the server level — the Generate path can legitimately
-		// take seconds (indigo + headless render). Per-request deadlines live in
-		// the renderer client. IdleTimeout keeps idle keep-alives from piling up.
+		// No WriteTimeout: the generate path can take seconds.
 		IdleTimeout: 120 * time.Second,
 	}
 
-	// Graceful shutdown: stop accepting new connections, finish in-flight
-	// pass-throughs, then join the background renders so a half-written cache
-	// entry cannot be left behind.
+	// Drain connections, then join background renders.
 	shutdownDone := make(chan struct{})
 	go func() {
 		defer close(shutdownDone)

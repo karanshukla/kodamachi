@@ -231,11 +231,6 @@ func TestNFSettingsClient_RetriesNetworkErrors(t *testing.T) {
 	}
 }
 
-// TestIndigoFetcher_FetchProfile_SettingsFailure_StillReturnsProfile and
-// TestIndigoFetcher_FetchProfile_SettingsTimeout_StillReturnsProfile pin the
-// hard constraint that a settings-read failure or timeout never fails
-// FetchProfile — the card renders with DefaultPrompt instead.
-
 func bskyProfileServer(t *testing.T, did, handle, displayName string) *httptest.Server {
 	t.Helper()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -325,7 +320,7 @@ func TestIndigoFetcher_FetchProfile_SettingsTimeout_StillReturnsProfile(t *testi
 
 func TestIndigoFetcher_FetchProfile_NoSettingsClient_LeavesPromptAndLocaleEmpty(t *testing.T) {
 	appview := bskyProfileServer(t, "did:plc:abc123", "alice.bsky.social", "Alice")
-	f := NewIndigoFetcher(appview.URL) // f.Settings is nil
+	f := NewIndigoFetcher(appview.URL)
 
 	p, err := f.FetchProfile(context.Background(), "did:plc:abc123")
 	if err != nil {
@@ -336,9 +331,7 @@ func TestIndigoFetcher_FetchProfile_NoSettingsClient_LeavesPromptAndLocaleEmpty(
 	}
 }
 
-// errSettingsTransport always fails the round trip, simulating a server that
-// is entirely unreachable (DNS failure, connection refused) rather than one
-// that answers with an error status.
+// errSettingsTransport fails the round trip: an entirely unreachable server.
 type errSettingsTransport struct{}
 
 func (errSettingsTransport) RoundTrip(*http.Request) (*http.Response, error) {
@@ -356,10 +349,7 @@ func TestNFSettingsClient_UnreachableHost_ReturnsErrorNotPanic(t *testing.T) {
 	}
 }
 
-// dnsNotFoundTransport simulates a hostname that fails DNS resolution — the
-// expected state of NF_SERVER_URL in production until the Railway variable is
-// set (DefaultNFServerHost's docker-compose-local default does not resolve on
-// Railway's private network).
+// dnsNotFoundTransport: NF_SERVER_URL in production until the Railway variable is set.
 type dnsNotFoundTransport struct {
 	calls *int32
 }
@@ -369,13 +359,8 @@ func (t dnsNotFoundTransport) RoundTrip(req *http.Request) (*http.Response, erro
 	return nil, &net.DNSError{Err: "no such host", Name: req.URL.Hostname(), IsNotFound: true}
 }
 
-// TestNFSettingsClient_DNSResolutionFailure_IsNotRetried pins the fix for a
-// production incident risk: a DNS name that does not resolve is a permanent
-// misconfiguration, not a wake-shaped failure like 502/503 or
-// connection-refused. Retrying it burns the full retry budget as dead latency
-// on a cold render — the same render that may also be waiting on
-// html-to-image waking Chromium — so it must fail after exactly one attempt,
-// well under the configured deadline.
+// A non-resolving DNS name is a permanent misconfiguration, not a wake-shaped failure:
+// retrying burns the whole budget as dead latency on a cold render.
 func TestNFSettingsClient_DNSResolutionFailure_IsNotRetried(t *testing.T) {
 	var calls int32
 	c := NewNFSettingsClient("http://nf-settings.invalid/", 6*time.Second)
@@ -395,9 +380,6 @@ func TestNFSettingsClient_DNSResolutionFailure_IsNotRetried(t *testing.T) {
 	}
 }
 
-// A did reaches FetchSettings from a caller-chosen handle, so path metacharacters
-// in it must stay inside one path segment instead of rewriting the URL. Pins the
-// PathEscape in FetchSettings.
 func TestNFSettingsClient_EscapesDIDInPath(t *testing.T) {
 	var gotPath string
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -417,9 +399,6 @@ func TestNFSettingsClient_EscapesDIDInPath(t *testing.T) {
 	}
 }
 
-// The two retry policies agree today on purpose. This fails the day one moves
-// without the other, and separately asserts they are independent maps rather
-// than one alias, which is what makes deliberate divergence possible at all.
 func TestSettingsWakeRetryableStatuses_MatchRenderer(t *testing.T) {
 	if !maps.Equal(settingsWakeRetryableStatuses, wakeRetryableStatuses) {
 		t.Fatalf("settings policy %v diverged from renderer policy %v; move both or document why they differ",

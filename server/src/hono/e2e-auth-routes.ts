@@ -1,5 +1,4 @@
-// Its own module so it can be excluded from the unit-coverage gate: it makes
-// live network calls and DB writes, exercised by the Playwright overlay.
+// Own module so it can be excluded from the unit-coverage gate (live network and DB, covered by Playwright).
 
 import { AtpAgent } from "@atproto/api";
 import { z } from "zod";

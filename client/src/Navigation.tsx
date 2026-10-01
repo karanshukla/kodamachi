@@ -27,7 +27,6 @@ interface NavigationProps {
 export function Navigation({ onLinkClick }: NavigationProps) {
   const location = useLocation();
   const messages = useTranslations();
-  /** The three ways a kodamachi user can be related to you. */
   const friendGroups = [
     {
       key: "moots",
@@ -154,7 +153,6 @@ export function Navigation({ onLinkClick }: NavigationProps) {
   );
 }
 
-/** Context chip shown while looking at someone else's public profile. */
 function ViewingProfile({ handle }: { handle: string }) {
   const messages = useTranslations();
   return (

@@ -28,11 +28,9 @@ interface ProfileCardProps {
    * not carry it. Null sends the viewer to Bluesky, as before.
    */
   clientId: string | null;
-  /** Whether the viewer keeps @mentions in this app instead of following them out. */
   openProfilesInApp: boolean;
 }
 
-/** Bluesky-style banner + avatar + bio header for the profile being viewed. */
 export function ProfileCard({ profile, clientId, openProfilesInApp }: ProfileCardProps) {
   const messages = useTranslations();
   const destination = clientDestinationFor(

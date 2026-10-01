@@ -2,7 +2,6 @@ import type { CSSProperties } from "react";
 
 import { surfaceGhost, surfaceHighlight } from "../../styles/tokens";
 
-/** One row's height, held constant so the form below never shifts. */
 const ROW_HEIGHT = 64;
 
 export const box: CSSProperties = {

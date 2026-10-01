@@ -18,9 +18,7 @@ describe("Messages (Hono)", () => {
     mock.clearAllMocks();
   });
 
-  // syncMessages reads user_settings directly via ctx.db, so the ctx needs a
-  // chainable builder for that one path. dbResult controls what the settings
-  // query returns.
+  // syncMessages reads user_settings via ctx.db; dbResult is that query's result.
   function makeCtx(dbResult: any = null): AppContext {
     return {
       db: {
@@ -457,16 +455,8 @@ describe("Messages (Hono)", () => {
   });
 
   describe("DELETE /messages/:tid", () => {
-    test("returns 400 when tid is missing from params", async () => {
-      // A path with no tid segment can't match /messages/:tid; use an empty
-      // segment which the validator path-param won't bind. Hit /messages/ which
-      // 404s (no route) — but the controller guard for empty tid is exercised
-      // by passing a literal empty value via the route. Instead test that a
-      // missing-but-present param returns 400 by using a sentinel path.
+    test("returns 404 when the tid segment is absent", async () => {
       const { app, headers } = makeApp();
-      // /messages/ alone doesn't match the :tid route; the real guard fires when
-      // tid is present-but-empty, which can't happen via path binding. So we
-      // assert the route requires a non-empty tid by checking 404 on no-tid.
       const res = await app.request("/messages/", { headers, method: "DELETE" });
       assert.strictEqual(res.status, 404);
     });

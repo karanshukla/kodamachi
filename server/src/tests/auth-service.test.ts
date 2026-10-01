@@ -6,30 +6,14 @@ import { OAuthResolverError } from "@atproto/oauth-client-node";
 
 import { deleteE2EAgent, setE2EAgent } from "../auth/e2e-agent-store";
 
-// `mock.module` must be registered before the module under test is imported so
-// that auth-service's transitive import of session-agent picks up the mock.
-// AuthService is therefore loaded lazily in `before()` and held in this `let`.
-//
-// checkSession and revokeSession both check hasE2EAgent() themselves before
-// ever calling initializeAgentForDid, so the mock only needs to reproduce the
-// null-on-restore-miss / fake-agent branching; the `new Agent(session)` leaf
-// is replaced with `mockAgent`, whose `getProfile` tests reassign to exercise
-// the previously untestable getProfile block in checkSession.
+// mock.module must precede the import, so AuthService is loaded lazily in beforeAll.
 let AuthService: typeof import("../services/auth-service").AuthService;
 let mockAgent: { getProfile: Mock<(...args: any[]) => Promise<any>> };
 
 beforeAll(async () => {
   mockAgent = { getProfile: mock(async () => ({ data: undefined })) };
-  // Spread the real module so every export it has keeps working and only
-  // initializeAgentForDid is swapped. Bun's `mock.module` is process-global and
-  // not restorable (`clearAllMocks` clears mock call history but does not unmock
-  // modules), so `--isolate` (passed in the package script) gives each test
-  // file a fresh module registry. Do not let `--isolate` be the only thing
-  // keeping this mock contained: spreading the real binding means a partial
-  // mock can't take out files that import the real initializeAgentForDid
-  // (e.g. session-agent.test.ts) with a missing-export SyntaxError. Re-exporting
-  // the real binding costs no coverage — it is the same function session-agent
-  // .test.ts already exercises.
+  // Spread the real module so only initializeAgentForDid is swapped; a partial mock would break session-agent.test.ts with a missing-export SyntaxError.
+  // mock.module is process-global and unrestorable; --isolate is what keeps it out of other files.
   const realSessionAgent = await import("../auth/session-agent");
   mock.module("../auth/session-agent", () => ({
     ...realSessionAgent,
@@ -43,11 +27,7 @@ beforeAll(async () => {
   AuthService = mod.AuthService;
 });
 
-// Drop the mock() call history. Bun's `clearAllMocks` does not unmock modules
-// (the session-agent mock above stays registered for the process), but
-// `--isolate` gives each test file its own module registry so the mock never
-// leaks into other files regardless. This is call-history cleanup, not the
-// thing keeping the session-agent mock contained.
+// Call-history cleanup only; the mock stays registered (--isolate contains it).
 afterAll(() => {
   mock.clearAllMocks();
 });

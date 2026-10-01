@@ -6,7 +6,6 @@ import { Kysely } from "kysely";
 import { ProfileService, ProfileResolver } from "../services/profile-service";
 
 describe("ProfileService", () => {
-  // Mock Logger
   const mockLogger = {
     error: mock(),
     warn: mock(),
@@ -14,9 +13,7 @@ describe("ProfileService", () => {
     debug: mock(),
   };
 
-  // Mock database query builders. Two separate builders so the user_profile
-  // (checkUserExists) and user_settings (public-facing subset) legs of
-  // getPublicProfile's Promise.all can return independent values.
+  // Separate builders so the user_profile and user_settings legs of getPublicProfile's Promise.all return independent values.
   const mockSelectBuilder = {
     select() {
       return this;
@@ -24,20 +21,17 @@ describe("ProfileService", () => {
     where() {
       return this;
     },
-    executeTakeFirst: async () => undefined as any, // Will be overridden in tests
-    execute: async () => [] as any[], // Will be overridden in tests that need it
+    executeTakeFirst: async () => undefined as any,
+    execute: async () => [] as any[],
   };
 
-  // Separate builder for the user_settings leg so it can return its own row
-  // independently of the user_profile existence check.
   const mockSettingsSelectBuilder = {
-    // Records its column list, unlike the user_profile builder: the public
-    // payload's column list is itself the thing one of the tests below asserts.
+    // Records its column list: one test asserts the public payload's columns.
     select: mock((_columns: string[]) => mockSettingsSelectBuilder),
     where() {
       return this;
     },
-    executeTakeFirst: async () => undefined as any, // Will be overridden in tests
+    executeTakeFirst: async () => undefined as any,
   };
 
   const mockDb = {
@@ -46,7 +40,6 @@ describe("ProfileService", () => {
     ),
   };
 
-  // Mock AtpAgent response
   const mockGetProfile = mock(async () => ({
     success: true,
     data: {
@@ -56,12 +49,10 @@ describe("ProfileService", () => {
     },
   }));
 
-  // Mock the AtpAgent
   const mockAtpAgent = {
     getProfile: mockGetProfile,
   };
 
-  // Mock ProfileResolver
   const mockResolver = {
     resolveDidToHandle: mock(async (did) => `handle-for-${did}`),
     resolveHandleToDid: mock(async (handle) =>
@@ -69,15 +60,13 @@ describe("ProfileService", () => {
     ),
   };
 
-  // Presence is its own service with its own suite; here it is a seam, so the
-  // profile payload can be asserted against a known list.
+  // Presence is its own service; stubbed so the payload is asserted against a known list.
   const mockPresenceFor = mock(async () => ["tangled", "leaflet"]);
   const mockAtmosphere = { presenceFor: mockPresenceFor };
 
   let profileService: ProfileService;
 
   beforeEach(() => {
-    // Reset all mocks
     mockLogger.error.mockClear();
     mockLogger.warn.mockClear();
     mockLogger.info.mockClear();
@@ -90,11 +79,9 @@ describe("ProfileService", () => {
     mockPresenceFor.mockClear();
     mockPresenceFor.mockImplementation(async () => ["tangled", "leaflet"]);
 
-    // Reset both select builders' executeTakeFirst to the unset default.
     mockSelectBuilder.executeTakeFirst = async () => undefined;
     mockSettingsSelectBuilder.executeTakeFirst = async () => undefined;
 
-    // Create a new instance of the service with our mocks
     profileService = new ProfileService(
       mockDb as unknown as Kysely<any>,
       mockResolver as ProfileResolver,
@@ -102,20 +89,16 @@ describe("ProfileService", () => {
       mockAtmosphere as any
     );
 
-    // Override the AtpAgent with our mock
     (profileService as any).agent = mockAtpAgent;
   });
 
   describe("getPublicProfile", () => {
     it("should fetch public profile and return exists: false when user not in DB", async () => {
-      // Arrange
       const testDid = "did:test:user123";
       mockSelectBuilder.executeTakeFirst = async () => undefined;
 
-      // Act
       const result = await profileService.getPublicProfile(testDid);
 
-      // Assert
       assert.strictEqual(result.exists, false);
       assert.deepStrictEqual(result.profile, {
         did: testDid,
@@ -128,20 +111,16 @@ describe("ProfileService", () => {
     });
 
     it("should return exists: true when user is registered in DB", async () => {
-      // Arrange
       const testDid = "did:test:user456";
       mockSelectBuilder.executeTakeFirst = async () => ({ did: testDid });
 
-      // Act
       const result = await profileService.getPublicProfile(testDid);
 
-      // Assert
       assert.strictEqual(result.exists, true);
       assert.ok(result.profile);
     });
 
     it("should return the profile owner's public-facing settings when set", async () => {
-      // Arrange — user_settings row with all four customisations populated.
       const testDid = "did:test:customised";
       mockSelectBuilder.executeTakeFirst = async () => ({ did: testDid });
       mockSettingsSelectBuilder.executeTakeFirst = async () => ({
@@ -151,10 +130,8 @@ describe("ProfileService", () => {
         touchpointLocale: "es",
       });
 
-      // Act
       const result = await profileService.getPublicProfile(testDid);
 
-      // Assert — all four fields pass straight through to the response.
       assert.strictEqual(result.inboxEnabled, false);
       assert.strictEqual(result.customPrompt, "Pregúntame algo");
       assert.strictEqual(result.profileCardTheme, "ember");
@@ -162,30 +139,23 @@ describe("ProfileService", () => {
     });
 
     it("should default public-facing fields when user_settings has no row", async () => {
-      // Arrange — no user_settings row (owner never customised). inboxEnabled
-      // is NOT NULL default true, so a missing row still reads as open; the
-      // nullable fields default to null = "use the default".
       const testDid = "did:test:nodefaults";
       mockSelectBuilder.executeTakeFirst = async () => ({ did: testDid });
       mockSettingsSelectBuilder.executeTakeFirst = async () => undefined;
 
-      // Act
       const result = await profileService.getPublicProfile(testDid);
 
-      // Assert
-      assert.strictEqual(result.inboxEnabled, true); // default-open
+      assert.strictEqual(result.inboxEnabled, true);
       assert.strictEqual(result.customPrompt, null);
       assert.strictEqual(result.profileCardTheme, null);
       assert.strictEqual(result.touchpointLocale, null);
     });
 
     it("should read inboxEnabled as closed whether Postgres returns false or SQLite returns 0", async () => {
-      // Postgres stores booleans natively; SQLite stores them as 0/1. The
-      // normalization must handle both so the client always gets a boolean.
+      // Postgres returns native booleans, SQLite 0/1; both must become booleans.
       const testDid = "did:test:closed";
       mockSelectBuilder.executeTakeFirst = async () => ({ did: testDid });
 
-      // Postgres: actual boolean false
       mockSettingsSelectBuilder.executeTakeFirst = async () => ({
         inboxEnabled: false,
         customPrompt: null,
@@ -195,7 +165,6 @@ describe("ProfileService", () => {
       let result = await profileService.getPublicProfile(testDid);
       assert.strictEqual(result.inboxEnabled, false);
 
-      // SQLite: numeric 0
       mockSettingsSelectBuilder.executeTakeFirst = async () => ({
         inboxEnabled: 0,
         customPrompt: null,
@@ -207,7 +176,6 @@ describe("ProfileService", () => {
     });
 
     it("should read inboxEnabled as open when the row stores 1 (number)", async () => {
-      // Arrange — SQLite stores booleans as 1/0; verify the `!== 0` coercion.
       const testDid = "did:test:openinbox";
       mockSelectBuilder.executeTakeFirst = async () => ({ did: testDid });
       mockSettingsSelectBuilder.executeTakeFirst = async () => ({
@@ -223,10 +191,6 @@ describe("ProfileService", () => {
     });
 
     it("should fetch the settings subset as a third parallel leg of Promise.all", async () => {
-      // Arrange — verify the settings lookup runs against user_settings (not
-      // user_profile) and selects the public-facing columns. The mock's
-      // selectFrom returns a different builder per table, so a call against
-      // user_settings is observable via the second selectFrom call arg.
       const testDid = "did:test:parallel";
       mockSelectBuilder.executeTakeFirst = async () => ({ did: testDid });
       mockSettingsSelectBuilder.executeTakeFirst = async () => undefined;
@@ -234,21 +198,17 @@ describe("ProfileService", () => {
       await profileService.getPublicProfile(testDid);
 
       const selectTables = mockDb.selectFrom.mock.calls.map((c) => c[0]);
-      // Two legs: checkUserExists → user_profile, settings subset → user_settings.
       assert.ok(selectTables.includes("user_profile"));
       assert.ok(selectTables.includes("user_settings"));
     });
 
     it("never selects a setting that is private to its owner", async () => {
-      // Arrange
       const testDid = "did:test:private-settings";
       mockSelectBuilder.executeTakeFirst = async () => ({ did: testDid });
       mockSettingsSelectBuilder.executeTakeFirst = async () => undefined;
 
-      // Act
       await profileService.getPublicProfile(testDid);
 
-      // Assert
       const columns = mockSettingsSelectBuilder.select.mock.calls.at(-1)?.[0] ?? [];
       assert.ok(!columns.includes("defaultClient"));
       assert.ok(!columns.includes("uiLocale"));
@@ -256,32 +216,25 @@ describe("ProfileService", () => {
     });
 
     it("selects the setting that governs what every visitor sees", async () => {
-      // Arrange — the mirror of the test above: atmosphereLinksEnabled is the
-      // owner's public choice, so the public payload has to read it.
       const testDid = "did:test:public-settings";
       mockSelectBuilder.executeTakeFirst = async () => ({ did: testDid });
       mockSettingsSelectBuilder.executeTakeFirst = async () => undefined;
 
-      // Act
       await profileService.getPublicProfile(testDid);
 
-      // Assert
       const columns = mockSettingsSelectBuilder.select.mock.calls.at(-1)?.[0] ?? [];
       assert.ok(columns.includes("atmosphereLinksEnabled"));
     });
 
     it("returns the account's Atmosphere apps when it has not opted out", async () => {
-      // Arrange
       const testDid = "did:test:atmosphere-on";
       mockSelectBuilder.executeTakeFirst = async () => ({ did: testDid });
       mockSettingsSelectBuilder.executeTakeFirst = async () => ({
         atmosphereLinksEnabled: 1,
       });
 
-      // Act
       const result = await profileService.getPublicProfile(testDid);
 
-      // Assert
       assert.deepStrictEqual(
         result.atmosphereApps.map((app) => app.id),
         ["tangled", "leaflet"]
@@ -289,31 +242,24 @@ describe("ProfileService", () => {
     });
 
     it("returns no Atmosphere apps for an account that opted out", async () => {
-      // Arrange
       const testDid = "did:test:atmosphere-off";
       mockSelectBuilder.executeTakeFirst = async () => ({ did: testDid });
       mockSettingsSelectBuilder.executeTakeFirst = async () => ({
         atmosphereLinksEnabled: 0,
       });
 
-      // Act
       const result = await profileService.getPublicProfile(testDid);
 
-      // Assert
       assert.deepStrictEqual(result.atmosphereApps, []);
     });
 
     it("shows Atmosphere apps for an account with no settings row at all", async () => {
-      // Arrange — the column defaults to on, so an account that never visited
-      // /customise is opted in.
       const testDid = "did:test:atmosphere-default";
       mockSelectBuilder.executeTakeFirst = async () => ({ did: testDid });
       mockSettingsSelectBuilder.executeTakeFirst = async () => undefined;
 
-      // Act
       const result = await profileService.getPublicProfile(testDid);
 
-      // Assert
       assert.deepStrictEqual(
         result.atmosphereApps.map((app) => app.id),
         ["tangled", "leaflet"]
@@ -321,26 +267,22 @@ describe("ProfileService", () => {
     });
 
     it("should throw 'Profile not found' when Bluesky returns success: false", async () => {
-      // Arrange
       const testDid = "did:test:notfound";
       const tempMockGetProfile = mock(async () => ({ success: false }));
       (profileService as any).agent.getProfile = tempMockGetProfile;
 
-      // Act & Assert
       await assert.rejects(async () => await profileService.getPublicProfile(testDid), {
         message: "Profile not found",
       });
     });
 
     it("should throw an error when the API call fails on every retry attempt", async () => {
-      // Arrange
       const testDid = "did:test:error";
       const tempMockGetProfile = mock(async () => {
         throw new Error("API call failed");
       });
       (profileService as any).agent.getProfile = tempMockGetProfile;
 
-      // Act & Assert
       await assert.rejects(async () => await profileService.getPublicProfile(testDid), {
         message: "Failed to fetch profile",
       });
@@ -350,7 +292,6 @@ describe("ProfileService", () => {
     });
 
     it("should succeed once getProfile recovers within the retry budget", async () => {
-      // Arrange — fails twice with a transient error, then succeeds.
       const testDid = "did:test:recovered";
       let callCount = 0;
       const tempMockGetProfile = mock(async () => {
@@ -363,10 +304,8 @@ describe("ProfileService", () => {
       });
       (profileService as any).agent.getProfile = tempMockGetProfile;
 
-      // Act
       const result = await profileService.getPublicProfile(testDid);
 
-      // Assert
       assert.strictEqual(result.profile.handle, "recovered.bsky.app");
       assert.strictEqual(tempMockGetProfile.mock.calls.length, 3);
       assert.strictEqual(mockLogger.warn.mock.calls.length, 2);
@@ -376,40 +315,32 @@ describe("ProfileService", () => {
 
   describe("checkUserExists", () => {
     it("should return true when user exists", async () => {
-      // Arrange
       const testDid = "did:test:existing";
       mockSelectBuilder.executeTakeFirst = async () => ({ did: testDid });
 
-      // Act
       const result = await profileService.checkUserExists(testDid);
 
-      // Assert
       assert.strictEqual(result, true);
       assert.strictEqual(mockDb.selectFrom.mock.calls.length, 1);
       assert.deepStrictEqual(mockDb.selectFrom.mock.calls[0], ["user_profile"]);
     });
 
     it("should return false when user does not exist", async () => {
-      // Arrange
       const testDid = "did:test:nonexistent";
       mockSelectBuilder.executeTakeFirst = async () => undefined;
 
-      // Act
       const result = await profileService.checkUserExists(testDid);
 
-      // Assert
       assert.strictEqual(result, false);
       assert.strictEqual(mockDb.selectFrom.mock.calls.length, 1);
     });
 
     it("should throw an error when the database query fails", async () => {
-      // Arrange
       const testDid = "did:test:error";
       mockSelectBuilder.executeTakeFirst = async () => {
         throw new Error("Database operation failed");
       };
 
-      // Act & Assert
       await assert.rejects(async () => await profileService.checkUserExists(testDid), {
         message: "Failed to check user existence",
       });
@@ -419,39 +350,31 @@ describe("ProfileService", () => {
 
   describe("resolveHandleToDid", () => {
     it("should resolve handle to DID successfully", async () => {
-      // Arrange
       const testHandle = "test.bsky.app";
       const expectedDid = "did-for-test.bsky.app";
 
-      // Act
       const result = await profileService.resolveHandleToDid(testHandle);
 
-      // Assert
       assert.strictEqual(result, expectedDid);
       assert.strictEqual(mockResolver.resolveHandleToDid.mock.calls.length, 1);
       assert.deepStrictEqual(mockResolver.resolveHandleToDid.mock.calls[0], [testHandle]);
     });
 
     it("should throw 'Handle not found' when resolver returns undefined", async () => {
-      // Arrange
-      const testHandle = "not-found"; // resolver mock returns undefined for this
+      const testHandle = "not-found";
 
-      // Act & Assert
       await assert.rejects(async () => await profileService.resolveHandleToDid(testHandle), {
         message: "Handle not found",
       });
-      // No error log — this is an expected 404, not an unexpected failure
       assert.strictEqual(mockLogger.error.mock.calls.length, 0);
     });
 
     it("should throw an error when resolver fails", async () => {
-      // Arrange
       const testHandle = "error.bsky.app";
       mockResolver.resolveHandleToDid = mock(async () => {
         throw new Error("Resolver operation failed");
       });
 
-      // Act & Assert
       await assert.rejects(async () => await profileService.resolveHandleToDid(testHandle), {
         message: "Failed to resolve handle",
       });
@@ -582,9 +505,7 @@ describe("ProfileService", () => {
       { did: "did:user:3", handle: "user3.bsky.app", displayName: undefined, avatar: undefined },
     ];
 
-    // Configures the service's single internal agent with the given follows and
-    // followers. Both getFollows and getFollowers are served by the same mock so
-    // we can assert they originate from one agent instance.
+    // Both getFollows and getFollowers are served by the one mock so tests can assert they share one agent.
     const setServiceAgent = (
       follows: typeof sampleFollows,
       followers: typeof sampleFollows,
@@ -611,7 +532,6 @@ describe("ProfileService", () => {
     };
 
     it("should separate moots, following-only, and followers-only", async () => {
-      // user:1 = mutual, user:3 = I follow them (not back), user:2 = they follow me (not back)
       setServiceAgent([sampleFollows[0], sampleFollows[2]], [sampleFollows[0], sampleFollows[1]]);
       mockSelectBuilder.execute = async () => [
         { did: "did:user:1" },
@@ -632,7 +552,6 @@ describe("ProfileService", () => {
     });
 
     it("should put followers-only users in oomfs", async () => {
-      // user:2 follows me but I don't follow them
       setServiceAgent([], [sampleFollows[1]]);
       mockSelectBuilder.execute = async () => [{ did: "did:user:2" }];
 
@@ -645,7 +564,6 @@ describe("ProfileService", () => {
     });
 
     it("should put following-only users in following", async () => {
-      // user:3 I follow but they don't follow back
       setServiceAgent([sampleFollows[2]], []);
       mockSelectBuilder.execute = async () => [{ did: "did:user:3" }];
 
@@ -676,7 +594,6 @@ describe("ProfileService", () => {
       assert.strictEqual(result.moots.length, 0);
       assert.strictEqual(result.following.length, 0);
       assert.strictEqual(result.oomfs.length, 0);
-      // No DB query should be made when both lists are empty
       assert.strictEqual(mockDb.selectFrom.mock.calls.length, 0);
     });
 
@@ -721,7 +638,6 @@ describe("ProfileService", () => {
 
       assert.strictEqual(followsCallCount, 2);
       assert.strictEqual(result.following.length, 2);
-      // Verify cursor was forwarded on the second call
       const secondCallArgs = ((profileService as any).agent.app.bsky.graph.getFollows as any).mock
         .calls[1][0];
       assert.strictEqual(secondCallArgs.cursor, "page2-cursor");
@@ -801,11 +717,7 @@ describe("ProfileService", () => {
     });
 
     it("should source both getFollows and getFollowers from the same agent instance", async () => {
-      // Regression guard for the moots/oomfs categorization bug: previously
-      // getFollows used the caller's authenticated agent while getFollowers used
-      // the service's public agent, so the two datasets could disagree on
-      // indexing state and mislabel mutuals. Both calls must now originate from
-      // the service's single internal agent.
+      // getFollows and getFollowers must come from the same internal agent, or the datasets can disagree on indexing state.
       setServiceAgent(sampleFollows, sampleFollows);
 
       await profileService.getFriendsOnApp("did:owner:1");

@@ -10,13 +10,8 @@ test.use({ storageState: "e2e/.auth/user.json" });
 // shorter catalog string so the match tracks either rendered form.
 const replyButtonName = new RegExp(`^${escapeRegex(en.replyComposer.reply)}`);
 
-// Inbox happy paths against real server endpoints. Replying would post a
-// permanent Bluesky post with no cleanup path, so that test drives the compose
-// UI and backs out with Escape.
-//
-// These share one account with the other spec files, which run in parallel, so
-// no test may assume it owns the inbox. Most don't care which card they touch;
-// the delete test seeds and deletes its own marker'd message.
+// Replying would post a permanent Bluesky post, so that test backs out with Escape.
+// The account is shared with other specs: no test may assume it owns the inbox.
 
 test.beforeEach(async ({ page }) => {
   await page.goto("/messages");
@@ -97,24 +92,20 @@ test("posting-preferences switch toggles state", async ({ page }) => {
 });
 
 test("delete a message removes it from the inbox (no-confirm default)", async ({ page }) => {
-  // Must never skip: a "populated inbox ⇒ skip" guard used to let this go green
-  // without exercising delete at all, because the parallel
-  // profile-send-message.spec.ts lands a row first (#289). Hence the marker.
+  // Seeds its own marker row: skipping on a populated inbox once let this pass
+  // without exercising delete.
   const marker = `[e2e inbox-delete ${Date.now()}]`;
   await seedOwnedMessage(page, marker);
   try {
-    // Seeded via the API after beforeEach navigated, so React Query's cache has
-    // not seen the row yet.
+    // The row was seeded after navigation; reload past React Query's cache.
     await page.reload();
     const card = page.locator('[id^="message-card-"]').filter({ hasText: marker });
     await expect(card).toBeVisible({ timeout: 15_000 });
 
     await card.getByRole("button", { name: en.questionCard.deleteMessageLabel }).click();
 
-    // Asserting on our own card, not a count delta, which races the other spec.
     await expect(card).toHaveCount(0, { timeout: 15_000 });
   } finally {
-    // Best-effort litter cleanup if the UI delete never landed.
     await deleteMessagesByText(page, [marker]);
   }
 });
@@ -161,21 +152,9 @@ async function cleanupAllMessages(page: Page) {
 }
 
 /**
- * Seed a single message owned by THIS test into the inbox of the logged-in
- * account, identified by `marker`. Uses the public `POST /messages/send`
- * endpoint (the same one `profile-send-message.spec.ts` exercises) so the
- * message is deletable later via its tid and leaves no PDS record.
- *
- * Why this exists: `ensureExampleMessages` returns false (and the old delete
- * test then `test.skip`-ed) whenever the inbox already held any row. Under the
- * Playwright worker model different spec files run concurrently against the
- * same shared account, so another spec seeding the inbox first caused the
- * delete test to silently opt out — a green run that never exercised delete
- * (#289). Seeding a marker'd message we ourselves created removes that
- * dependency entirely: the inbox is never a reason to skip.
- *
- * Returns when the API confirms the insert; the caller is responsible for
- * making the card visible (e.g. via `page.reload()`) before asserting on it.
+ * Seeds a message identified by `marker` via `POST /messages/send`, so it is
+ * deletable by tid and leaves no PDS record. The caller must make the card
+ * visible (e.g. `page.reload()`) before asserting on it.
  */
 async function seedOwnedMessage(page: Page, marker: string): Promise<void> {
   const session = await page.request.get("/api/session");

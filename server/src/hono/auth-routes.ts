@@ -22,7 +22,6 @@ import { validateJson } from "./route-helpers";
 import type { AppContext } from "#/index";
 import type { AppSessionData } from "#/auth/session";
 
-/** Derived so it stays in step with what `AuthService.checkSession` returns. */
 type BlueskyProfile = NonNullable<Awaited<ReturnType<AuthService["checkSession"]>>>;
 
 export interface AuthDeps {
@@ -58,7 +57,6 @@ export function createAuthHono(ctx: AppContext, deps: AuthDeps = {}): Hono {
 
   const LOGGED_OUT = { isLoggedIn: false, profile: null, did: null } as const;
 
-  /** Writes the session back with `did`'s account entry refreshed from `profile`. */
   async function rememberAccount(
     c: Context,
     session: AppSessionData,
@@ -70,7 +68,6 @@ export function createAuthHono(ctx: AppContext, deps: AuthDeps = {}): Hono {
     );
   }
 
-  /** Writes the session back with `did` dropped, for an account Bluesky rejected. */
   async function forgetAccount(
     c: Context,
     session: AppSessionData,
@@ -82,9 +79,8 @@ export function createAuthHono(ctx: AppContext, deps: AuthDeps = {}): Hono {
   }
 
   /**
-   * The account `/session` should answer for: the active one while Bluesky still
-   * honours its OAuth grant, otherwise the first of the remaining signed-in
-   * accounts. Null once neither has a live grant, which is a logged-out answer.
+   * The account `/session` answers for: the active one while its OAuth grant is
+   * live, else the first live remaining account, else null (logged out).
    *
    * @see [auth-controller.test.ts](../tests/auth-controller.test.ts) — pins the
    * fallback to a second account and the drop when that one is dead too.
@@ -163,8 +159,7 @@ export function createAuthHono(ctx: AppContext, deps: AuthDeps = {}): Hono {
       return c.json({ message: "Logged out, switched account", switched: true });
     }
     clearSession(c);
-    // Appended, not set: clearSession already wrote nf-session's expiry and a
-    // non-appending c.header would clobber that Set-Cookie header.
+    // Append: clearSession already set nf-session's expiry Set-Cookie.
     c.header("Set-Cookie", expireNfRegionCookie(), { append: true });
     return c.json({ message: "Logged out successfully" });
   });
@@ -205,7 +200,6 @@ export function createAuthHono(ctx: AppContext, deps: AuthDeps = {}): Hono {
         mutateSession(updated, (draft) => upsertAccount(draft, toAccountEntry(profile)))
       );
       ctx.logger.info({ did }, "Switched active account");
-      // Fire-and-forget — the switch response must not wait on this.
       notificationService
         .syncSubscriptionsAcrossAccounts(getAccounts(updated).map((a) => a.did))
         .catch((err) =>
@@ -304,7 +298,6 @@ export function createAuthHono(ctx: AppContext, deps: AuthDeps = {}): Hono {
     env.E2E_TESTING && env.NODE_ENV !== "production" ? createE2EAuthHono(ctx, service) : null;
   if (e2eSubApp) app.route("/", e2eSubApp);
 
-  /** Applies `mutate` to a shallow copy, so a rejected write leaves the original intact. */
   function mutateSession(
     session: AppSessionData,
     mutate: (draft: AppSessionData) => void

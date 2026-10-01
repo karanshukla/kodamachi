@@ -32,8 +32,6 @@ function serviceFor(pds: string | undefined, fetchImpl: unknown) {
 
 describe("appsPresentIn", () => {
   it("omits a Bluesky-only client every account would match", () => {
-    // Deer, Northsky and nine others declare `app.bsky.` and nothing else, so
-    // matching on it would put the same row on every profile in the app.
     const apps = appsPresentIn(new Set(["app.bsky.actor.profile", "app.bsky.feed.post"]));
 
     assert.deepStrictEqual(apps, []);
@@ -46,8 +44,6 @@ describe("appsPresentIn", () => {
   });
 
   it("counts five readers of one blog once", () => {
-    // Leaflet, Offprint, Pckt, Standard Reader and Anisota Reader all render
-    // the same `pub.leaflet.` records and all sit in the `standard-site` family.
     const apps = appsPresentIn(new Set(["pub.leaflet.document"]));
 
     assert.deepStrictEqual(apps, ["leaflet"]);
@@ -66,8 +62,6 @@ describe("appsPresentIn", () => {
   });
 
   it("finds an app the Aturi catalog has never heard of", () => {
-    // Rocksky writes app.rocksky.* and is in no catalog entry, so it only
-    // appears through the supplementary table.
     const apps = appsPresentIn(new Set(["app.rocksky.scrobble"]));
 
     assert.deepStrictEqual(apps, ["rocksky"]);
@@ -109,8 +103,6 @@ describe("appLinksFor", () => {
   });
 
   it("drops an app that cannot address this account", () => {
-    // Grain addresses a repo by DID alone, so without one there is nowhere to
-    // send a reader and a mark linking nowhere is worse than no mark.
     assert.deepStrictEqual(appLinksFor(["grain"], HANDLE, undefined), []);
   });
 
@@ -174,8 +166,7 @@ describe("AtmosphereService", () => {
   });
 
   it("refuses to follow a redirect away from the PDS it validated", async () => {
-    // A PDS on a public hostname passes isPublicPdsUrl and can then 302 the
-    // request onto a private address, which is the whole check undone.
+    // A public-hostname PDS can 302 onto a private address, undoing isPublicPdsUrl.
     const fetchImpl = mock(async (_url: string, _init?: RequestInit) => ({
       ok: false,
       status: 302,

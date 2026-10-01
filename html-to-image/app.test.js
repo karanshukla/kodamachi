@@ -4,7 +4,6 @@ import http from 'node:http';
 import fs from 'node:fs/promises';
 import { createApp, createBrowserPool, CHROMIUM_LAUNCH_ARGS, MAX_CONCURRENT_RENDERS } from './app.js';
 
-// Starts the app on a random port and returns { server, url }.
 function startServer(getBrowser, options) {
   return new Promise((resolve, reject) => {
     const server = http.createServer(createApp(getBrowser, options));
@@ -15,8 +14,6 @@ function startServer(getBrowser, options) {
   });
 }
 
-// Polls a predicate until it's true, rather than sleeping a fixed amount —
-// avoids flakiness from arbitrary timing assumptions.
 async function waitFor(predicate, { timeoutMs = 2000, intervalMs = 5 } = {}) {
   const deadline = Date.now() + timeoutMs;
   while (!predicate()) {
@@ -29,9 +26,7 @@ function stopServer(server) {
   return new Promise((resolve) => server.close(resolve));
 }
 
-// Mock browser whose page writes dummy bytes so createReadStream succeeds.
-// Supports the visual-readiness wait methods (evaluate, waitForFunction) added
-// to the render path — tests can assert they were called before the screenshot.
+// Mock page writes dummy bytes so createReadStream succeeds.
 function makeMockBrowser({ failScreenshot = false } = {}) {
   const calls = { setViewport: [], goto: [], evaluate: [], waitForFunction: [], screenshot: [] };
   const page = {
@@ -58,9 +53,6 @@ async function post(url, body, extraHeaders = {}) {
   });
 }
 
-// ---------------------------------------------------------------------------
-// Health check
-// ---------------------------------------------------------------------------
 describe('GET /', () => {
   let server, url;
   before(async () => ({ server, url } = await startServer(async () => { throw new Error('no browser'); })));
@@ -73,9 +65,6 @@ describe('GET /', () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// Warm endpoint
-// ---------------------------------------------------------------------------
 describe('POST /warm', () => {
   test('invokes warm and returns 200', async () => {
     let warmed = 0;
@@ -93,8 +82,6 @@ describe('POST /warm', () => {
   });
 
   test('is not rejected by the render validation that requires a source body', async () => {
-    // /warm carries no 'source', so it only works because it is registered
-    // ahead of the render validation middleware.
     const { server, url } = await startServer(async () => { throw new Error('no browser'); }, {
       warm: async () => {},
     });
@@ -120,9 +107,6 @@ describe('POST /warm', () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// Validation middleware
-// ---------------------------------------------------------------------------
 describe('POST / validation', () => {
   let server, url;
   before(async () => ({ server, url } = await startServer(async () => { throw new Error('no browser'); })));
@@ -186,9 +170,6 @@ describe('POST / validation', () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// Browser unavailable
-// ---------------------------------------------------------------------------
 describe('POST / browser unavailable', () => {
   let server, url;
   before(async () => ({ server, url } = await startServer(async () => { throw new Error('crashed'); })));
@@ -202,9 +183,6 @@ describe('POST / browser unavailable', () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// Screenshot — HTML source
-// ---------------------------------------------------------------------------
 describe('POST / HTML source', () => {
   let server, url, calls;
 
@@ -230,28 +208,14 @@ describe('POST / HTML source', () => {
   });
 
   test('waits for visual readiness (fonts + images) before screenshotting', () => {
-    // Banner/avatar <img> elements and webfonts load asynchronously after
-    // page.goto's 'load' event. The render path must call waitForFunction
-    // (img completeness) and evaluate (document.fonts.ready) BEFORE the
-    // screenshot, otherwise external-asset renders race and produce flaky
-    // blank banners / fallback-font text.
     assert.ok(calls.waitForFunction.length > 0, 'waitForFunction was not called');
     assert.ok(calls.evaluate.length > 0, 'evaluate (fonts.ready) was not called');
-    // Record the screenshot index after the first render so we can order-check.
     const shotIdx = 0; // first screenshot in this describe block
-    // waitForFunction must precede the screenshot call in the overall page-call
-    // sequence. We can't compare across different arrays by time, but the render
-    // path is sequential (await between each), so the wait having been invoked
-    // at all is the load-bearing assertion — the screenshot can't have started
-    // before the awaited wait resolved.
     assert.ok(calls.screenshot.length > shotIdx, 'screenshot was not called');
   });
 
   test('evaluate callback waits on document.fonts.ready when present', async () => {
-    // page.evaluate's function argument runs inside the browser page, not in
-    // this Node process — the mock browser above only records it. Invoke it
-    // directly here (with a fake `document` global standing in for the page's)
-    // to exercise its actual logic and branches.
+    // The callback runs in the browser; the mock only records it, so invoke it against a fake `document`.
     const fn = calls.evaluate[0];
     let readAccessed = false;
     globalThis.document = { fonts: { get ready() { readAccessed = true; return Promise.resolve(); } } };
@@ -273,9 +237,7 @@ describe('POST / HTML source', () => {
   });
 
   test('waitForFunction predicate checks every image is complete with non-zero naturalWidth', () => {
-    // Same rationale as the evaluate-callback tests above: waitForFunction's
-    // predicate runs inside the browser page. Invoke it directly against a
-    // fake `document.images` to exercise its actual completeness check.
+    // Same: the predicate runs in-page, so invoke it against a fake `document.images`.
     const predicate = calls.waitForFunction[0].fn;
     globalThis.document = { images: [{ complete: true, naturalWidth: 10 }] };
     try {
@@ -308,8 +270,6 @@ describe('POST / HTML source', () => {
   });
 
   test('a waitForFunction timeout (slow-loading images) does not fail the render', async () => {
-    // waitForVisualReadiness swallows a waitForFunction rejection so a slow
-    // CDN image doesn't turn into a 500 — the screenshot proceeds regardless.
     const page = {
       setViewport: async () => {},
       goto: async () => {},
@@ -331,9 +291,6 @@ describe('POST / HTML source', () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// options.width / options.height
-// ---------------------------------------------------------------------------
 describe('POST / custom viewport', () => {
   let server, url, calls;
 
@@ -350,9 +307,6 @@ describe('POST / custom viewport', () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// options.args passthrough
-// ---------------------------------------------------------------------------
 describe('POST / options.args passthrough', () => {
   let server, url, calls;
 
@@ -383,9 +337,6 @@ describe('POST / options.args passthrough', () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// jpg and webp formats
-// ---------------------------------------------------------------------------
 describe('POST / jpg and webp formats', () => {
   let server, url, calls;
 
@@ -417,9 +368,6 @@ describe('POST / jpg and webp formats', () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// Screenshot failure
-// ---------------------------------------------------------------------------
 describe('POST / screenshot failure', () => {
   let server, url;
 
@@ -437,9 +385,6 @@ describe('POST / screenshot failure', () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// Concurrency limiting
-// ---------------------------------------------------------------------------
 describe('POST / concurrency limiting', () => {
   test(`caps concurrent renders at MAX_CONCURRENT_RENDERS (${MAX_CONCURRENT_RENDERS})`, async () => {
     let inFlight = 0;
@@ -470,8 +415,7 @@ describe('POST / concurrency limiting', () => {
         post(url, { source: '<h1>hi</h1>', format: 'png' })
       );
 
-      // Let every request attempt entry; only MAX_CONCURRENT_RENDERS should
-      // make it into the screenshot section, the rest queue on the semaphore.
+      // Only MAX_CONCURRENT_RENDERS may reach the screenshot; the rest queue on the semaphore.
       await waitFor(() => maxObservedInFlight === MAX_CONCURRENT_RENDERS);
       assert.equal(inFlight, MAX_CONCURRENT_RENDERS, 'excess requests should be queued, not running');
 
@@ -485,9 +429,6 @@ describe('POST / concurrency limiting', () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// onRenderComplete callback (browser recycling hook)
-// ---------------------------------------------------------------------------
 describe('POST / onRenderComplete callback', () => {
   test('invokes onRenderComplete with the remaining active-render count on success', async () => {
     const { browser } = makeMockBrowser();
@@ -537,12 +478,7 @@ describe('POST / onRenderComplete callback', () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// Browser pool lifecycle
-// ---------------------------------------------------------------------------
 describe('createBrowserPool', () => {
-  // Tracks launches and closes so tests can assert on lifecycle transitions
-  // rather than on wall-clock timing.
   function makeLaunchSpy({ failFirst = false } = {}) {
     const launched = [];
     const launch = async () => {
@@ -679,10 +615,7 @@ describe('createBrowserPool', () => {
   });
 
   test('a second caller racing a crash reuses the relaunch the first caller already started', async () => {
-    // Two concurrent getBrowser() calls both observe the same crashed browser.
-    // Only one of them should discard-and-relaunch; the other must notice the
-    // relaunch already in flight (browserPromise !== its own `pending`) rather
-    // than launching a second, redundant browser.
+    // Two concurrent callers see the same crashed browser; only one may discard-and-relaunch.
     const { launch, launched } = makeLaunchSpy();
     const pool = createBrowserPool({ launch });
 
@@ -696,9 +629,7 @@ describe('createBrowserPool', () => {
   });
 
   test('discard swallows a rejected browser promise during close', async () => {
-    // shutdown()/idle-close call discard() on whatever browserPromise currently
-    // holds. If that promise is still a rejecting launch (nobody has awaited
-    // getBrowser() yet to surface the failure), discard must not throw.
+    // discard() on a still-rejecting launch (never awaited) must not throw.
     const pool = createBrowserPool({ launch: async () => { throw new Error('launch failed'); } });
 
     const pending = pool.getBrowser();
@@ -718,11 +649,7 @@ describe('createBrowserPool', () => {
     await pool.getBrowser();
     pool.onRenderComplete(0);
 
-    // The idle timer's closeBrowser() awaits discard(), which swallows the
-    // close() rejection internally. browserPromise is nulled synchronously
-    // before discard runs, so once the idle timer has fired, the next
-    // getBrowser() call relaunches — proving the failed close() never left
-    // the pool wedged or produced an unhandled rejection.
+    // A failed close() must not wedge the pool: the next getBrowser() relaunches.
     await waitFor(() => launchCount === 1);
     await new Promise((resolve) => setTimeout(resolve, 15));
     const revived = await pool.getBrowser();
@@ -741,9 +668,7 @@ describe('createBrowserPool', () => {
   });
 
   test('a warm that is never followed by a render still closes on idle', async () => {
-    // The other half of the pair below. Without warm() arming the idle close,
-    // a composer opened and abandoned would pin Chromium up forever and the
-    // container would never sleep.
+    // Without warm() arming the idle close, an abandoned composer pins Chromium up forever.
     const { launch, launched } = makeLaunchSpy();
     const pool = createBrowserPool({ launch, idleTimeoutMs: 5 });
 
@@ -796,8 +721,7 @@ describe('createBrowserPool', () => {
 // ---------------------------------------------------------------------------
 describe('CHROMIUM_LAUNCH_ARGS', () => {
   test('disables the background subsystems that keep the container chattering', () => {
-    // Each of these emits outbound packets on a timer with no page open, which
-    // resets Railway's 10-minute inactivity window and blocks app-sleeping.
+    // Each emits outbound packets on a timer with no page open, resetting Railway's inactivity window.
     for (const flag of [
       '--disable-background-networking',
       '--disable-component-update',

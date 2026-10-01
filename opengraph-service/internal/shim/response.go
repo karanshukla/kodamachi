@@ -16,10 +16,8 @@ type ResponseInput struct {
 	Origin        string // the public site origin, e.g. https://navyfragen.app
 }
 
-// BuildOGResponse produces the index.html whose og:image points at the PNG
-// served from /og-cache/:did.png — not the image itself. All user-supplied
-// strings are HTML-escaped. The crawler only reads meta tags, so the body is a
-// placeholder.
+// BuildOGResponse produces the HTML whose og:image points at the cached PNG.
+// User-supplied strings are HTML-escaped.
 func BuildOGResponse(in ResponseInput) string {
 	imageURL := AbsoluteImageURL(in.Origin, in.ImageURL)
 	origin := strings.TrimRight(strings.TrimSpace(in.Origin), "/")
@@ -54,10 +52,8 @@ func BuildOGResponse(in ResponseInput) string {
 </html>`, title, AppName, title, AppName, ogURL, ogImage, OGWidth, OGHeight, ogImage)
 }
 
-// AbsoluteImageURL resolves a possibly-relative image URL against the public
-// origin. Cardyb (and link-preview crawlers in general) will not resolve
-// relative URLs, so /og-cache/foo.png must become https://origin/og-cache/foo.png.
-// Already-absolute URLs pass through unchanged.
+// AbsoluteImageURL resolves imageURL against origin, since crawlers do not
+// resolve relative URLs.
 func AbsoluteImageURL(origin, imageURL string) string {
 	imageURL = strings.TrimSpace(imageURL)
 	if imageURL == "" {
@@ -76,7 +72,6 @@ func AbsoluteImageURL(origin, imageURL string) string {
 		return base
 	}
 	if strings.HasPrefix(imageURL, "//") {
-		// Protocol-relative: assume https from the origin scheme.
 		scheme := "https"
 		if u, err := url.Parse(origin); err == nil && u.Scheme != "" {
 			scheme = u.Scheme

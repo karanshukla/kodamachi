@@ -12,7 +12,6 @@ interface ImageThemeSwatchesProps {
   onSelect: (theme: string) => void;
 }
 
-/** The three image-export themes as picker swatches. */
 export function ImageThemeSwatches({ selected, disabled, onSelect }: ImageThemeSwatchesProps) {
   const themes = imageThemeLabels(useTranslations());
 

@@ -1,10 +1,5 @@
 import * as s from "./ImageThemePreview.styles";
 
-/**
- * Wireframe of what each image-export theme produces. Every dimension and colour
- * lives in the styles module; these functions only describe the arrangement.
- */
-
 function DefaultPreview() {
   return (
     <div style={s.defaultRoot}>

@@ -9,22 +9,13 @@ on:
 permissions:
   contents: read
 
-# The suite drives one shared live Bluesky test account and mutates global state
-# on it (customise.spec flips touchpointLocale; inbox/profile-send-message write
-# and delete real messages), so two runs overlapping stomp each other.
-#
-# That cross-ref serialisation cannot live here. A concurrency group holds
-# exactly one pending run: when a third queues, GitHub cancels the second, and
-# cancel-in-progress: false does not change that. A cancelled run never reports
-# its check, and Playwright E2E Tests is required, so the pull request is left
-# blocked with nothing to re-run. On 2026-08-30 five Dependabot merges inside
-# eight minutes cancelled four E2E runs this way, main's own head among them.
-# The lock is therefore taken inside the job, where waiting evicts nothing.
-#
-# This group is per-ref, and sheds only runs made obsolete by a newer push to
-# the same ref, whose check the newer SHA supersedes anyway. cancel-in-progress
-# stays false because specs restore the state they mutate in teardown, and a
-# cancelled run skips that.
+# The suite mutates shared state on one live Bluesky test account, so runs must
+# not overlap. The lock is taken inside the job (first step), not here: a
+# concurrency group keeps one pending run and cancels the rest, a cancelled run
+# never reports the required check, and the PR is left blocked (2026-08-30: four
+# E2E runs cancelled this way). This group only sheds runs superseded by a newer
+# push to the same ref. cancel-in-progress stays false because specs restore
+# mutated state in teardown, which a cancel skips.
 concurrency:
   group: e2e-${{ github.ref }}
   cancel-in-progress: false
@@ -33,8 +24,7 @@ jobs:
   e2e:
     name: Playwright E2E Tests
     runs-on: ubuntu-latest
-    # Generous because the job now spends part of its life queueing for the
-    # shared account rather than running Playwright.
+    # Includes time queueing for the shared account.
     timeout-minutes: 60
 
     permissions:
@@ -42,11 +32,8 @@ jobs:
       actions: read
 
     steps:
-      # Proceed only once every older E2E run has finished. run_number is a
-      # total order, so exactly one waiter is released at a time and the queue
-      # is FIFO. Runs that have not started yet are counted too: a queued run
-      # with a lower number will overtake this one as soon as a runner frees
-      # up, and ignoring it here would put two suites on the account at once.
+      # FIFO by run_number. Counts not-yet-started runs too, or a lower-numbered
+      # queued run would overtake this one and put two suites on the account.
       - name: Wait for the shared Bluesky test account
         env:
           GH_TOKEN: ${{ github.token }}
@@ -72,15 +59,8 @@ jobs:
 
       - uses: actions/checkout@v4
 
-      # The one place in the repo that still needs Node. Playwright's test
-      # runner cannot load our spec files under Bun: `bunx --bun playwright
-      # test` fails with an opaque `BuildMessage {}` from Bun's transpiler
-      # inside Playwright's loader on every spec that uses an inline `type`
-      # import, and Bun transpiles the same files standalone without complaint.
-      # Microsoft does not support Bun as a Playwright runtime. Not worth
-      # fighting: E2E drives a real browser against the built Docker images, so
-      # the runner's own runtime has no bearing on what is under test.
-      # See docs/testing-notes.md, "Playwright is the one Node holdout".
+      # Playwright's runner fails under Bun (opaque BuildMessage {} on inline
+      # `type` imports) and Bun is unsupported there. See docs/testing-notes.md.
       - uses: actions/setup-node@v4
         with:
           node-version: 24
@@ -152,7 +132,6 @@ jobs:
         env:
           E2E_HANDLE: ${{ secrets.E2E_HANDLE }}
           E2E_APP_PASSWORD: ${{ secrets.E2E_APP_PASSWORD }}
-          # Playwright connects to Caddy directly (port 8090), bypassing Anubis
           PLAYWRIGHT_BASE_URL: http://localhost:8090
 
       - name: Upload Playwright report on failure

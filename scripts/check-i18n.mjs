@@ -1,34 +1,11 @@
 #!/usr/bin/env bun
-// Fails when a .ts or .tsx file under client/src holds a bare string literal
-// that looks like English prose — #402 moved the client's UI copy into the i18n
-// catalog (client/src/lib/i18n/en.ts), so a new one belongs there too, not
-// scattered back through JSX attributes and object properties.
-//
-// Two shapes are checked. A string literal — a JSX attribute value or an
-// object property — and a JSX text child, which carries no quotes at all and
-// is therefore invisible to any search for one. Three strings shipped that way
-// (`Account Overview`, and the 404 page's title and body) precisely because
-// nothing could see them.
-//
-// Heuristic, not a parser: a string literal counts as prose if it starts
-// uppercase or contains a space, the same reproduction grep #402's own issue
-// used to find the ~210 strings this replaced. Template literals count too —
-// interpolating `${APP_NAME}` into a sentence is a reason to catalog the
-// string as a function, not a reason to exempt it — evaluated against their
-// *static* text (the parts outside `${...}`), so `${x}/${y}` reads as empty
-// and `Not on ${APP_NAME}` reads as "Not on ". A handful of positions are
-// genuinely never prose — an SVG path's `d` or `viewBox`, a `rel` attribute,
-// a `transform` or `border` CSS value, a `fontFamily` value — and are
-// allowlisted by name, as are a few recurring technical values
-// (`KeyboardEvent.key`, `DOMException.name`) allowlisted by exact match.
-// Anything else gets `/* i18n-allow */` on the same line: explicit, and
-// `grep -rn i18n-allow` finds every exception.
-//
-// Three kinds of file are prose by construction and are skipped whole rather
-// than line by line: a locale catalog (identified by `satisfies Messages`, so
-// every locale #406/#410 adds is covered without editing this list), the
-// touchpoint catalogs (`touchpointTranslations.ts` — the other locale axis,
-// hand-maintained by design, #266), and `*.styles.ts`, whose values are CSS.
+// Fails when a .ts/.tsx file under client/src holds a bare English-prose string
+// (attribute/property literal, template literal, or JSX text child); UI copy
+// belongs in client/src/lib/i18n/en.ts. Heuristic: starts uppercase or contains a
+// space. Template literals are judged on their static text outside `${...}`.
+// `/* i18n-allow */` on the line exempts it. Skipped whole: locale catalogs
+// (`satisfies Messages`), touchpointTranslations.ts, `*.styles.ts`.
+// Checker rules: docs/comment-style.md.
 
 import { readdirSync, readFileSync } from "node:fs";
 import { join, relative, resolve } from "node:path";
@@ -48,12 +25,9 @@ const SKIP_DIRS = new Set([
   "tests",
 ]);
 
-/** Path, relative to `client/src`, of the touchpoint catalogs (#266). */
 const TOUCHPOINT_CATALOG = join("lib", "touchpointTranslations.ts");
 
 /**
- * Every `.ts`/`.tsx` file under `dir` the checker is responsible for.
- *
  * @param {string} dir Directory to descend into.
  * @param {string} [root] Root the skip list is resolved against; defaults to `dir`.
  * @returns {string[]} Absolute paths.
@@ -78,11 +52,7 @@ export function walk(dir, root = dir) {
   return found;
 }
 
-// Position names whose value is never prose regardless of shape: an SVG
-// path's `d` or `viewBox`, a link's `rel`, a Mantine theme's `fontFamily`,
-// and the `transform`/`border` CSS values that are the template-literal
-// equivalent of the same problem (`` `1px solid ${x}` `` starts with a digit
-// but "1px solid " still contains the space that trips the heuristic).
+// Positions whose value is never prose; CSS values like `1px solid ${x}` trip the space rule.
 const ALLOWED_POSITION_NAMES = new Set([
   "rel",
   "d",
@@ -93,9 +63,7 @@ const ALLOWED_POSITION_NAMES = new Set([
   "borderTop",
 ]);
 
-// Exact values that are technical vocabulary, not UI copy: a header name, two
-// `in window` feature-detection keys, KeyboardEvent.key comparisons, and
-// DOMException.name checks.
+// Technical vocabulary: header name, `in window` keys, KeyboardEvent.key, DOMException.name.
 const ALLOWED_EXACT_VALUES = new Set([
   "Content-Type",
   "Notification",
@@ -110,32 +78,19 @@ const ALLOWED_EXACT_VALUES = new Set([
   "AbortError",
 ]);
 
-// A JSX text child written inline between an open and a close tag:
-// `<Text>Account Overview</Text>`. Requiring the closing `</` is what keeps a
-// generic — `Promise<Messages>`, `Record<string, () => Promise<T>>` — from
-// reading as one: a type argument is followed by an identifier, never a slash.
+// Inline JSX text. The closing `</` keeps generics like `Promise<Messages>` from matching.
 const INLINE_JSX_TEXT = /> *([^<>{}"'`\n]*[A-Za-z][^<>{}"'`\n]*?) *<\//;
 
 const ESCAPE_MARKER = "i18n-allow";
 
-// Matches a double-quoted string literal, optionally preceded by the
-// `name:` or `name=` it is the value of — a JSX attribute or an object
-// property, the two positions #402's in-scope rule cares about.
+// Double-quoted literal, with the `name:`/`name=` it is the value of.
 const STRING_LITERAL = /(?:([A-Za-z][\w-]*)\s*[:=]\s*)?"((?:[^"\\]|\\.)*)"/g;
 
-// Same idea, backtick-delimited — plus an optional `{`, since JSX never
-// allows a bare backtick as an attribute value: `viewBox={\`...\`}`, not
-// `viewBox=\`...\``. Single-line only — this codebase has no multi-line
-// template literals in client/src/**/*.tsx today (checked via an
-// even-backtick-count scan per file), and a line-based checker can't see
-// across a line break anyway.
+// Backtick form; optional `{` because JSX attributes need braces around a template.
+// Single-line only: the checker is line-based.
 const TEMPLATE_LITERAL = /(?:([A-Za-z][\w-]*)\s*[:=]\s*\{?\s*)?`((?:[^`\\]|\\.)*)`/g;
 
-// SCREAMING_SNAKE is an identifier vocabulary this codebase uses for values
-// that cross a wire or a platform boundary — the error codes in contracts.ts,
-// an HTTP method, a service-worker postMessage type, a tagName comparison.
-// None of it is ever shown to a user, and all of it trips the leading-capital
-// rule below.
+// SCREAMING_SNAKE wire/platform identifiers (error codes, HTTP methods) are never shown to users.
 const IDENTIFIER_TOKEN = /^[A-Z][A-Z0-9]*(_[A-Z0-9]+)*$/;
 
 function looksLikeProse(value) {
@@ -144,10 +99,7 @@ function looksLikeProse(value) {
   return /^[A-Z]/.test(value) || value.includes(" ");
 }
 
-// The parts of a template literal outside `${...}` — brace-depth aware, so
-// an expression that itself contains braces (`${a ? {x:1}.x : 0}`) doesn't
-// desync the scan. `Not on ${APP_NAME}` reduces to "Not on "; `${x}/${y}`
-// reduces to "/".
+// Brace-depth aware so `${a ? {x:1}.x : 0}` doesn't desync the scan.
 export function staticTextOf(templateContent) {
   let out = "";
   let depth = 0;
@@ -170,9 +122,7 @@ export function staticTextOf(templateContent) {
   return out;
 }
 
-// Blanks out line and block comments (line breaks kept, so line numbers
-// still line up) without disturbing string content — a URL or a comment
-// marker living inside a string literal must not be read as a real comment.
+// Blanks comments but keeps line breaks and string content (a `//` inside a string is not a comment).
 export function stripComments(source) {
   let out = "";
   let inBlockComment = false;
@@ -230,28 +180,12 @@ export function stripComments(source) {
   return out;
 }
 
-/**
- * A locale catalog is entirely prose on purpose. `satisfies Messages` is what
- * pins one to the `Messages` shape (see client/src/lib/i18n/types.ts), so it
- * doubles as the marker — a new locale file is exempt the moment it compiles,
- * with nothing to add here.
- */
+/** `satisfies Messages` marks a locale catalog, so new locales are exempt automatically. */
 export function isLocaleCatalog(source) {
   return /\bsatisfies\s+Messages\b/.test(source);
 }
 
-/**
- * A JSX text child on its own line, which is how Prettier formats any child
- * long enough to matter:
- *
- *     <Text c="dimmed" mt="md">
- *       The requested resource was not found.
- *     </Text>
- *
- * Identified structurally — the line before it opens a tag, the line after it
- * closes one — rather than by shape, because the text itself is
- * indistinguishable from a fragment of ordinary code.
- */
+/** Prettier-wrapped JSX text: the previous line opens a tag and the next closes one. */
 export function isOwnLineJsxText(previousLine, line, nextLine) {
   if (/[<>{}();=]/.test(line)) return false;
   return previousLine.trimEnd().endsWith(">") && nextLine.trimStart().startsWith("</");

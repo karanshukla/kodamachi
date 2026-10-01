@@ -1,11 +1,8 @@
-// Scoped here rather than in tsconfig `types` so the Bun global doesn't leak
-// into the whole project (#263). Must stay above the imports — a triple-slash
-// directive after any statement is silently treated as a plain comment.
+// Scoped here, not tsconfig `types`, so the Bun global doesn't leak project-wide.
+// Must stay above the imports or it is treated as a plain comment.
 /// <reference types="bun" />
 
-// Kysely's SqliteDialect is duck-typed against this surface. bun:sqlite matches
-// it apart from two deltas the adapter below bridges: no `reader` flag, and
-// variadic params instead of an array.
+// bun:sqlite differs from Kysely's duck-typed surface by no `reader` flag and variadic params.
 interface KyselySqliteStatement {
   reader: boolean;
   all(parameters: ReadonlyArray<unknown>): unknown[];

@@ -10,8 +10,7 @@ permissions:
   contents: read
 
 env:
-  # Pinned: on `latest`, a nuclei release changes what this job does with no
-  # commit to bisect it against. Bump deliberately.
+  # Pinned so a nuclei release can't change this job with no commit to bisect.
   NUCLEI_VERSION: v3.11.1
 
 jobs:
@@ -51,10 +50,7 @@ jobs:
       - name: Wait for remaining services to stabilise
         run: sleep 30
 
-      # "Exit" alone misses a crash loop: every service sets restart:
-      # unless-stopped, so a container that dies on boot and is restarted for
-      # ever reports "Restarting (1)" and never "Exited". A server that could
-      # not reach Postgres passed this step for exactly that reason.
+      # "Exit" alone misses a crash loop: restart: unless-stopped shows "Restarting (1)".
       - name: Check no containers have crashed
         run: |
           BAD=$(docker compose -f docker/docker-compose.yml ps -a \
@@ -68,10 +64,8 @@ jobs:
           fi
           echo "All containers are running"
 
-      # The two public smoke tests below only exercise the frontend and the
-      # redirector, so the API can be entirely dead and still pass them. Hit the
-      # server directly on the compose network, and use curl -f so a 5xx fails
-      # rather than merely proving something answered.
+      # The public smoke tests don't touch the API; hit the server directly, with curl -f
+      # so a 5xx fails.
       - name: Smoke test — server API on the compose network
         run: |
           docker run --rm --network docker_default curlimages/curl:latest \
@@ -79,10 +73,8 @@ jobs:
             http://server:3000/client-metadata.json > /dev/null
           echo "server:3000/client-metadata.json → OK"
 
-      # /robots.txt is in the Anubis ALLOW list so the request passes
-      # through Anubis → Caddy → client without triggering a PoW challenge.
-      # X-Real-Ip is required by Anubis when use-remote-address is false
-      # (default); in production a load balancer sets it, so we simulate that here.
+      # /robots.txt is in the Anubis ALLOW list, so no PoW challenge. X-Real-Ip is required
+      # by Anubis when use-remote-address is false; production's load balancer sets it.
       - name: Smoke test — frontend via Anubis (port 8080)
         run: |
           STATUS=$(curl -s -o /dev/null -w '%{http_code}' \
@@ -119,10 +111,8 @@ jobs:
           [ "$STATUS" = "200" ] || { echo "Expected 200, got $STATUS"; exit 1; }
           echo "kodamachi.app → HTTP $STATUS"
 
-      # The templates are ~5900 files cloned from GitHub anonymously on every run,
-      # so an unrelated rate-limit or network blip failed the job and read as "this
-      # PR broke the build" — it already did once. The key rolls weekly, so the scan
-      # still picks up new templates without re-cloning on every push.
+      # The ~5900 templates are cloned anonymously from GitHub; caching stops rate-limit
+      # blips failing the job. The key rolls weekly to pick up new templates.
       - name: Key the Nuclei template cache by week
         id: nuclei-week
         run: echo "week=$(date -u +%G-W%V)" >> "$GITHUB_OUTPUT"
@@ -138,12 +128,9 @@ jobs:
           mkdir -p /tmp/nuclei-out /tmp/nuclei-templates
           chmod 777 /tmp/nuclei-out /tmp/nuclei-templates
 
-          # A template download that fails leaves nuclei with nothing to scan, and
-          # it exits non-zero for that exactly as it does for a real finding. Retry
-          # rather than report an empty template dir as a security failure.
+          # A failed template download makes nuclei exit non-zero like a real finding; retry.
           for attempt in 1 2 3; do
-            # Nuclei appends to -o, so a partial file from a failed attempt would
-            # otherwise survive into the findings check below.
+            # Nuclei appends to -o; drop partial output from a failed attempt.
             rm -f /tmp/nuclei-out/findings.txt
             if docker run --rm \
               --network docker_default \
@@ -181,12 +168,9 @@ jobs:
           fi
           echo "Nuclei: no medium+ severity findings"
 
-      # The scan container runs as root, so the template tree it writes is
-      # unreadable to the runner user and actions/cache's tar exits with
-      # "Cannot open: Permission denied" — the cache step reports no error, it
-      # just never saves, and every run re-downloads. Hand the tree back before
-      # the post-job cache step runs. `always()` so a run that found something
-      # still leaves a usable cache behind.
+      # The scan container runs as root, so actions/cache's tar can't read the template
+      # tree and silently never saves. Hand it back before the post-job cache step;
+      # always() so a run with findings still saves.
       - name: Hand the Nuclei templates back to the runner
         if: always()
         run: |

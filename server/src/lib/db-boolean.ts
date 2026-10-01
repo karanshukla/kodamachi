@@ -1,7 +1,6 @@
 /**
- * SQLite stores booleans as 0/1 while Postgres returns real booleans, so a
- * column read through Kysely can arrive as either shape at runtime regardless
- * of what the row type declares.
+ * SQLite stores booleans as 0/1, Postgres as booleans: a Kysely read can be
+ * either at runtime whatever the row type says.
  *
  * @see [db-boolean.test.ts](../tests/db-boolean.test.ts) — pins both shapes.
  */

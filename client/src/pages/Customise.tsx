@@ -60,14 +60,12 @@ export default function Customise() {
     </Alert>
   );
 
-  /** Every bottom-anchored control shows the same three states. */
   const field = (skeletonHeight: number, control: React.ReactNode) => {
     if (settingsLoading) return <Skeleton height={skeletonHeight} radius="sm" />;
     if (settingsError) return loadError;
     return control;
   };
 
-  /** Header switches shrink to a track-sized skeleton; the error goes in the body. */
   const headerToggle = (toggle: React.ReactNode) => {
     if (settingsLoading) return <Skeleton height={22} width={38} radius="xl" />;
     if (settingsError) return null;

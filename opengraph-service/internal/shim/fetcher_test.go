@@ -60,8 +60,6 @@ func TestNewIndigoFetcher(t *testing.T) {
 	})
 }
 
-// writeXRPCError mimics the AppView's XRPC error envelope so xrpc.Error's
-// StatusCode is populated the same way it would be from a real response.
 func writeXRPCError(w http.ResponseWriter, status int, errName, message string) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)

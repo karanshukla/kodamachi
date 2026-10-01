@@ -3,27 +3,16 @@ import { describe, test, beforeEach, mock } from "bun:test";
 
 import { createBidirectionalResolver } from "../lib/id-resolver";
 
-// Minimal stub of the slice of @atproto/identity's IdResolver that the
-// bidirectional wrapper touches: did.resolveAtprotoData and handle.resolve.
-// Each call is recorded so tests can assert network-call counts directly —
-// the acceptance criterion for #318 is "repeat resolveDidToHandle(sameDid)
-// within TTL makes zero network calls".
-//
-// The stub derives the handle/DID pair from its input so distinct DIDs resolve
-// to distinct handles (a real resolver does; a constant handle would make
-// every DID collide). did:web:X.test ↔ handle X.test, and handle.resolve
-// round-trips the handle back to its owning DID.
+// Stub of the IdResolver slice the wrapper touches (did.resolveAtprotoData, handle.resolve). Derives a distinct handle per DID and records calls.
 function makeResolverStub() {
   const didResolveAtprotoData = mock(async (did: string) => ({
     did,
-    // did:web:alice.test → handle alice.test
     handle: did.replace(/^did:web:/, ""),
   }));
   const handleResolve = mock(async (handle: string) => `did:web:${handle}`);
   return {
     did: { resolveAtprotoData: didResolveAtprotoData },
     handle: { resolve: handleResolve },
-    // Raw references to the underlying mocks so call counts are assertable.
     _didResolveAtprotoData: didResolveAtprotoData,
     _handleResolve: handleResolve,
   };
@@ -42,7 +31,6 @@ describe("createBidirectionalResolver", () => {
         resolver._didResolveAtprotoData.mock.calls.length +
         resolver._handleResolve.mock.calls.length;
 
-      // Second call for the same DID — must be served entirely from cache.
       const second = await bidi.resolveDidToHandle("did:web:alice.test");
       assert.strictEqual(second, "alice.test");
 
@@ -75,7 +63,6 @@ describe("createBidirectionalResolver", () => {
 
     test("returns the DID unchanged when the doc has no handle, and caches that fallback", async () => {
       const resolver = makeResolverStub();
-      // No handle on the DID doc; handle.resolve(did) also returns nothing.
       resolver._didResolveAtprotoData.mockImplementation(
         async (did: string) =>
           ({
@@ -91,7 +78,6 @@ describe("createBidirectionalResolver", () => {
       assert.strictEqual(result, "did:web:ghost");
 
       const callsBefore = resolver._didResolveAtprotoData.mock.calls.length;
-      // The fallback is cached too — a repeat makes no network calls.
       await bidi.resolveDidToHandle("did:web:ghost");
       assert.strictEqual(resolver._didResolveAtprotoData.mock.calls.length, callsBefore);
     });
@@ -155,7 +141,6 @@ describe("createBidirectionalResolver", () => {
 
     test("falls back to the DID itself when one resolution rejects", async () => {
       const resolver = makeResolverStub();
-      // Make alice resolve normally but bob throw.
       resolver._didResolveAtprotoData.mockImplementation(async (did: string) => {
         if (did === "did:web:bob.test") throw new Error("nope");
         return { did, handle: did.replace(/^did:web:/, "") };
@@ -169,21 +154,13 @@ describe("createBidirectionalResolver", () => {
   });
 
   describe("cache bounding (LRU)", () => {
-    // The acceptance criterion also asks that both caches have a size bound.
-    // We assert it indirectly: insert CACHE_MAX + N distinct keys, then confirm
-    // an early-inserted key (evicted by LRU) is a cache miss (re-resolves),
-    // while a recently-inserted key is still a hit (no network call).
     test("evicts the least-recently-used DID→handle entry once the cap is exceeded", async () => {
       const resolver = makeResolverStub();
       const bidi = createBidirectionalResolver(resolver as any);
 
-      // Fill the cache past its cap (1000) with distinct DIDs so the
-      // earliest-inserted keys are evicted by LRU.
       for (let i = 0; i < 1001; i++) {
         await bidi.resolveDidToHandle(`did:web:${i}.test`);
       }
-      // The very first key should have been evicted; re-resolving it must hit
-      // the network again.
       const callsBefore = resolver._didResolveAtprotoData.mock.calls.length;
       await bidi.resolveDidToHandle("did:web:0.test");
       assert.ok(
@@ -191,7 +168,6 @@ describe("createBidirectionalResolver", () => {
         "evicted key should re-resolve over the network"
       );
 
-      // The most-recently-inserted key is still cached — no network call.
       const callsBefore2 = resolver._didResolveAtprotoData.mock.calls.length;
       await bidi.resolveDidToHandle("did:web:1000.test");
       assert.strictEqual(

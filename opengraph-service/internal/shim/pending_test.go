@@ -5,10 +5,6 @@ import (
 	"time"
 )
 
-// TestPendingRenders_SecondBeginKeepsWaitersParkedUntilBothRelease pins the
-// refcount. A share-time warm and the crawl behind it both begin a render for
-// one profile; waking waiters when the first of them returns would hand the
-// crawler a cache the surviving render has not written yet.
 func TestPendingRenders_SecondBeginKeepsWaitersParkedUntilBothRelease(t *testing.T) {
 	var p pendingRenders
 
@@ -37,9 +33,6 @@ func TestPendingRenders_SecondBeginKeepsWaitersParkedUntilBothRelease(t *testing
 	}
 }
 
-// TestPendingRenders_WatchWithNothingInFlight_ReturnsNil pins the answer that
-// keeps a fallback serve immediate: a key nobody is rendering — never begun, or
-// already released — has nothing to wait for.
 func TestPendingRenders_WatchWithNothingInFlight_ReturnsNil(t *testing.T) {
 	var p pendingRenders
 
@@ -53,8 +46,6 @@ func TestPendingRenders_WatchWithNothingInFlight_ReturnsNil(t *testing.T) {
 	}
 }
 
-// TestPendingRenders_SeparateKeysDoNotShareAWait pins that one profile's render
-// never wakes — or holds — another's.
 func TestPendingRenders_SeparateKeysDoNotShareAWait(t *testing.T) {
 	var p pendingRenders
 

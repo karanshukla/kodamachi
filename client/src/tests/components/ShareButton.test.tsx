@@ -123,7 +123,6 @@ describe("ShareButton", () => {
         configurable: true,
         writable: true,
       });
-      // No onSuccess prop passed
       renderWithProviders(<ShareButton shareData={shareData} />);
       await userEvent.click(screen.getByRole("button", { name: en.shareButton.button }));
       expect(document.body).toBeInTheDocument();
@@ -135,7 +134,6 @@ describe("ShareButton", () => {
         configurable: true,
         writable: true,
       });
-      // No onError prop passed
       renderWithProviders(<ShareButton shareData={shareData} />);
       await userEvent.click(screen.getByRole("button", { name: en.shareButton.button }));
       expect(document.body).toBeInTheDocument();
@@ -152,7 +150,6 @@ describe("ShareButton", () => {
         configurable: true,
         writable: true,
       });
-      // No onSuccess prop passed
       renderWithProviders(<ShareButton shareData={shareData} />);
       await userEvent.click(screen.getByRole("button", { name: en.shareButton.button }));
       expect(document.body).toBeInTheDocument();
@@ -169,7 +166,6 @@ describe("ShareButton", () => {
         configurable: true,
         writable: true,
       });
-      // No onError prop passed
       renderWithProviders(<ShareButton shareData={shareData} />);
       await userEvent.click(screen.getByRole("button", { name: en.shareButton.button }));
       expect(document.body).toBeInTheDocument();

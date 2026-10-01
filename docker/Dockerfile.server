@@ -1,38 +1,18 @@
-# Bun runtime image (#268, #271). The server runs TypeScript directly under Bun
-# (no tsup/bundle step — Bun resolves the #/ tsconfig paths alias and TS natively).
 FROM oven/bun:1.4-alpine AS builder
 WORKDIR /app
 
-# No node-gyp toolchain here: better-sqlite3 (the only dependency that needed
-# one to build from source on musl) was removed entirely in #288 when the Node
-# code path in db.ts was retired — SQLite now runs through bun:sqlite, which
-# ships inside the Bun runtime and needs no compile step. sharp ships prebuilt
-# musl binaries and needs no compile step either.
-
-# Copy workspace manifests so bun install can use the root lock file. patches/
-# must be present: patchedDependencies in package.json applies
-# patches/@atproto-labs%2Ffetch-node@0.3.7.patch during bun install (#270).
-# Every workspace member's manifest must be copied — bun install reads the
-# root workspaces array (client, server, html-to-image) and fails if any
-# listed workspace dir is missing its package.json (#314 added html-to-image).
+# patches/ is needed for patchedDependencies; every workspace manifest must be
+# copied or bun install fails on the root workspaces array.
 COPY package.json bun.lock ./
 COPY patches/ ./patches/
 COPY server/package.json ./server/
 COPY client/package.json ./client/
 COPY html-to-image/package.json ./html-to-image/
 
-# Install runtime deps only, applying the patch. A single pass is enough now that
-# tsup is gone and nothing has to be built from the dev tree. Use --omit dev (not
-# --production): --omit dev traverses workspaces, so the server workspace's prod
-# deps are kept; --production only prunes to the root package's deps and drops
-# the workspace's runtime dependencies.
+# --omit dev (not --production) keeps workspace prod deps.
 RUN bun install --frozen-lockfile --omit dev
 
-# ── Runtime ──────────────────────────────────────────────────────────────────
-# Bun's isolated node_modules layout puts each workspace's deps under
-# <workspace>/node_modules as symlinks into the shared /app/node_modules/.bun
-# store. The runtime image preserves that layout plus the server source (run
-# directly by Bun — no compiled dist/).
+# Bun's isolated layout symlinks workspace deps into /app/node_modules/.bun; keep it.
 FROM oven/bun:1.4-alpine
 WORKDIR /app
 
@@ -46,5 +26,4 @@ COPY server/lexicons ./server/lexicons
 WORKDIR /app/server
 EXPOSE 3000
 
-# Run the TypeScript source directly under Bun.
 CMD ["bun", "src/index.ts"]

@@ -1,28 +1,18 @@
-# Bun is now both the installer (#250) and the runtime: the build (vite) and
-# the static server (client/serve.ts, a Bun.serve handler) both run under Bun,
-# so the image no longer needs Node at all.
 FROM oven/bun:1.4-alpine
 WORKDIR /app
 
-# Copy workspace manifests so bun install can use the root lock file.
-# patches/ must be present too: patchedDependencies in package.json applies
-# patches/@atproto-labs%2Ffetch-node@0.3.7.patch during bun install (#270).
-# Every workspace member's manifest must be copied — bun install reads the
-# root workspaces array (client, server, html-to-image) and fails if any
-# listed workspace dir is missing its package.json (#314 added html-to-image).
+# patches/ is needed for patchedDependencies; every workspace manifest must be
+# copied or bun install fails on the root workspaces array.
 COPY package.json bun.lock brand.json ./
 COPY patches/ ./patches/
 COPY client/package.json ./client/
 COPY server/package.json ./server/
 COPY html-to-image/package.json ./html-to-image/
 
-# --frozen-lockfile mirrors npm ci (exact versions, no lockfile mutation).
-# --ignore-scripts skips any postinstall hooks during install.
 RUN bun install --frozen-lockfile --ignore-scripts
 
 COPY client/ ./client/
 
-# Vite env vars are baked in at build time
 ARG VITE_API_URL=/api
 ARG VITE_SHORTLINK_URL
 ARG VITE_E2E_TESTING=false
@@ -34,7 +24,5 @@ RUN bun run --cwd client build
 
 EXPOSE 3000
 
-# `bun run start` resolves to `bun serve.ts` (client/package.json) — the
-# Bun.serve static handler in client/serve.ts serves dist/.
 WORKDIR /app/client
 CMD ["bun", "run", "start"]

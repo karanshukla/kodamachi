@@ -297,7 +297,6 @@ describe("profile hooks", () => {
     const { result } = renderHook(() => useFriends(mockDid), {
       wrapper: makeWrapper(),
     });
-    // getCachedFriends catches JSON.parse error and returns null → initialData undefined
     expect(result.current.data).toBeUndefined();
   });
 

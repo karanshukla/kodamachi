@@ -81,7 +81,7 @@ describe("messageService", () => {
     recipient: mockDid,
     original: "Original message",
     response: "Response message",
-    includeQuestionAsImage: true, // Added new parameter
+    includeQuestionAsImage: true,
   };
 
   const mockResponseMessageResponse = {
@@ -209,12 +209,7 @@ describe("messageService", () => {
   });
 
   describe("messageKeys", () => {
-    /**
-     * Invalidation matches by prefix, so this is the boundary that keeps every
-     * message mutation from force-refetching a live render poll. Both terminal
-     * render statuses are read-once on the server, so a forced refetch reads
-     * `unknown` and queues a fresh Chromium render for an answered question.
-     */
+    // Invalidation matches by prefix. Terminal render statuses are read-once, so a forced poll refetch reads `unknown` and queues a fresh render.
     it("a message invalidation refreshes the message list", async () => {
       const qc = new QueryClient();
       const listKey = messageKeys.detail("did:plc:abc");

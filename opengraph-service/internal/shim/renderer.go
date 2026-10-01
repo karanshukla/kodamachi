@@ -12,23 +12,18 @@ import (
 	"time"
 )
 
-// ErrRenderFailed wraps any failure from the html-to-image service so the
-// generator can surface a single typed error (and the proxy fast path can
-// degrade gracefully).
+// ErrRenderFailed wraps any failure from the html-to-image service.
 var ErrRenderFailed = errors.New("render failed")
 
-// ImageRenderer renders an HTML source document to image bytes. The
-// html-to-image-backed implementation is the production path; the interface
-// exists so the generator can be unit-tested with a fake.
+// ImageRenderer renders an HTML source document to image bytes.
 type ImageRenderer interface {
 	Render(ctx context.Context, htmlSrc string) ([]byte, error)
 }
 
-// A sleeping html-to-image answers before it is ready, and those answers are
-// HTTP responses rather than network errors: Railway's edge returns 502 while
-// the container is still waking, and the service itself returns 503 while
-// Chromium is still launching. Mirrors WAKE_RETRYABLE_STATUSES in
-// server/src/lib/image-generator.ts — 4xx and 429 are deliberately absent.
+// A waking html-to-image answers with HTTP errors rather than network ones:
+// Railway's edge returns 502, the service 503 while Chromium launches. Mirrors
+// WAKE_RETRYABLE_STATUSES in server/src/lib/image-generator.ts; 4xx and 429 are
+// deliberately absent.
 var wakeRetryableStatuses = map[int]bool{
 	http.StatusRequestTimeout:     true,
 	http.StatusBadGateway:         true,
@@ -36,29 +31,25 @@ var wakeRetryableStatuses = map[int]bool{
 	http.StatusGatewayTimeout:     true,
 }
 
-// maxRenderBackoff caps exponential growth so a long deadline cannot produce a
-// single sleep that swallows the entire remaining budget.
+// maxRenderBackoff caps the retry delay.
 const maxRenderBackoff = 2 * time.Second
 
-// defaultAttemptTimeout bounds one attempt. A cold attempt pays a container
-// wake plus a Chromium launch plus the render; anything beyond this is a hang,
-// and retrying beats waiting out the whole budget on a dead connection.
+// defaultAttemptTimeout bounds one attempt; a cold one pays a container wake
+// plus a Chromium launch, and anything longer is a hang worth retrying.
 const defaultAttemptTimeout = 15 * time.Second
 
-// HTMLToImageRenderer POSTs the composite HTML to the sibling html-to-image
-// service. It mirrors image-generator.ts's call shape and retry discipline.
+// HTMLToImageRenderer POSTs the composite HTML to the html-to-image service.
 type HTMLToImageRenderer struct {
 	URL     string
 	Client  *http.Client
 	Timeout time.Duration // overall deadline including retries
-	// AttemptTimeout bounds a single attempt. The overall Timeout must not be
-	// used here: one hung connection would consume the entire budget and leave
-	// nothing for the retry that would have succeeded.
+	// AttemptTimeout bounds a single attempt, so one hung connection cannot
+	// consume the whole Timeout.
 	AttemptTimeout time.Duration
 }
 
-// NewHTMLToImageRenderer constructs a renderer for the given service URL. The
-// timeout bounds the full retry loop (default 30s if <= 0).
+// NewHTMLToImageRenderer returns a renderer whose retry loop is bounded by
+// timeout (30s if <= 0).
 func NewHTMLToImageRenderer(url string, timeout time.Duration) *HTMLToImageRenderer {
 	if url == "" {
 		url = "http://localhost:3033/"
@@ -72,26 +63,23 @@ func NewHTMLToImageRenderer(url string, timeout time.Duration) *HTMLToImageRende
 	}
 	return &HTMLToImageRenderer{
 		URL: url,
-		// No Client.Timeout — it would bound the whole loop, not one attempt.
+		// No Client.Timeout: it would bound the whole loop, not one attempt.
 		Client:         &http.Client{},
 		Timeout:        timeout,
 		AttemptTimeout: attempt,
 	}
 }
 
-// renderRequest is the body shape html-to-image expects — mirrors
-// server/src/lib/image-generator.ts.
+// renderRequest is the body html-to-image expects.
 type renderRequest struct {
 	Source  string         `json:"source"`
 	Format  string         `json:"format"`
 	Options map[string]any `json:"options"`
 }
 
-// Render POSTs the HTML and returns the image bytes. Network errors and
-// not-awake-yet statuses are retried with capped exponential backoff until the
-// deadline; other non-2xx responses are final (retrying a rejected payload
-// won't help). Any failure surfaces as ErrRenderFailed so callers can handle
-// one typed error.
+// Render POSTs the HTML and returns the image bytes. Network errors and wake
+// statuses retry with capped backoff until the deadline; other non-2xx
+// responses are final. Failures wrap ErrRenderFailed.
 func (r *HTMLToImageRenderer) Render(ctx context.Context, htmlSrc string) ([]byte, error) {
 	body, err := json.Marshal(renderRequest{
 		Source: htmlSrc,
@@ -149,9 +137,8 @@ func (r *HTMLToImageRenderer) Render(ctx context.Context, htmlSrc string) ([]byt
 	return nil, fmt.Errorf("%w: after retries: %v", ErrRenderFailed, lastErr)
 }
 
-// attempt performs one POST under its own deadline and returns the body and
-// status. A transport error yields a zero status, which the caller treats as
-// retryable.
+// attempt performs one POST under its own deadline. A transport error returns
+// status 0.
 func (r *HTMLToImageRenderer) attempt(ctx context.Context, body []byte, timeout time.Duration) ([]byte, int, error) {
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
@@ -170,8 +157,7 @@ func (r *HTMLToImageRenderer) attempt(ctx context.Context, body []byte, timeout 
 
 	respBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
-		// A truncated read mid-wake is transient; report it as retryable rather
-		// than failing the whole render on one bad connection.
+		// A truncated read mid-wake is transient, so it stays retryable.
 		return nil, 0, err
 	}
 	return respBytes, resp.StatusCode, nil

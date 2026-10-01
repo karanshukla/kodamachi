@@ -24,23 +24,16 @@ export const RENDER_LOST_MESSAGE = en.questionRender.renderLost;
 export const RENDER_UNREACHABLE_MESSAGE = en.questionRender.renderUnreachable;
 
 export interface QuestionRenderArgs {
-  /** The question whose composer is open, or null when none is. */
   target: { tid: string; original: string } | null;
-  /** The owner's stored image theme — a different theme is a different render. */
   theme?: string;
-  /** False when replies are text only, which needs no render at all. */
   enabled: boolean;
 }
 
 export interface QuestionRender {
   status: QuestionRenderStatus;
-  /** The key to post with. Non-null only while the store holds a ready render. */
   readyRenderId: string | null;
-  /** The specific failure behind a `failed` status. */
   error?: string;
-  /** Starts over after a failure the user has already been told about. */
   retry: () => void;
-  /** Feeds a respond 409 back in, so the send goes back to waiting on a poll. */
   recover: () => void;
 }
 

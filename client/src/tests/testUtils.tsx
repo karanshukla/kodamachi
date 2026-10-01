@@ -17,18 +17,9 @@ interface Options extends Omit<RenderOptions, "wrapper"> {
 }
 
 /**
- * Supplies i18n directly through `I18nContext` rather than mounting the real
- * `I18nProvider`, which calls `useSession()`/`useUserSettings()` — hooks a
- * per-file `settingsService`/`authService` mock can narrow away entirely,
- * throwing when `I18nProvider` calls the now-missing export. `messages` lets
- * an individual test override the catalog; every other test gets `en` for
- * free.
- *
- * `Notifications` sits inside `I18nContext.Provider` rather than beside it —
- * it renders toast content (e.g. a notification `message` built from a
- * component that calls `useTranslations()`) through its own portal, which
- * resolves context from its position in the React tree, not from where that
- * content was created.
+ * Supplies i18n via `I18nContext` instead of the real `I18nProvider`, whose `useSession()`/`useUserSettings()`
+ * calls break when a per-file mock narrows those modules. `Notifications` sits inside the provider because
+ * its portal resolves context by tree position.
  */
 export function renderWithProviders(
   ui: React.ReactElement,

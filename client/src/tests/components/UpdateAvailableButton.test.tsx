@@ -17,12 +17,8 @@ let swUpdate: SwUpdateModule;
 let UpdateAvailableButton: typeof import("../../components/UpdateAvailableButton").UpdateAvailableButton;
 let renderWithProviders: TestUtilsModule["renderWithProviders"];
 
-// swUpdate is module-level singleton state and the component reads it via
-// useSyncExternalStore, so both are re-imported together for each test.
-// testUtils comes along too — it re-exports the same lib/i18n module graph
-// UpdateAvailableButton resolves useTranslations() through, and a stale
-// pre-reset I18nContext object fails useContext's identity check against a
-// post-reset one, throwing "must be used within an I18nProvider".
+// swUpdate is singleton state, so re-import it per test. testUtils too: a stale pre-reset I18nContext
+// fails useContext's identity check ("must be used within an I18nProvider").
 beforeEach(async () => {
   vi.resetModules();
   triggerHaptic.mockClear();
@@ -114,7 +110,6 @@ describe("UpdateAvailableButton", () => {
 
     unmount();
 
-    // A post-unmount notification must not attempt to update a torn-down tree.
     expect(() => swUpdate.markUpdateReady()).not.toThrow();
   });
 });

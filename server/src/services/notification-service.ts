@@ -1,7 +1,6 @@
 /* v8 ignore next 1 */
 import { Logger } from "pino";
-// web-push is CJS whose named exports aren't statically detectable by Node's
-// ESM loader (cjs-module-lexer), so we import the default and destructure.
+// web-push is CJS with undetectable named exports: import the default and destructure.
 import webPush from "web-push";
 const { sendNotification, setVapidDetails } = webPush;
 
@@ -13,8 +12,7 @@ export interface ProfileResolver {
   resolveDidToHandle(did: string): Promise<string | undefined>;
 }
 
-// Read live from process.env rather than the frozen `env` snapshot, so a test
-// can toggle VAPID on and off without reloading the module.
+// Live from process.env, not the frozen `env`, so tests can toggle VAPID.
 function readVapidConfigFromLiveEnv() {
   return {
     publicKey: process.env.VAPID_PUBLIC_KEY || "",
@@ -65,8 +63,7 @@ export function createConcurrencyLimiter(limit: number) {
   };
 }
 
-// Shared across every NotificationService instance (one per route module):
-// they share one process and one network egress.
+// Shared across instances: one process, one egress.
 export const PUSH_CONCURRENCY_LIMIT = 10;
 const pushLimiter = createConcurrencyLimiter(PUSH_CONCURRENCY_LIMIT);
 
@@ -82,10 +79,8 @@ export class NotificationService {
   }
 
   /**
-   * Upserts by (did, endpoint) so a device holds one row per signed-in account
-   * instead of the newest account stealing the row. Single-statement because a
-   * read-then-write races: two concurrent saves can both miss the existing row
-   * and the second INSERT then violates the unique constraint (migration 008).
+   * Upserts by (did, endpoint): one row per signed-in account per device.
+   * Single-statement because read-then-write races on the unique constraint.
    */
   async saveSubscription(
     did: string,
@@ -101,12 +96,7 @@ export class NotificationService {
     this.logger.info({ did }, "Push subscription saved");
   }
 
-  /**
-   * Given every account remembered on one browser, copies whichever device
-   * subscriptions already exist for any of them onto the accounts still
-   * missing one — so a device that has ever subscribed keeps every signed-in
-   * account covered, not just whichever was active at subscribe time.
-   */
+  /** Copies any existing device subscription among a browser's accounts onto the accounts missing one. */
   async syncSubscriptionsAcrossAccounts(dids: string[]): Promise<void> {
     if (dids.length < 2) return;
 
@@ -162,8 +152,7 @@ export class NotificationService {
   }
 
   /**
-   * A failed or missing settings read must not cost the recipient the
-   * notification itself, only its language — so this never rejects.
+   * Never rejects: a failed settings read costs the language, not the notification.
    * @see [notification-service.test.ts](../tests/notification-service.test.ts)
    * — "still delivers the notification when the locale read fails".
    */
@@ -184,12 +173,7 @@ export class NotificationService {
     }
   }
 
-  /**
-   * Names the recipient account in the payload because one device can hold
-   * subscriptions for several accounts at once — the client uses `did`/`handle`
-   * to tell them apart and switch to the right account on click, rather than
-   * opening whichever account happens to be active in the browser.
-   */
+  /** The payload names the recipient: one device can hold several accounts, and the click must switch to the right one. */
   private async buildNewMessagePayload(recipientDid: string): Promise<string> {
     const [handle, locale] = await Promise.all([
       this.resolver.resolveDidToHandle(recipientDid).catch(() => undefined),

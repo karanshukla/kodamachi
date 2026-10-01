@@ -26,19 +26,15 @@ const PIN_SETTLE_MS = 420;
 
 export interface ThreadRoot {
   rootTid: string | null;
-  /** Set for one animation frame after pinning, so the card can settle in. */
   justPinnedTid: string | null;
-  /** Messages with the pinned one hoisted to the front. */
   ordered: Message[];
   isRoot: (tid: string) => boolean;
-  /** The Bluesky post a pinned message was answered with, once there is one. */
   linkFor: (tid: string) => ThreadLink | undefined;
   /**
    * A thread has to start somewhere: while a root is pinned but unanswered,
    * every other message is held back so replies cannot orphan themselves.
    */
   isReplyBlocked: (tid: string) => boolean;
-  /** The post a reply to `tid` should hang off, or undefined to post standalone. */
   replyTarget: (tid: string) => Pick<ThreadLink, "uri" | "cid"> | undefined;
   togglePin: (tid: string) => void;
   recordReply: (tid: string, link: ThreadLink) => void;

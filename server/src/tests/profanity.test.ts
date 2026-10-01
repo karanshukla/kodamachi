@@ -5,13 +5,7 @@ import { findProfanity } from "../lib/profanity";
 import { ordinaryWordsToNeverFlag, profaneWordsByLanguage } from "../lib/profanity-wordlists";
 import type { ProfanityLanguage } from "../lib/profanity-wordlists";
 
-/**
- * Ordinary sentences in every language the filter screens. They are checked
- * against the whole union of wordlists, not just their own language's — one
- * language's profanity is another's everyday vocabulary, and a flagged message
- * is dropped without telling either party, so a collision here is invisible
- * censorship rather than a visible bug.
- */
+/** Checked against the union of all wordlists: one language's profanity is another's everyday word, and a flagged message is dropped silently. */
 const ORDINARY_SENTENCES: Record<ProfanityLanguage, readonly string[]> = {
   en: [
     "Please pass the classic bass guitar to the assembly.",

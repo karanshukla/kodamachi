@@ -8,22 +8,13 @@ import { createTtlCache, type TtlCache } from "../lib/ttl-cache";
 import { readImageTheme } from "./image-theme";
 import type { ProfileResolver } from "./message-service";
 
-/**
- * Long enough to survive a user being interrupted mid-reply. A minute would
- * throw away work they still want; the reply is the whole point of the render.
- */
+/** Long enough to survive a user being interrupted mid-reply. */
 export const RENDER_TTL_MS = 10 * 60 * 1000;
 
-/**
- * One entry is a downsampled PNG of a few hundred KB, so this is the ceiling on
- * what an idle process can be holding.
- */
+/** Entries are PNGs of a few hundred KB; this bounds idle memory. */
 const RENDER_STORE_MAX_ENTRIES = 100;
 
-/**
- * The image service sleeps within minutes of idle, so a render that follows one
- * finished longer ago than this almost certainly pays a container wake.
- */
+/** The image service sleeps within minutes of idle; past this a render likely pays a wake. */
 const WARM_WINDOW_MS = 60_000;
 
 const NOT_READY_MESSAGE = "The question image is still rendering.";
@@ -37,10 +28,7 @@ export interface RenderedQuestionImage {
   height?: number;
 }
 
-/**
- * Status and bytes share one record so they expire together and a poll can
- * never see `ready` against missing bytes.
- */
+/** Status and bytes share one record so a poll never sees `ready` without bytes. */
 type RenderRecord = { did: string } & (
   | { status: "pending" | "rendering" }
   | { status: "ready"; image: RenderedQuestionImage }
@@ -63,25 +51,14 @@ export interface EnqueueRenderInput {
   theme?: string;
 }
 
-/** What a render of anything but one of the caller's own questions is refused with. */
 export const QUESTION_NOT_IN_INBOX = "Question not found";
 
-/**
- * A byte no field can contain, so no combination of DID, handle, theme and
- * question can be rearranged into another one's digest input.
- *
- * Written as an escape rather than the literal byte: git detects a NUL in the
- * first 8000 bytes and treats the whole file as binary, which cost this file
- * its diff in review. The two forms are the same one-character string, so
- * every key already in flight stays valid.
- */
+/** A byte no field can contain. Written as an escape: a literal NUL makes git treat this file as binary. */
 const FIELD_SEPARATOR = "\u0000";
 
 /**
- * Content-addressed so duplicate enqueues collapse onto one key instead of
- * racing. The DID is part of the key as well as the handle: it scopes a render
- * to its owner, and a handle change has to produce a fresh render because the
- * handle is drawn into the image.
+ * Content-addressed so duplicate enqueues collapse. The DID scopes a render to
+ * its owner; the handle is drawn into the image, so a change must re-render.
  *
  * @see [render-service.test.ts](../tests/render-service.test.ts) — pins that
  * text shifted across a field boundary produces a different key.
@@ -102,15 +79,13 @@ function renderKey(
  * Renders question images off the reply request and holds the result until the
  * user confirms the post.
  *
- * The queued unit is pure — `(message, theme, handle) → png bytes` — which is
- * what keeps this small: same input, same output, no side effects, safe to
- * retry. **Nothing here may reach `agent.post` or `agent.uploadBlob`.** Posting
- * stays in an authenticated request with a live session, so a user who signed
- * out or closed the tab never has something posted on their behalf.
+ * **Nothing here may reach `agent.post` or `agent.uploadBlob`**: posting stays
+ * in an authenticated request, so a signed-out user never has something posted
+ * on their behalf.
  *
- * The store is in-process, which is only safe at one replica per region. See
+ * The store is in-process, safe only at one replica per region; see
  * "In-process state, and the replica count that makes it safe" in
- * `server/CLAUDE.md` before scaling either server service out.
+ * `server/CLAUDE.md`.
  *
  * @see [render-service.test.ts](../tests/render-service.test.ts) — pins the
  * content-addressed dedup, the TTL, that a failed render is cleared as it is
@@ -150,17 +125,14 @@ export class RenderService {
       { renderId, tid, did, theme: resolvedTheme, cold: this.looksCold() },
       "Question image render enqueued"
     );
-    // Dispatched on the next turn so the 202 is written before the render
-    // starts, which is the whole point of moving it off the reply request.
+    // Next turn, so the 202 is written before the render starts.
     setImmediate(() => void this.render(renderId, did, original, resolvedTheme, handle));
     return { renderId, status: "pending" };
   }
 
   /**
-   * A failed render is cleared as it is read so an explicit retry re-renders
-   * instead of replaying the failure. A key nobody knows about — expired, or
-   * lost to a deploy starting a new instance before the old one drains — reads
-   * as `unknown` rather than `failed`, because the work is cheap to redo.
+   * A failed render is cleared as it is read so a retry re-renders. An unknown
+   * key (expired, or lost to a deploy) reads as `unknown`, not `failed`.
    */
   readStatus(renderId: string, did: string): RenderStatusReport {
     const record = this.store.get(renderId);
@@ -173,10 +145,8 @@ export class RenderService {
   }
 
   /**
-   * Single-use: the key is consumed as the bytes are read. `renderId` is
-   * content-addressed, so two tabs answering the same message hold the *same*
-   * ready key and a per-component client gate cannot see across them. The
-   * second caller gets `unknown` and cannot post the image.
+   * Single-use: `renderId` is content-addressed, so two tabs share one ready
+   * key; the second caller gets `unknown` and cannot post the image.
    */
   claimReady(renderId: string, did: string): RenderClaim {
     const record = this.store.get(renderId);
@@ -193,13 +163,9 @@ export class RenderService {
   }
 
   /**
-   * The render key is content-addressed, so an arbitrary `original` is an
-   * arbitrary key and every distinct string is a fresh Chromium render. Tying
-   * the text to a question the caller actually holds bounds the endpoint by
-   * inbox size rather than by whatever the per-IP limiter happens to allow.
-   *
-   * A question that is not theirs is refused as not-found rather than
-   * forbidden, so this cannot be used to probe which tids exist.
+   * Bounds renders by inbox size: an arbitrary `original` would be a fresh
+   * Chromium render. Another inbox's question reads as not-found, so tids
+   * cannot be probed.
    *
    * @see [render-service.test.ts](../tests/render-service.test.ts) — pins that
    * the caller's own question renders and that another inbox's does not.
@@ -250,8 +216,6 @@ export class RenderService {
         "Question image render completed"
       );
     } catch (err) {
-      // Logged rather than surfaced: once the render is behind a poll, a
-      // failure that lands after the user gives up leaves no other trace.
       this.store.set(
         renderId,
         { did, status: "failed", error: errorMessage(err) || "Image render failed" },

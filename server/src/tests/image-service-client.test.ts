@@ -71,9 +71,7 @@ describe("fetchWithRetry", () => {
   });
 
   test("retries a 502 from Railway's edge while the service is waking", async () => {
-    // A slept Railway service answers the first request from the edge with a
-    // 502 before the container is back. Treating that as final would make every
-    // wake a user-visible image-generation failure.
+    // Railway's edge answers 502 while the container wakes; that must be retried.
     const mockResponse = new Response("ok", { status: 200 });
     let callCount = 0;
     mockFetch(async () => {
@@ -119,8 +117,7 @@ describe("fetchWithRetry", () => {
       mock.restore();
     }
 
-    // 400 is a rejected payload and 429 is a limiter already shedding load —
-    // both fail identically on retry, so neither is worth another attempt.
+    // 400 and 429 fail identically on retry.
     for (const status of [400, 429]) {
       let callCount = 0;
       mockFetch(async () => {
@@ -135,8 +132,7 @@ describe("fetchWithRetry", () => {
   });
 
   test("returns the last wake response, not a throw, when the deadline expires", async () => {
-    // The caller logs response.status/body on failure. Throwing here would
-    // replace a diagnosable "502 from the edge" with a generic error.
+    // The caller logs status/body, so throwing here would hide a diagnosable failure.
     let callCount = 0;
     mockFetch(async () => {
       callCount++;
@@ -154,7 +150,6 @@ describe("fetchWithRetry", () => {
     let fetchCallCount = 0;
     mockFetch(async () => {
       fetchCallCount++;
-      // Simulate a fetch that takes 50ms — longer than the 10ms overall timeout
       await new Promise((r) => setTimeout(r, 50));
       throw new Error("slow connect error");
     });
@@ -164,8 +159,6 @@ describe("fetchWithRetry", () => {
       (err: unknown) => err instanceof Error && err.message === "slow connect error"
     );
 
-    // Only one fetch attempt: deadline passed during the request, so the
-    // `if (remainingAfter <= 0) break` path exits without a retry sleep.
     assert.strictEqual(fetchCallCount, 1);
   });
 

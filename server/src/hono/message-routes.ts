@@ -24,7 +24,7 @@ import type { AppContext } from "#/index";
 /** The key expired, was lost to a deploy, or has already been posted with. */
 const NO_READY_RENDER = "That question image is no longer available.";
 
-/** What `/messages/send` accepts, and so the longest a stored question can be. */
+/** The longest `/messages/send` accepts, so the longest a stored question. */
 export const MAX_MESSAGE_LENGTH = 500;
 
 export interface MessageDeps {
@@ -39,8 +39,7 @@ export function createMessageHono(ctx: AppContext, deps: MessageDeps = {}): Hono
     deps.messageService ?? new MessageService(ctx.db, ctx.resolver, ctx.logger);
   const notificationService =
     deps.notificationService ?? new NotificationService(ctx.db, ctx.resolver, ctx.logger);
-  // One instance per sub-app, and the sub-app is built once at boot, so the
-  // render store outlives the request that filled it.
+  // Built once at boot, so the render store outlives the request that filled it.
   const renderService = deps.renderService ?? new RenderService(ctx.db, ctx.resolver, ctx.logger);
 
   app.post(
@@ -80,14 +79,9 @@ export function createMessageHono(ctx: AppContext, deps: MessageDeps = {}): Hono
   });
 
   /**
-   * The render is queued; the post never is. Answering with an image blocks on
-   * a cold `image-gen` container — a Railway wake plus a Chromium launch — and
-   * cold is the common case rather than the edge case, so the user watched a
-   * spinner for the whole wake and lost the reply outright if it timed out.
-   *
-   * Unlike `/messages/respond`, nothing downstream of this costs the caller a
-   * Bluesky post, so the render itself is the only thing rationing it. The
-   * question has to be one of theirs and it has to fit what an inbox can hold.
+   * The render is queued; the post never is: a cold `image-gen` wake is the
+   * common case and would block the reply. Nothing downstream costs a Bluesky
+   * post, so the question must be the caller's own and inbox-sized.
    *
    * @see [render-controller.test.ts](../tests/render-controller.test.ts) — pins
    * that an identical enqueue produces one render and a theme change produces

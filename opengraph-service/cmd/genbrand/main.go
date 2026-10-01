@@ -1,9 +1,6 @@
-// genbrand renders internal/shim/brand.go from the repo-root brand.json — the
-// one source of truth shared with client/src/lib/brand.ts and
-// server/src/lib/brand.ts. Run via `go generate ./internal/...` from
-// opengraph-service/ — `go generate ./...` also matches this cmd/genbrand
-// package itself and corrupts its build directory with the generator's own
-// output.
+// genbrand renders internal/shim/brand.go from the repo-root brand.json.
+// Run via `go generate ./internal/...`; `go generate ./...` also matches this
+// package and corrupts its build directory with the generator's output.
 package main
 
 import (

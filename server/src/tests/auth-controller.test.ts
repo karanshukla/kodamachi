@@ -94,9 +94,7 @@ describe("Auth (Hono)", () => {
     });
 
     test("returns 400 for a handle that passes Zod but fails isValidHandle", async () => {
-      // "invalid_handle" has an underscore (not a valid AT Protocol char) but
-      // satisfies the Zod min(1).max(64) schema — exercises the defense-in-depth
-      // isValidHandle guard.
+      // Passes the Zod schema but fails the isValidHandle guard.
       const { app, headers } = makeApp();
       const res = await app.request("/login", {
         method: "POST",
@@ -172,7 +170,6 @@ describe("Auth (Hono)", () => {
       assert.strictEqual(res.status, 200);
       const body = await res.json();
       assert.deepStrictEqual(body, { message: "Logged out successfully" });
-      // revokeSession was called for the logged-out DID.
       assert.strictEqual(service.revokeSession.mock.calls.length, 1);
       assert.strictEqual(service.revokeSession.mock.calls[0][0], "did:foo");
     });
@@ -272,8 +269,6 @@ describe("Auth (Hono)", () => {
     });
 
     test("removes the fallback account too when its session is also invalid", async () => {
-      // Active account invalid → fall back to first remembered account → that
-      // one is ALSO invalid → both removed, session cleared.
       const { app, headers } = makeApp({
         session: {
           did: "did:foo",
@@ -339,8 +334,7 @@ describe("Auth (Hono)", () => {
     });
 
     test("returns 400 for a malformed DID that passes Zod but fails isValidDid", async () => {
-      // "not-a-did" satisfies Zod min(1).max(512) but isn't a valid DID —
-      // exercises the defense-in-depth isValidDid guard.
+      // Passes the Zod schema but fails the isValidDid guard.
       const { app, ctx, headers } = makeApp({
         session: { did: "did:plc:foo", accounts: [{ did: "did:plc:foo" }] },
       });
@@ -352,7 +346,6 @@ describe("Auth (Hono)", () => {
       assert.strictEqual(res.status, 400);
       const body = await res.json();
       assert.strictEqual(body.error, "INVALID_DID");
-      // The DID-format check runs before the session lookup, so no warn log.
       assert.strictEqual((ctx.logger.warn as any).mock.calls.length, 0);
     });
 
@@ -381,7 +374,6 @@ describe("Auth (Hono)", () => {
       });
       const body = await res.json();
       assert.deepStrictEqual(body, { success: true, did: "did:plc:bar" });
-      // Fire-and-forget push-subscription sync across all remembered accounts.
       await new Promise((resolve) => setImmediate(resolve));
       assert.strictEqual(notifications.syncSubscriptionsAcrossAccounts.mock.calls.length, 1);
     });
@@ -595,7 +587,6 @@ describe("Auth (Hono)", () => {
       });
       const body = await res.json();
       assert.deepStrictEqual(body, { success: true });
-      // No nf-region cookie, but the nf-session cookie IS set by setSession.
       const setCookie = res.headers.get("set-cookie") ?? "";
       assert.ok(
         !setCookie.includes("nf-region="),

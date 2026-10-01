@@ -19,7 +19,6 @@ export const disclaimer: CSSProperties = {
   lineHeight: 1.55,
 };
 
-/** The welcome card is the one hero surface on the page. */
 export const hero = {
   padding: "40px 32px",
   textAlign: "center",

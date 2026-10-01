@@ -10,13 +10,7 @@ import appTheme, { ALERT_TONES } from "../../Theme";
 import { contrast, flatten, parseColor, type Rgb } from "./colorMath";
 import { declaredTokens, paletteTokens, referencedTokens, token, type Scheme } from "./readTokens";
 
-/**
- * The palette's accessibility rules, executable.
- *
- * Every pair below is text-on-background somewhere in the UI, and WCAG AA for
- * body text is 4.5:1. Lowering a token past that is a failing test rather than a
- * regression someone notices in a screenshot months later.
- */
+/** Every pair below is text-on-background somewhere in the UI; WCAG AA for body text is 4.5:1. */
 
 const AA = 4.5;
 /** WCAG's relaxed threshold, for ≥24px or ≥18.66px-bold text, and for UI shapes. */
@@ -28,11 +22,7 @@ const SRC = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const navy = appTheme.colors!.navy!;
 const inverse = appTheme.colors!.inverse!;
 
-/**
- * Opaque page background a translucent surface has to be flattened against.
- * Mantine derives it from the theme (`theme.white` / `dark[7]`), not from
- * index.css, so it is read from the same place the browser reads it.
- */
+/** Opaque page background for flattening translucent surfaces; Mantine derives it from the theme, not index.css. */
 const BODY: Record<Scheme, Rgb> = {
   light: parseColor(appTheme.white!),
   dark: parseColor(appTheme.colors!.dark![7]),
@@ -76,11 +66,6 @@ describe("body text", () => {
   });
 });
 
-/**
- * Hero surfaces are navy in light mode and off-white in dark, so each is the
- * inverse of the card around it. The last pair pins that: before the inverse,
- * the dark hero was the card's own blue and the welcome card vanished into it.
- */
 describe("hero surfaces", () => {
   it.each(SCHEMES)("carry their ink and muted text at AA (%s)", (scheme) => {
     const bg = parseColor(token("--ds-hero", scheme));
@@ -94,8 +79,7 @@ describe("hero surfaces", () => {
   });
 
   it.each(SCHEMES)("keep the faint ink too weak for text (%s)", (scheme) => {
-    // Pinned so nobody promotes it to a Text colour: it exists for dashed rules
-    // and progress-ring tracks, where contrast is not a legibility requirement.
+    // Not a Text colour: dashed rules and ring tracks only.
     const bg = parseColor(token("--ds-hero", scheme));
     expect(ratio("--ds-on-hero-faint", bg, scheme)).toBeLessThan(AA_LARGE);
   });
@@ -113,7 +97,6 @@ describe("text on the ask-card presets", () => {
   it.each(DARK_FILLS.flatMap((fill) => FOREGROUNDS.map((fg) => [fill, fg] as const)))(
     "%s carries %s at AA",
     (fill, fg) => {
-      // Alpha-carrying foregrounds are flattened against the fill itself.
       const bg = parseColor(token(fill));
       expect(contrast(flatten(token(fg), bg), bg)).toBeGreaterThanOrEqual(AA);
     }
@@ -131,11 +114,7 @@ describe("text on the ask-card presets", () => {
   });
 });
 
-/**
- * WCAG 2.4.11 wants a focus indicator at 3:1 against what surrounds it. The
- * ring is drawn outside the control, so it sits on the card or the page; on a
- * hero surface it takes the hero's ink, which the hero tests above cover.
- */
+// WCAG 2.4.11: 3:1 against the card or page; on a hero surface the ring takes the hero's ink.
 describe("focus ring", () => {
   it.each(SCHEMES)("shows against the card surface and the page (%s)", (scheme) => {
     expect(ratio("--ds-focus-ring", surface(scheme), scheme)).toBeGreaterThanOrEqual(AA_LARGE);
@@ -207,14 +186,7 @@ describe("alert tones", () => {
   });
 });
 
-/**
- * Mantine's palette and `index.css` are two independent copies of the same brand
- * colours, and they have to be: Mantine needs literal tuples to derive hover,
- * light and outline variants from, the browser needs custom properties. So a
- * repaint has to edit both, and a half-finished one is invisible — the filled
- * buttons change and one border stays the old hue. Each pair below is pinned so
- * that stops being something you have to notice.
- */
+// Mantine's literal tuples and index.css custom properties are two copies of the brand colours; pin each pair.
 describe("the Mantine palette and the stylesheet agree", () => {
   const SHADES: [string, string][] = [
     ["--ds-navy", navy[6]],
@@ -265,12 +237,6 @@ describe("token hygiene", () => {
     expect(undeclared).toEqual([]);
   });
 
-  /**
-   * The rule that makes a repaint a one-file change. A component naming a hue
-   * directly is invisible until someone swaps the palette and one border stays
-   * the old blue, so it fails here instead: give the colour a semantic token in
-   * index.css and reference that.
-   */
   it("keeps the brand palette out of everything but index.css", async () => {
     const palette = new Set(paletteTokens());
     const sources = await collectSources(SRC);

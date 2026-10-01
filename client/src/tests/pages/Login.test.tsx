@@ -345,7 +345,6 @@ describe("Login page", () => {
 
       fireEvent.change(getHandleInput(), { target: { value: "ali" } });
 
-      // Exact handle match ("ali.bsky.social") should be ranked first.
       const suggestionRow = await screen.findByRole("option", {}, { timeout: 2000 });
       expect(suggestionRow).toHaveTextContent("Ali");
 
@@ -428,7 +427,6 @@ describe("Login page", () => {
         { did: "did:plc:karina", handle: "karina.bsky.social", displayName: "Karina" },
         { did: "did:plc:karan", handle: "karan.bsky.social", displayName: "Karan" },
         { did: "did:plc:zzz", handle: "zzz.bsky.social", displayName: "Zzz" },
-        // Handle doesn't match the prefix, but the display name does (rank 3).
         { did: "did:plc:disp", handle: "unrelated.bsky.social", displayName: "Karenina" },
         // Neither handle nor (missing) display name match — falls to the `?? ""` fallback.
         { did: "did:plc:nodisp", handle: "other.bsky.social", displayName: undefined },
@@ -475,7 +473,6 @@ describe("Login page", () => {
       expect(screen.getByText("Karan")).toBeInTheDocument();
 
       fireEvent.change(input, { target: { value: "karan.bsky.socia" } });
-      // Typing again clears the manual selection; the static "selected" row disappears.
       await waitFor(() => expect(screen.queryByText("Karan")).not.toBeInTheDocument());
     });
 
@@ -487,8 +484,6 @@ describe("Login page", () => {
       mockUseLogin.mockReturnValue({ mutate: vi.fn(), isPending: false } as any);
       renderWithProviders(<Login />);
 
-      // Two characters, no dot: search runs but the handle is not "ready" yet, so the
-      // typed-handle offer is skipped and the plain "No handles found" branch renders.
       fireEvent.change(getHandleInput(), { target: { value: "ab" } });
 
       expect(
@@ -642,7 +637,6 @@ describe("Login page", () => {
         capturedCallbacks.onSuccess();
       });
 
-      // MemoryRouter doesn't change window.location; component stays rendered
       expect(screen.getByTestId("e2e-submit")).toBeInTheDocument();
     });
 

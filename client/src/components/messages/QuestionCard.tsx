@@ -21,20 +21,17 @@ import * as styles from "./QuestionCard.styles";
 
 interface QuestionCardProps {
   message: Message;
-  /** Painted with the navy fill; the "ink backgrounds" preference. */
   ink: boolean;
   pinned: boolean;
   focused: boolean;
   expanded: boolean;
   justPinned: boolean;
   deleting: boolean;
-  /** True while this card's own reply is in flight. */
   locked: boolean;
   /** True while an unanswered thread root is holding this reply back. */
   blocked: boolean;
   /** A reply here would chain onto a pinned root rather than post standalone. */
   inThread: boolean;
-  /** The Bluesky post this card's answer started, once it has one. */
   threadLink?: ThreadLink;
   /** The answering account, so a destination reads as a handle and not a DID. */
   handle?: string;
@@ -45,7 +42,6 @@ interface QuestionCardProps {
   onTogglePin: () => void;
   onDelete: () => void;
   cardRef: (el: HTMLDivElement | null) => void;
-  /** The composer, rendered by the grid so it can own the draft text. */
   composer: React.ReactNode;
 }
 

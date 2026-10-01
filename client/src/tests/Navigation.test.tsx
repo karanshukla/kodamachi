@@ -181,7 +181,6 @@ describe("Navigation", () => {
       renderWithProviders(<Navigation />);
       expect(screen.queryByText("Alice")).toBeNull();
       expect(screen.queryByText("@alice.bsky.social")).toBeNull();
-      // Skeleton placeholders render in place of the friends list while loading.
       expect(document.querySelectorAll(".mantine-Skeleton-root").length).toBeGreaterThan(0);
     });
   });
@@ -220,7 +219,6 @@ describe("Navigation", () => {
 
     it("falls back to handle as the label when displayName is absent", () => {
       renderWithProviders(<Navigation />);
-      // Bob has no displayName — the first Text renders the handle
       expect(screen.getByText("bob.bsky.social")).toBeInTheDocument();
     });
 
@@ -411,7 +409,6 @@ describe("Navigation", () => {
         { route: "/" }
       );
       fireEvent.keyDown(document, { key: "M", altKey: false });
-      // No navigation should happen
       expect(screen.getByTestId("location")).toHaveTextContent("/");
     });
 
@@ -506,16 +503,13 @@ describe("Navigation", () => {
     });
 
     it("reads section state from localStorage when it contains a value", () => {
-      // Pre-populate localStorage so getSectionOpen takes the JSON.parse branch
       localStorage.setItem(SECTION_KEY, JSON.stringify({ Moots: false }));
       renderWithProviders(<Navigation />);
-      // The Moots section header is still rendered (it's a toggle, not removed)
       expect(screen.getByText(en.nav.friendGroups.moots.label)).toBeInTheDocument();
     });
 
     it("falls back to open=true when localStorage contains invalid JSON", () => {
       localStorage.setItem(SECTION_KEY, "{{invalid}}");
-      // Should not throw, getSectionOpen returns true from catch
       expect(() => renderWithProviders(<Navigation />)).not.toThrow();
       expect(screen.getByText(en.nav.friendGroups.moots.label)).toBeInTheDocument();
     });
@@ -523,7 +517,6 @@ describe("Navigation", () => {
     it("clicking a FriendSection header toggles it and persists to localStorage", () => {
       renderWithProviders(<Navigation />);
       const mootsHeader = screen.getByText(en.nav.friendGroups.moots.label);
-      // Click the header — triggers handleToggle → setSectionOpen → localStorage.setItem
       fireEvent.click(mootsHeader);
       const stored = localStorage.getItem(SECTION_KEY);
       expect(stored).not.toBeNull();
@@ -538,7 +531,6 @@ describe("Navigation", () => {
       fireEvent.click(mootsHeader);
       const stored = localStorage.getItem(SECTION_KEY);
       const parsed = JSON.parse(stored!);
-      // Pre-existing Following key must still be present
       expect(parsed.Following).toBe(false);
     });
   });

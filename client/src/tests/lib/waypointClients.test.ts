@@ -23,7 +23,6 @@ describe("postClientOptions", () => {
 
   it("leaves out a client that renders another lexicon entirely", () => {
     const ids = postClientOptions.map((option) => option.value);
-    // Tangled is a git forge (sh.tangled.), Leaflet a publication reader.
     expect(ids).not.toContain("tangled");
     expect(ids).not.toContain("leaflet");
     expect(ids).not.toContain("grain");

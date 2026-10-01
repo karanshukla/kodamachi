@@ -58,7 +58,6 @@ describe("Home page", () => {
       isLoading: false,
     } as any);
     renderWithProviders(<Home />);
-    // Name appears inside a styled div (not a heading element)
     expect(screen.getByText(/Karan$/)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: en.home.viewYourMessages })).toBeInTheDocument();
   });
@@ -223,7 +222,6 @@ describe("Home page", () => {
     } as any);
     renderWithProviders(<Home />);
     fireEvent.click(screen.getByRole("button", { name: en.common.share }));
-    // Neither API available — no crash, nothing happens
     expect(document.body).toBeInTheDocument();
   });
 

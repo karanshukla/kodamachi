@@ -49,8 +49,7 @@ function setShare(share: ((data: unknown) => Promise<void>) | undefined) {
 
 describe("OpenInModal", () => {
   beforeEach(() => {
-    // The notification store is module-global, so a toast raised by one test is
-    // still on screen for the next one unless it is cleared here.
+    // The notification store is module-global.
     notifications.clean();
     setClipboard(() => Promise.resolve());
     setShare(undefined);

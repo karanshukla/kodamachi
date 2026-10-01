@@ -26,7 +26,7 @@ export interface UserSettings {
 
 const USE_APP_DEFAULT = null;
 
-/** What `com.atproto.repo.listRecords` accepts as its per-page maximum. */
+/** `com.atproto.repo.listRecords` per-page maximum. */
 const PDS_PAGE_SIZE = 100;
 
 /** Caps the count at a number worth showing rather than paging a whole repo. */
@@ -55,7 +55,6 @@ const SETTINGS_DEFAULTS_WITH_SYNC_OPT_IN = {
   pdsSyncEnabled: toDbBoolean(false),
 };
 
-/** Every field is optional: the service persists only the keys present. */
 export interface UpdatableSettings {
   pdsSyncEnabled?: boolean;
   imageTheme?: string;
@@ -78,10 +77,7 @@ const BOOLEAN_SETTINGS = [
   "atmosphereLinksEnabled",
 ] as const satisfies readonly (keyof UpdatableSettings)[];
 
-/**
- * Projects only the keys the caller actually supplied, so a /customise card
- * mutating one setting never clobbers the rest back to their defaults.
- */
+/** Only supplied keys, so changing one setting never resets the rest. */
 function toSettingsColumns(updates: UpdatableSettings): Record<string, unknown> {
   const columns: Record<string, unknown> = {};
 

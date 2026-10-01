@@ -1,43 +1,17 @@
 [run]
-# Same Node-drift guard as client/bunfig.toml: `bun run <script>` defers a
-# node-shebang binary to Node whenever Node is on PATH, and oxlint, tsc,
-# pino-pretty, rimraf, and lex all have one. The scripts spell out
-# `bunx --bun`; this makes it hold even when a new one forgets.
+# Backstop for `bunx --bun`: stops node-shebang binaries running on Node.
 bun = true
 
-# Bun test + coverage configuration.
-#
-# The server suite runs exclusively under `bun test` (the Node `node --test`
-# path was retired in #288, along with the runtime-agnostic mock shim).
-# Coverage is produced by Bun's built-in coverage reporter (#287) — c8 is no
-# longer used. `bun run test` / `test:watch` run without coverage; the
-# `--coverage` flag on `test:coverage` enables it here.
-#
-# Three accepted limitations of Bun's coverage (verified on 1.3.14, re-checked on
-# 1.4.1 and unchanged; documented in docs/testing-notes.md "Coverage under Bun"):
-#   1. It honors NO coverage-ignore annotation: not `/* v8 ignore */`, not
-#      `/* istanbul ignore */`, not `/* c8 ignore */`. Per-file exclusion is done
-#      via `coveragePathIgnorePatterns` below.
-#   2. Its lcov carries line + function coverage only (no branch data).
-#   3. `coverageThreshold` is enforced PER FILE, not on the total, which is why
-#      none is set here: a run whose aggregate clears the bar still exits 1 if any
-#      single file is under it, and that is what threshold=0.97 against an
-#      aggregate of 99.59% was. (This was previously recorded as a Bun bug that
-#      exits 1 below 100% whatever the value. It is not; the behaviour is the same
-#      on 1.3.14 and 1.4.1.) Setting one forced `continue-on-error` on the CI step,
-#      which in turn swallowed *test* failures — #380 shipped a red server suite
-#      green that way. With no threshold, `bun test --coverage` exits on test
-#      results alone, so the CI step gates again. The coverage bar is Coveralls.
+# Bun ignores coverage-ignore annotations, reports line + function coverage only, and
+# enforces coverageThreshold per file (a threshold here would turn the CI step red on
+# one file and force continue-on-error). So none is set and per-file exclusion lives
+# in coveragePathIgnorePatterns. Rationale: docs/testing-notes.md "Coverage under Bun".
+
 [test]
-# Coverage is opt-in via `bun test --coverage` (the test:coverage script).
-# Leaving `coverage` unset here means a plain `bun test` does no instrumentation.
 coverageSkipTestFiles = true
 coverageReporter = ["text", "lcov"]
 coverageDir = "coverage"
-# Mirrors the former `c8.exclude` list. Each entry is a glob relative to this
-# file. Files whose coverage previously depended on `/* v8 ignore */` markers
-# (which Bun does not honor) and can't meet 97% lines without them are listed
-# individually in docs/testing-notes.md.
+# Globs relative to this file; each suppressed site is catalogued in docs/testing-notes.md.
 coveragePathIgnorePatterns = [
   "src/lexicon/**",       # auto-generated from AT Protocol lexicons
   "src/index.ts",         # Hono app + Bun.serve boot + process signal handlers

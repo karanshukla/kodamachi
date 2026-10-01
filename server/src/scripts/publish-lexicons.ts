@@ -1,8 +1,8 @@
 /**
  * Publishes the app.navyfragen.message lexicon to the AT Protocol network.
  *
- * Run this once after setting up the DNS TXT record:
- *   _lexicon.navyfragen.app  TXT  "did=<your-DID>"
+ * Run once after setting the DNS TXT record
+ * `_lexicon.navyfragen.app TXT "did=<your-DID>"`; the DID printed here is its value.
  *
  * Usage:
  *   LEXICON_AUTHORITY_HANDLE=you.bsky.social \
@@ -10,9 +10,7 @@
  *   LEXICON_AUTHORITY_PDS=https://bsky.social \
  *   npm run publish-lexicons
  *
- * LEXICON_AUTHORITY_PDS defaults to https://bsky.social if not set.
- *
- * The DID printed by this script is what goes into the DNS TXT record.
+ * LEXICON_AUTHORITY_PDS defaults to https://bsky.social.
  */
 
 import { readFileSync } from "node:fs";

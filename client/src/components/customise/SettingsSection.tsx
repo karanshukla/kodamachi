@@ -9,7 +9,6 @@ interface SettingsSectionProps {
   children: React.ReactNode;
 }
 
-/** A titled band of setting cards. */
 export function SettingsSection({ eyebrow, help, last, children }: SettingsSectionProps) {
   return (
     <div style={styles.section(last)}>

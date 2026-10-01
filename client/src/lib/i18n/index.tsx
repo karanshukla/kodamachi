@@ -1,11 +1,10 @@
 /**
  * `uiLocale` plumbing: the logged-in user's own app language, distinct from
  * `touchpointLocale` (`../touchpointTranslations.ts`), which is the profile
- * owner's audience's language. See #400 for the two-axis split.
+ * owner's audience's language.
  *
- * Ships English, Spanish (`es`, #406), and Portuguese/German/French
- * (`pt`/`de`/`fr`, #410) — every non-English locale is lazy-loaded through
- * `LOCALE_LOADERS` so the default bundle still carries only `en`.
+ * Every non-English locale is lazy-loaded through `LOCALE_LOADERS`, so the
+ * default bundle carries only `en`.
  */
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";

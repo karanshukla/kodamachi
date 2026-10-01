@@ -153,16 +153,11 @@ describe("resolveUiLocale", () => {
 });
 
 describe("counts reach the catalog as numbers", () => {
-  // The signature is the point: Intl.PluralRules.select() takes a number, so
-  // an entry that only ever saw a formatted string could not choose a plural
-  // form. #406 depends on this staying a number.
+  // Intl.PluralRules.select() takes a number, so the count must stay a number (#406).
   it("formats a grouped count rather than interpolating it raw", () => {
     expect(en.nav.unreadCount(1234)).toBe("1,234 unread");
   });
 
-  // Spanish adjectives agree in number with the noun — "1 nuevo" vs "2 nuevos" —
-  // which is exactly the shape #406 depends on the count arriving as a number
-  // for. One test inside the singular rule, one outside it.
   it("uses the singular Spanish form for exactly one", () => {
     expect(es.nav.unreadCount(1)).toBe("1 no leído");
   });
@@ -172,9 +167,7 @@ describe("counts reach the catalog as numbers", () => {
     expect(es.nav.unreadCount(1234)).toBe("1234 no leídos");
   });
 
-  // Portuguese and French both classify 0 with the singular ("one") category
-  // per CLDR, unlike Spanish — the opposite of the naive assumption, and
-  // exactly the kind of thing #410 warned is a common bug to get backwards.
+  // CLDR puts 0 in the singular ("one") category for pt and fr, unlike es (#410).
   it("uses the singular Portuguese form for both zero and one", () => {
     expect(pt.nav.unreadCount(0)).toBe("0 não lida");
     expect(pt.nav.unreadCount(1)).toBe("1 não lida");
@@ -193,8 +186,7 @@ describe("counts reach the catalog as numbers", () => {
     expect(fr.nav.unreadCount(2)).toBe("2 non lus");
   });
 
-  // German count labels are bare predicate adjectives that don't inflect for
-  // number ("1 ungelesen" / "2 ungelesen"), unlike the other three locales.
+  // German count labels don't inflect for number ("1 ungelesen" / "2 ungelesen").
   it("uses the same uninflected German form regardless of count", () => {
     expect(de.nav.unreadCount(0)).toBe("0 ungelesen");
     expect(de.nav.unreadCount(1)).toBe("1 ungelesen");
@@ -207,9 +199,7 @@ describe("counts reach the catalog as numbers", () => {
 });
 
 describe("es catalog interpolations", () => {
-  // es is lazy-loaded and never the active catalog elsewhere in this suite (en
-  // is), so its own interpolating functions get no incidental coverage from
-  // component rendering the way en's do — each one needs a direct call here.
+  // Lazy-loaded catalogs are never active elsewhere, so each function-valued entry needs a direct call for coverage.
   it("interpolates every function-valued entry", () => {
     expect(es.common.switchedToAccount("alice.bsky.social")).toBe("Cambiaste a @alice.bsky.social");
     expect(es.nav.friendGroups.moots.emptyText("kodamachi")).toBe(
@@ -239,9 +229,6 @@ describe("es catalog interpolations", () => {
 });
 
 describe("pt/de/fr catalog interpolations", () => {
-  // Same rationale as the es block above: each of these is lazy-loaded and
-  // never the active catalog elsewhere in this suite, so every
-  // function-valued entry needs a direct call here for coverage.
   it("interpolates every function-valued entry in pt", () => {
     expect(pt.common.switchedToAccount("alice.bsky.social")).toBe(
       "Você mudou para @alice.bsky.social"
@@ -342,9 +329,7 @@ describe("loadCatalog", () => {
   });
 
   it("reports en, not the request, for a locale this bundle does not (yet) register", async () => {
-    // The locale it reports is the one being rendered. Echoing "it" back here
-    // would label an English page Italian for a screen reader and format its
-    // dates in a language nothing on screen is written in.
+    // Echoing the unsupported "it" would label an English page Italian.
     expect(await loadCatalog("it")).toEqual({ locale: "en", messages: en });
   });
 
@@ -369,8 +354,7 @@ describe("loadCatalog", () => {
   });
 
   it("reduces a malformed tag to one the Intl formatters accept", async () => {
-    // "en-"/"es-" are what `Intl.NumberFormat` throws RangeError on. The
-    // catalog is still the right one; only the tag is trimmed back.
+    // "en-"/"es-" make `Intl.NumberFormat` throw RangeError.
     expect(await loadCatalog("en-")).toEqual({ locale: "en", messages: en });
     expect(await loadCatalog("es-")).toEqual({ locale: "es", messages: es });
   });
@@ -384,8 +368,7 @@ describe("loadCatalog", () => {
   });
 
   it("reports en for a prototype key rather than treating it as a loader", async () => {
-    // `LOCALE_LOADERS` is a Map, so `constructor` and `toString` are misses
-    // rather than inherited functions that would be called as loaders.
+    // LOCALE_LOADERS is a Map, so `constructor`/`toString` are misses, not inherited functions.
     for (const key of ["constructor", "toString", "__proto__", "hasOwnProperty"]) {
       expect(await loadCatalog(key)).toEqual({ locale: "en", messages: en });
     }
@@ -403,11 +386,7 @@ describe("loadCatalog", () => {
   });
 });
 
-/**
- * Seeded into `<html lang>` before every provider render so each assertion on
- * it proves the provider wrote the tag. Seeding `"en"` instead would let the
- * `en` cases pass without the provider ever running.
- */
+/** Seeded into `<html lang>` so assertions prove the provider wrote it; "en" would pass vacuously. */
 const LANG_BEFORE_PROVIDER = "zz";
 
 describe("I18nProvider / useTranslations / useLocale", () => {
@@ -591,7 +570,6 @@ describe("I18nProvider / useTranslations / useLocale", () => {
       expect(localStorage.getItem(STORAGE_KEY)).toBe(JSON.stringify("en"));
     });
 
-    // Simulate the reload: a fresh mount, now logged out.
     mockUseSession.mockReturnValue({ data: { isLoggedIn: false }, isLoading: false } as any);
     mockUseUserSettings.mockReturnValue({
       data: undefined,
@@ -602,8 +580,6 @@ describe("I18nProvider / useTranslations / useLocale", () => {
     await waitFor(() => {
       expect(screen.getAllByTestId("probe")[1]).toHaveTextContent(JSON.stringify(en));
     });
-    // The stored value from the logged-in session is still there for the
-    // resolution logic to pick up — this pins that a reload doesn't clear it.
     expect(localStorage.getItem(STORAGE_KEY)).toBe(JSON.stringify("en"));
   });
 
@@ -611,8 +587,7 @@ describe("I18nProvider / useTranslations / useLocale", () => {
     mockUseSession.mockReturnValue({ data: { isLoggedIn: false }, isLoading: false } as any);
     mockUseUserSettings.mockReturnValue({ data: undefined, isLoading: false } as any);
     const { unmount } = renderProvider();
-    // loadCatalog resolves on a microtask; unmounting before it fires exercises
-    // the effect's cancelled guard instead of calling setState after unmount.
+    // Unmounting before the loadCatalog microtask resolves exercises the effect's cancelled guard.
     unmount();
     await new Promise((resolve) => setTimeout(resolve, 0));
   });

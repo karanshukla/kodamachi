@@ -45,7 +45,6 @@ export const settingsKeys = {
   update: () => [...settingsKeys.all, "update"] as const,
 };
 
-/** The fields one save carries. Every request updates only the keys it names. */
 export type SettingsPatch = Partial<UserSettings>;
 
 export type SettingsField = keyof UserSettings;
@@ -105,7 +104,6 @@ export function usePdsInfo() {
   });
 }
 
-/** The keys of `shape`, read off `source`. */
 function project(source: UserSettings, shape: SettingsPatch): SettingsPatch {
   return Object.fromEntries(
     Object.keys(shape).map((key) => [key, source[key as SettingsField]])
@@ -119,7 +117,6 @@ function mergeIntoCache(client: QueryClient, patch: SettingsPatch) {
 }
 
 interface SaveContext {
-  /** This save's own fields as they stood before it started, for rollback. */
   previous?: SettingsPatch;
 }
 
@@ -133,9 +130,7 @@ interface SaveContext {
 const ONLY_THIS_SAVE = 1;
 
 export interface UpdateUserSettings {
-  /** Persists one patch. Resolves with the saved row, or `null` if it failed. */
   save: (patch: SettingsPatch) => Promise<UserSettings | null>;
-  /** True only while a request carrying this field is in flight. */
   isSaving: (field: SettingsField) => boolean;
   isSavingAny: boolean;
 }

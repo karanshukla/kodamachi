@@ -43,7 +43,6 @@ const TOOLTIP_EVENTS = { hover: true, focus: true, touch: false };
 
 interface MessagePreferencesBarProps {
   state: MessagePreferencesState;
-  /** Null until settings load, so the default is shown rather than nothing. */
   imageTheme: string | null;
   imageThemeDisabled: boolean;
   onSelectImageTheme: (theme: string) => void;

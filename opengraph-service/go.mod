@@ -2,13 +2,9 @@ module github.com/karanshukla/navyfragen-app/opengraph-service
 
 go 1.26.0
 
-// Indigo has no semver release tags (see bluesky-social/indigo#1409); pin by
-// commit SHA so the API surface is reproducible. Interfaces may break between
-// commits, so this MUST be bumped deliberately. This is hard constraint #8.
-//
-// Note: this pinned commit (2026-06-29) declares `go >= 1.26` in its own
-// go.mod, so the toolchain below is set to 1.26 to match — that is the
-// canonical build path for current indigo.
+// Indigo has no semver tags (bluesky-social/indigo#1409), so it is pinned by
+// commit SHA; interfaces break between commits. Bump deliberately. The pinned
+// commit requires go >= 1.26.
 require github.com/bluesky-social/indigo v0.0.0-20260629160527-dfe5578fd537
 
 require (

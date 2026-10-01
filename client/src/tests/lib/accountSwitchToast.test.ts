@@ -4,7 +4,6 @@ import { buildAccountSwitchUrl, consumeAccountSwitchToast } from "../../lib/acco
 
 describe("accountSwitchToast", () => {
   beforeEach(() => {
-    // Reset to a clean origin between tests so leftover params don't leak.
     window.history.replaceState({}, "", "/");
   });
 

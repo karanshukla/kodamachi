@@ -10,10 +10,8 @@ import { notAuthenticated, sessionDid, sessionExpired, validateJson } from "./ro
 import type { AppContext } from "#/index";
 
 /**
- * Both locale columns are read back by formatters that reject a malformed
- * BCP-47 tag outright — `Intl.NumberFormat`/`toLocaleString` on the client
- * throw `RangeError`, which takes the page down — so an unusable tag is
- * rejected here rather than persisted and rendered later.
+ * Client `Intl` formatters throw `RangeError` on a malformed BCP-47 tag, so
+ * reject it here rather than persist it.
  *
  * @see [settings-controller.test.ts](../tests/settings-controller.test.ts):
  * "rejects a malformed locale tag" and "rejects an unsupported language".
@@ -33,10 +31,8 @@ const updateSchema = z.object({
   touchpointLocale: localeTag.nullable().optional(),
   uiLocale: localeTag.nullable().optional(),
   /**
-   * A waypoint id from Aturi's catalog, which only the client knows. Bounded
-   * rather than enumerated: the catalog gains clients without a deploy here,
-   * and an id this server has never heard of reads as "no preference" on the
-   * way back out.
+   * A waypoint id from Aturi's catalog, which only the client knows: bounded,
+   * not enumerated, since the catalog grows without a deploy here.
    *
    * @see [settings-controller.test.ts](../tests/settings-controller.test.ts):
    * "rejects an over-long default client id".

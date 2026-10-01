@@ -7,7 +7,6 @@ import { markTile } from "../mark";
 import { BASE_CSS, NOTO_LINK, NOTO_STACK, PRECONNECT } from "../shared-css";
 import type { RenderedTemplate } from "../templates";
 
-/** "Post": the question quoted as a paper post from the app's own account. */
 export function renderTwitterCard(
   escapedMessage: string,
   footerText: string,
@@ -123,8 +122,3 @@ export function renderTwitterCard(
 </html>`;
   return { html, width, height, fontSize };
 }
-
-/**
- * Picks the template for a stored `imageTheme`. `escapedMessage` is HTML-safe;
- * `message` is the raw text, which only the layout reads.
- */

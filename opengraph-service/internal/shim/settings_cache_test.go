@@ -10,13 +10,8 @@ import (
 	"time"
 )
 
-// TestGenerator_SettingsNotFetchedPerRender pins the caching constraint from
-// #409: the NF settings read (customPrompt/touchpointLocale) is not fetched
-// independently on every render. It piggybacks on the existing per-DID image
-// cache by only running inside FetchProfile, which EnsureRendered only calls
-// on a stale cache entry — so two EnsureRendered calls within one TTL window
-// cost exactly one settings read, the same as they cost exactly one AppView
-// profile read.
+// TestGenerator_SettingsNotFetchedPerRender pins #409: the NF settings read rides the per-DID cache,
+// so two renders in one TTL window cost one settings read.
 func TestGenerator_SettingsNotFetchedPerRender(t *testing.T) {
 	appview := bskyProfileServer(t, "did:plc:test", "alice.bsky.social", "Alice")
 
@@ -56,9 +51,6 @@ func TestGenerator_SettingsNotFetchedPerRender(t *testing.T) {
 	}
 }
 
-// The other side: a settings edit lands on the card in the same window a
-// display-name edit would — once the cache entry is stale, the next render
-// re-reads settings just like it re-reads the AppView profile.
 func TestGenerator_SettingsReReadAfterCacheExpiry(t *testing.T) {
 	appview := bskyProfileServer(t, "did:plc:test", "alice.bsky.social", "Alice")
 

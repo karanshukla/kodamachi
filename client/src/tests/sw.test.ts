@@ -34,9 +34,7 @@ vi.mock("workbox-strategies", () => ({
   },
 }));
 
-// sw.ts registers its `push` / `notificationclick` handlers via
-// `self.addEventListener` at import time; capture them here so tests can
-// invoke the handlers directly the way the browser would dispatch events.
+// sw.ts registers its handlers at import time; capture them to invoke directly.
 let listeners: Record<string, (event: any) => unknown>;
 let selfMock: any;
 
@@ -83,9 +81,7 @@ describe("sw.ts", () => {
 
   describe("update activation", () => {
     it("stays waiting instead of skipping on its own", () => {
-      // The regression this guards: an unconditional skipWaiting() at parse time
-      // activates every deploy immediately, and the registration answers that
-      // activation by reloading the page mid-session.
+      // An unconditional skipWaiting() activates every deploy at once and the page reloads mid-session.
       expect(selfMock.skipWaiting).not.toHaveBeenCalled();
     });
 
@@ -115,10 +111,7 @@ describe("sw.ts", () => {
   });
 
   describe("WAF interstitial guard", () => {
-    // Anubis answers a challenged request with its interstitial under HTTP 200,
-    // so every caching path here has to refuse it explicitly. Precaching is the
-    // one that actually bit on 2026-08-11: it fetches the whole asset manifest
-    // outside any page context, and each fetch was challenged in turn.
+    // Anubis serves its interstitial under HTTP 200, so every caching path must refuse it (precaching bit on 2026-08-11).
     function plugin() {
       return addPluginsMock.mock.calls[0][0][0] as {
         cacheWillUpdate: (arg: {

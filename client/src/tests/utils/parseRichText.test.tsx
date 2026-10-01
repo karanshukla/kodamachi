@@ -76,8 +76,6 @@ describe("parseRichText", () => {
   });
 
   it("safeUrlParse returns null for truly unparseable URL, toShortUrl falls back to original href", () => {
-    // [://](://) produces a link token with text === url === "://"
-    // new URL("https://://") throws → safeUrlParse returns null → toShortUrl returns "://" as-is
     const result = parseRichText("[://](://)");
     const { container } = render(<>{result}</>);
     const anchor = container.querySelector("a");
@@ -86,8 +84,6 @@ describe("parseRichText", () => {
   });
 
   it("toShortUrl truncates href over 80 chars when safeUrlParse returns null", () => {
-    // "://" + 80 "x"s = 83 chars; new URL("https://://xxx...") throws → safeUrlParse returns null
-    // toShortUrl falls back: length > 80 → slice(0,76) + "…"
     const longMalformed = "://" + "x".repeat(80);
     const mdText = `[${longMalformed}](${longMalformed})`;
     const result = parseRichText(mdText);
@@ -99,14 +95,12 @@ describe("parseRichText", () => {
   });
 
   it("renders unknown segment type (topic/hashtag) using raw text fallback", () => {
-    // "#hashtag" is tokenized as type="topic" with raw="#hashtag" — falls through to the default push
     const result = parseRichText("#hashtag");
     const { container } = render(<>{result}</>);
     expect(container.textContent).toContain("#hashtag");
   });
 
   it("toShortUrl handles http:// protocol (not https://)", () => {
-    // Tests the protocol === "http:" branch in safeUrlParse (line 16)
     const url = "http://a.com";
     const result = parseRichText(`[${url}](${url})`);
     const { container } = render(<>{result}</>);
@@ -117,7 +111,6 @@ describe("parseRichText", () => {
   });
 
   it("toShortUrl includes username in short URL (url.username truthy branch)", () => {
-    // Tests the url.username ? ... : "" branch in toShortUrl (line 30)
     const url = "https://user@example.com";
     const result = parseRichText(`[${url}](${url})`);
     const { container } = render(<>{result}</>);
@@ -127,7 +120,6 @@ describe("parseRichText", () => {
   });
 
   it("toShortUrl includes username:password in short URL (url.password truthy branch)", () => {
-    // Tests the url.password ? ":" + url.password : "" branch in toShortUrl (line 30)
     const url = "https://user:pass@example.com";
     const result = parseRichText(`[${url}](${url})`);
     const { container } = render(<>{result}</>);
@@ -137,7 +129,6 @@ describe("parseRichText", () => {
   });
 
   it("toShortUrl includes query string in short URL (url.search truthy branch)", () => {
-    // Tests the url.search.length > 1 ? url.search : "" branch (line 34)
     const url = "https://example.com?q=1";
     const result = parseRichText(`[${url}](${url})`);
     const { container } = render(<>{result}</>);
@@ -147,7 +138,6 @@ describe("parseRichText", () => {
   });
 
   it("toShortUrl includes hash fragment in short URL (url.hash truthy branch)", () => {
-    // Tests the url.hash.length > 1 ? url.hash : "" branch (line 35)
     const url = "https://example.com#section";
     const result = parseRichText(`[${url}](${url})`);
     const { container } = render(<>{result}</>);

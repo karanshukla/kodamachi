@@ -18,8 +18,6 @@ const bar = (height: number, background: string, extra?: CSSProperties): CSSProp
   ...extra,
 });
 
-/* ── quote: white card on the navy fill ── */
-
 export const defaultRoot: CSSProperties = {
   background: fillInk,
   height: "100%",
@@ -42,8 +40,6 @@ export const defaultQuote: CSSProperties = {
 export const defaultQuoteLine = bar(3, "#c9d2e1", { marginBottom: 4 });
 export const defaultQuoteLineShort = bar(3, "#c9d2e1", { width: "65%" });
 export const defaultFooter = bar(2, "rgba(255,255,255,0.35)", { width: "40%" });
-
-/* ── compact: white-ruled block on midnight ── */
 
 export const compressedRoot: CSSProperties = {
   background: fillMidnight,
@@ -74,8 +70,6 @@ export const compressedLineShort = bar(3, "rgba(255,255,255,0.28)", {
   width: "70%",
 });
 export const compressedMeta = bar(2.5, "rgba(255,255,255,0.28)", { width: "45%", marginTop: 5 });
-
-/* ── post: paper card with the mark as avatar ── */
 
 export const twitterRoot: CSSProperties = {
   background: "#f1f4f9",

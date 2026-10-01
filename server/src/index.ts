@@ -1,6 +1,4 @@
-// Bun version floor + the unpatched-fetch-node diagnostic. Kept first by
-// convention; see the module for why import order does not actually decide
-// which error wins under Bun.
+// Kept first by convention; see the module for why order does not decide which error wins.
 import "#/lib/assert-fetch-node-patch";
 
 import dns from "node:dns";
@@ -30,8 +28,7 @@ import { createClient } from "#/auth/client";
 import { APP_NAME } from "#/lib/brand";
 import { env } from "#/lib/env";
 
-// Windows hangs on DNS TXT lookups via the system resolver, so name resolution
-// there goes to public servers instead. No other platform needs it.
+// Windows hangs on DNS TXT lookups via the system resolver.
 function redirectWindowsDnsToPublicResolvers(): void {
   if (process.platform !== "win32") return;
   dns.setServers(["8.8.8.8", "1.1.1.1", "8.8.4.4"]);
@@ -39,8 +36,7 @@ function redirectWindowsDnsToPublicResolvers(): void {
 
 redirectWindowsDnsToPublicResolvers();
 
-// Defense-in-depth against a future logger call that logs a whole object:
-// these paths carry user-authored content and must never reach Axiom.
+// These paths carry user-authored content and must never reach Axiom, even if a logger call dumps a whole object.
 const USER_CONTENT_REDACT_PATHS = [
   "message",
   "updates.message",
@@ -92,8 +88,7 @@ function perIpRateLimiter(limit: number) {
     limit,
     standardHeaders: "draft-6",
     message: "Too many requests, please try again later.",
-    // Caddy/Railway set x-forwarded-for. Local dev has no proxy hop, so every
-    // request shares the one "local" bucket — fine for a single-user machine.
+    // Local dev has no proxy hop, so all requests share the "local" bucket.
     keyGenerator: (c) => {
       const xff = c.req.header("x-forwarded-for");
       return xff ? xff.split(",")[0].trim() : "local";
@@ -192,10 +187,8 @@ class Server {
 }
 
 /**
- * Binds a wildcard HOST as "::" so one dual-stack listener serves both families,
- * because Railway's private network — the only route Caddy has to this service —
- * is IPv6-only. Falls back to "0.0.0.0" on networks with no IPv6 at all (every
- * Docker bridge network in CI and local compose).
+ * Binds a wildcard HOST as "::" (dual-stack): Railway's private network, Caddy's
+ * only route here, is IPv6-only. Falls back to "0.0.0.0" without IPv6 (Docker bridges).
  */
 async function serveDualStack(
   port: number,

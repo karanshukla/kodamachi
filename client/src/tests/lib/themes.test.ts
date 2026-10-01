@@ -38,7 +38,6 @@ describe("profileCardThemes (#275)", () => {
     for (const theme of Object.values(profileCardThemes(en))) {
       expect(typeof theme.label).toBe("string");
       expect(theme.label.length).toBeGreaterThan(0);
-      // Fills reference --ds-fill-* tokens, never inline colours.
       expect(theme.background).toMatch(/^var\(--ds-fill-/);
     }
   });

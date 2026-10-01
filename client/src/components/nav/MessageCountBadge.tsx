@@ -3,7 +3,6 @@ import { useNumberFormat } from "../../lib/useNumberFormat";
 
 import * as styles from "./MessageCountBadge.styles";
 
-/** Unread count beside the Messages link. */
 export function MessageCountBadge({ count }: { count: number }) {
   const messages = useTranslations();
   const formatNumber = useNumberFormat();

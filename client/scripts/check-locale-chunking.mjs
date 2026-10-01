@@ -1,21 +1,7 @@
 #!/usr/bin/env bun
-// #406's acceptance criterion is "the es catalog ships as its own chunk,
-// asserted on build output, not eyeballed" — #410 extends the same check to
-// pt/de/fr. This runs against an existing `dist/` (CI: right after "Build
-// under Bun"; locally: `bun run build && bun run check:locale-chunking`)
-// rather than driving the build itself, so it stays cheap and composes with
-// whatever already produced `dist/`.
-//
-// "Own chunk" means two things, both checked here per locale: (1) some file
-// under dist/assets contains that locale's marker text at all — proving it
-// was built in, not silently dropped — and (2) that file is not one of the
-// entry chunks index.html loads eagerly via <script type="module">. Only the
-// matching dynamic `import("./<locale>")` in lib/i18n/index.tsx should pull
-// it in, and only for a visitor who actually picks that language.
-//
-// Identified by content, not by filename: Rollup hashes and can rename chunk
-// files across versions, but a real, locale-exclusive sentence stays a
-// reliable fingerprint.
+// Asserts on dist/ build output (#406, #410) that each locale catalog ships as its own lazy chunk:
+// its marker text is present, absent from the entry scripts, and not shared with another locale.
+// Run after `bun run build`. Chunks are identified by content, since Rollup renames hashed files.
 
 import { readFileSync, readdirSync } from "node:fs";
 import { extname, join, resolve } from "node:path";
@@ -25,11 +11,7 @@ const DIST_DIR = resolve(CLIENT_ROOT, "dist");
 const DIST_ASSETS = resolve(DIST_DIR, "assets");
 const INDEX_HTML = resolve(DIST_DIR, "index.html");
 
-// One phrase per locale that only exists inside that locale's catalog file —
-// accented or otherwise distinctive, and not a substring any English or
-// code-level string would ever contain. If one of these ever stops appearing
-// in the build, either that catalog's wording changed (update the marker
-// here to match) or the catalog stopped being bundled at all.
+// A phrase found only in that locale's catalog; update it if the catalog wording changes.
 const LOCALE_MARKERS = {
   es: "no leídos",
   pt: "não lida",
@@ -93,10 +75,7 @@ for (const [locale, marker] of Object.entries(LOCALE_MARKERS)) {
   summaries.push(`${locale} (${filesWithMarker.join(", ")})`);
 }
 
-// "Own chunk" is per locale, not "some lazy chunk": Rollup is free to fold the
-// four catalogs into one shared chunk, which passes both checks above while
-// making a visitor who picks Spanish download German, French and Portuguese
-// too. Sharing a file is what proves that happened.
+// Rollup may fold the catalogs into one shared chunk, which passes the checks above.
 for (const [locale, files] of chunksByLocale) {
   for (const [otherLocale, otherFiles] of chunksByLocale) {
     if (locale >= otherLocale) continue;

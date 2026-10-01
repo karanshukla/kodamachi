@@ -20,8 +20,6 @@ describe("withMarks", () => {
   });
 
   it("keeps an app the catalog omits, with no mark of its own", () => {
-    // Rocksky reaches the page from the server's supplementary table, so the
-    // catalog has no icon for it and the component supplies a neutral one.
     const [app] = withMarks([ROCKSKY]);
 
     expect(app.icon).toBeNull();

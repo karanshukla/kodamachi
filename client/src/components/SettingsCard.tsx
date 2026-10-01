@@ -5,11 +5,8 @@ import * as styles from "./SettingsCard.styles";
 interface SettingsCardProps {
   title: string;
   description: string;
-  /** This card's state, shown beside the title: a switch, or a status badge. */
   control?: React.ReactNode;
-  /** Dimmed line closing the description — usually why the card is unavailable. */
   note?: string;
-  /** The action — a button, an input, a picker. Anchored to the card's bottom. */
   children?: React.ReactNode;
 }
 

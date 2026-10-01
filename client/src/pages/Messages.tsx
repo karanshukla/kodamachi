@@ -184,7 +184,7 @@ export default function Messages() {
 
   const ownerName = session.profile?.displayName || session.profile?.handle || "";
   // Localised because this text leaves the DOM into a tweet/DM, where Google
-  // Translate cannot reach it (#266).
+  // Translate cannot reach it.
   const touchpoint = getTouchpointTranslations(userSettings?.touchpointLocale);
 
   return (
@@ -310,7 +310,6 @@ function PostedNotice({ link, inThread }: { link?: string; inThread: boolean }) 
   );
 }
 
-/** One-shot greeting after the OAuth round trip lands back on this page. */
 function useWelcomeBackToast() {
   const messages = useTranslations();
   useEffect(() => {
@@ -325,7 +324,6 @@ function useWelcomeBackToast() {
   }, []);
 }
 
-/** Brings a newly arrived question into view, but only if it landed off screen. */
 function useScrollToNewMessages(messages: Message[] | undefined, enabled: boolean) {
   const previousCount = useRef(0);
 

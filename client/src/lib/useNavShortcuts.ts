@@ -3,7 +3,6 @@ import { useNavigate } from "react-router";
 
 const TEXT_ENTRY_TAGS = ["INPUT", "TEXTAREA", "SELECT"];
 
-/** Alt+letter → route. Entries marked `private` need a session to be reachable. */
 const ROUTES: { key: string; path: string; private: boolean }[] = [
   { key: "H", path: "/", private: false },
   { key: "M", path: "/messages", private: true },

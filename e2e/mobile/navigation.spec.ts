@@ -17,18 +17,14 @@ const handle = () => {
 // The name may carry an unread badge ("Messages 3"), hence the trailing \b.
 const messagesLinkName = new RegExp(`^${escapeRegex(en.common.shortcuts.messages)}\\b`);
 
-/** The mobile burger button (no aria-label). It's the first button rendered in
- * the AppShell header — placed before the wordmark — and only exists on mobile
- * (`hiddenFrom="sm"`). Scoped to the header to avoid matching anything else. */
+/** The mobile burger: no aria-label, first button in the AppShell header (`hiddenFrom="sm"`). */
 function burger(page: Page): Locator {
   return page.locator("header").locator("button").first();
 }
 
 /**
- * Mantine collapses the mobile navbar with a CSS transform (translateX off the
- * left edge); the links remain in the accessibility tree, so toBeVisible() /
- * toBeHidden() can't tell the states apart. The user-facing reality is the
- * navbar's on-screen x position, which we assert via the bounding box.
+ * The collapsed navbar is translated off-screen but stays in the accessibility
+ * tree, so toBeVisible()/toBeHidden() can't tell the states apart; assert its x.
  */
 async function expectDrawerOpen(page: Page) {
   await expect

@@ -87,11 +87,6 @@ interface HandleSuggestionsProps {
   onEscape: () => void;
 }
 
-/**
- * The single-row typeahead under the handle input. It always occupies one row's
- * worth of space — suggestion, skeleton or hint — so the Continue button never
- * jumps while the user types.
- */
 export function HandleSuggestions({ search, suggestionRef, onEscape }: HandleSuggestionsProps) {
   const messages = useTranslations();
   const { selectedActor, isSearching, suggestions, noResults, isHandleReady, cleanHandle } = search;

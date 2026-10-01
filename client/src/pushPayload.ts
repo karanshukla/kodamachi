@@ -6,10 +6,7 @@
 export interface PushPayload {
   title?: string;
   body?: string;
-  /** Path navigated to when the notification is clicked. Defaults to /messages. */
   url?: string;
-  /** Recipient account DID — used by the page to switch accounts on click. */
   did?: string;
-  /** Recipient account handle — shown/used alongside `did`. */
   handle?: string;
 }

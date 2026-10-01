@@ -11,10 +11,8 @@ export interface ClientOption {
   label: string;
 }
 
-/** The record an answer posted from here becomes. */
 const POST_COLLECTION = "app.bsky.feed.post";
 
-/** A profile target names no record of its own; this is the one it stands for. */
 const PROFILE_COLLECTION = "app.bsky.actor.profile";
 
 const collectionsByClient = new Map(
@@ -42,7 +40,6 @@ function collectionOf(target: WaypointTarget): string {
   return target.collection ?? PROFILE_COLLECTION;
 }
 
-/** Whether this client is somewhere worth sending a reader for `target`. */
 export function clientRendersTarget(clientId: string, target: WaypointTarget): boolean {
   return clientRenders(clientId, collectionOf(target));
 }
@@ -60,7 +57,6 @@ export const postClientOptions: ClientOption[] = getWaypointDataForType("post")
 
 const clientNames = new Map(postClientOptions.map((option) => [option.value, option.label]));
 
-/** The catalog's display name for a stored client id, or null if it has none. */
 export function clientNameFor(clientId: string | null): string | null {
   return clientId === null ? null : (clientNames.get(clientId) ?? null);
 }
