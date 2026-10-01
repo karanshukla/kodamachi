@@ -3,6 +3,7 @@ import "#/lib/assert-fetch-node-patch";
 
 import dns from "node:dns";
 
+import { bodyLimit } from "hono/body-limit";
 import { cors } from "hono/cors";
 import { Hono } from "hono";
 import type { MiddlewareHandler } from "hono";
@@ -82,6 +83,9 @@ function corsForClient(clientUrl: string) {
   });
 }
 
+/** Every route takes a small JSON body; the largest, `/messages/respond`, is a few KB. */
+const MAX_REQUEST_BODY_BYTES = 64 * 1024;
+
 const noStore: MiddlewareHandler = async (c, next) => {
   await next();
   c.header("Cache-Control", "no-store");
@@ -102,6 +106,7 @@ function buildApp(
   const app = new Hono<{ Variables: SessionVars }>();
 
   app.use("*", corsForClient(clientUrl));
+  app.use("*", bodyLimit({ maxSize: MAX_REQUEST_BODY_BYTES }));
   if (rateLimitMax > 0) {
     app.use("*", perIpRateLimiter(rateLimitMax));
     app.post("/messages/send", sendRateLimiter());
