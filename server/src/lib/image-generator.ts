@@ -57,14 +57,17 @@ export async function generateQuestionImage(
     return {};
   }
 
-  const footerText = userBskyHandle ? `${SHARE_DOMAIN}/${userBskyHandle}` : APP_DOMAIN;
+  // A handle is read off a DID document its owner controls, so it is escaped like the message.
+  // @see [image-generator-generate.test.ts](../tests/image-generator-generate.test.ts): "escapes the handle drawn into the ... card".
+  const handle = userBskyHandle && escapeHtml(userBskyHandle);
+  const footerText = handle ? `${SHARE_DOMAIN}/${handle}` : APP_DOMAIN;
   const theme = isThemeName(themeName) ? themeName : "default";
   const { html, width, height } = renderQuestionCard(
     theme,
     escapeHtml(originalMessage),
     footerText,
     originalMessage,
-    userBskyHandle
+    handle
   );
 
   try {

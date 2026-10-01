@@ -62,6 +62,17 @@ describe("generateQuestionImage", () => {
     assert.ok(result.imageBlob instanceof Buffer);
   });
 
+  for (const theme of ["default", "compressed", "twitter"]) {
+    test(`escapes the handle drawn into the ${theme} card`, async () => {
+      const fetchSpy = mockFetch(async () => new Response(bodyBytes(pngBuffer), { status: 200 }));
+      const handle = '<iframe src="file:///proc/self/environ"></iframe>';
+      await generateQuestionImage("Hello", mockLogger(), handle, theme);
+      const { source } = JSON.parse(String(fetchSpy.mock.calls[0][1]?.body));
+      assert.ok(!source.includes("<iframe"));
+      assert.ok(source.includes("&lt;iframe"));
+    });
+  }
+
   test("returns empty object on HTTP 4xx response", async () => {
     mockFetch(async () => new Response("bad request", { status: 400 }));
     const result = await generateQuestionImage("Hello", mockLogger());
