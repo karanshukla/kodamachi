@@ -18,7 +18,7 @@ describe("Auth (Hono)", () => {
       db: {} as any,
       oauthClient: {
         clientMetadata: { client_id: "test-client" },
-        callback: mock(async () => ({ session: { did: "did:foo" } })),
+        callback: mock(async () => ({ session: { did: "did:foo" }, state: "state-1" })),
       } as any,
       idResolver: {
         did: {
@@ -33,7 +33,9 @@ describe("Auth (Hono)", () => {
 
   function makeService(overrides: any = {}) {
     const mocks = {
-      getOAuthRedirectUrl: mock(async () => "https://bsky.app/oauth"),
+      getOAuthRedirectUrl: mock(
+        async (_handle: string, _state: string) => "https://bsky.app/oauth"
+      ),
       revokeSession: mock(async (_did: string) => {}),
       checkSession: mock(async () => null),
       createOrConfirmUserProfile: mock(async () => {}),
@@ -67,6 +69,9 @@ describe("Auth (Hono)", () => {
     );
     return { app, service, notifications, ctx, headers: sessionHeader(opts.session ?? null) };
   }
+
+  const LOGIN_IN_PROGRESS: AppSessionData = { oauthState: "state-1" };
+  const SIGNED_IN: AppSessionData = { did: "did:foo" };
 
   const jsonHeaders = (h: Record<string, string>) => ({ ...h, "Content-Type": "application/json" });
 
@@ -116,6 +121,19 @@ describe("Auth (Hono)", () => {
       });
       const body = await res.json();
       assert.deepStrictEqual(body, { redirectUrl: "https://bsky.app/oauth" });
+    });
+
+    test("stores the OAuth state it starts the login with in the session cookie", async () => {
+      const { app, service, headers } = makeApp();
+      const res = await app.request("/login", {
+        method: "POST",
+        headers: jsonHeaders(headers),
+        body: JSON.stringify({ handle: "foo.bsky.social" }),
+      });
+      const state = service.getOAuthRedirectUrl.mock.calls[0][1];
+      assert.ok(state.length > 0);
+      const cookie = decodeURIComponent(res.headers.get("set-cookie") ?? "");
+      assert.ok(cookie.includes(`"oauthState":"${state}"`));
     });
 
     test("returns 500 when service throws", async () => {
@@ -447,7 +465,7 @@ describe("Auth (Hono)", () => {
 
   describe("GET /oauth/callback", () => {
     test("redirects with token on callback success", async () => {
-      const { app, headers } = makeApp();
+      const { app, headers } = makeApp({ session: LOGIN_IN_PROGRESS });
       const res = await app.request("/oauth/callback?code=abc&state=xyz", { headers });
       assert.strictEqual(res.status, 302);
       const location = res.headers.get("location") ?? "";
@@ -456,6 +474,7 @@ describe("Auth (Hono)", () => {
 
     test("still redirects with token when db profile creation throws", async () => {
       const { app, headers } = makeApp({
+        session: LOGIN_IN_PROGRESS,
         serviceOverride: {
           createOrConfirmUserProfile: mock(async () => {
             throw new Error("db error");
@@ -469,6 +488,7 @@ describe("Auth (Hono)", () => {
 
     test("redirects with error=server_config when encryptDid throws", async () => {
       const { app, headers } = makeApp({
+        session: LOGIN_IN_PROGRESS,
         serviceOverride: {
           encryptDid: mock(() => {
             throw new Error("no secret");
@@ -480,8 +500,31 @@ describe("Auth (Hono)", () => {
       assert.ok(location.includes("error=server_config"));
     });
 
+    test("rejects a callback whose state this browser did not start", async () => {
+      const { app, service, headers } = makeApp({ session: { oauthState: "state-2" } });
+      const res = await app.request("/oauth/callback?code=abc&state=xyz", { headers });
+      assert.ok((res.headers.get("location") ?? "").includes("error=oauth_failed"));
+      assert.strictEqual(res.headers.get("set-cookie"), null);
+      assert.strictEqual(service.encryptDid.mock.calls.length, 0);
+    });
+
+    test("rejects a callback when this browser has no login in progress", async () => {
+      const { app, headers } = makeApp({ session: null });
+      const res = await app.request("/oauth/callback?code=abc&state=xyz", { headers });
+      assert.ok((res.headers.get("location") ?? "").includes("error=oauth_failed"));
+    });
+
+    test("clears the OAuth state once the callback is accepted", async () => {
+      const { app, headers } = makeApp({ session: LOGIN_IN_PROGRESS });
+      const res = await app.request("/oauth/callback?code=abc&state=xyz", { headers });
+      const cookie = decodeURIComponent(res.headers.get("set-cookie") ?? "");
+      assert.ok(cookie.includes('"did":"did:foo"'));
+      assert.ok(!cookie.includes("oauthState"));
+    });
+
     test("redirects with error=oauth_failed when callback throws", async () => {
       const { app, headers } = makeApp({
+        session: LOGIN_IN_PROGRESS,
         ctxOverrides: {
           oauthClient: {
             clientMetadata: { client_id: "test-client" },
@@ -499,7 +542,7 @@ describe("Auth (Hono)", () => {
 
   describe("POST /oauth/consume", () => {
     test("returns 400 when oauth_token is missing", async () => {
-      const { app, headers } = makeApp();
+      const { app, headers } = makeApp({ session: SIGNED_IN });
       const res = await app.request("/oauth/consume", {
         method: "POST",
         headers: jsonHeaders(headers),
@@ -510,6 +553,7 @@ describe("Auth (Hono)", () => {
 
     test("returns 500 when decryptDid throws", async () => {
       const { app, headers } = makeApp({
+        session: SIGNED_IN,
         serviceOverride: {
           decryptDid: mock(() => {
             throw new Error("bad secret");
@@ -526,6 +570,7 @@ describe("Auth (Hono)", () => {
 
     test("returns 400 and sets no session when the token has expired", async () => {
       const { app, headers } = makeApp({
+        session: SIGNED_IN,
         serviceOverride: { decryptDid: mock(() => null) },
       });
       const res = await app.request("/oauth/consume", {
@@ -538,8 +583,21 @@ describe("Auth (Hono)", () => {
       assert.ok(!(res.headers.get("set-cookie") ?? "").includes("nf-session="));
     });
 
+    test("rejects a token for an account this browser did not sign in as", async () => {
+      const { app, service, headers } = makeApp({ session: { did: "did:bar" } });
+      const res = await app.request("/oauth/consume", {
+        method: "POST",
+        headers: jsonHeaders(headers),
+        body: JSON.stringify({ oauth_token: "token" }),
+      });
+      assert.strictEqual(res.status, 400);
+      assert.strictEqual((await res.json()).error, "INVALID_OAUTH_TOKEN");
+      assert.strictEqual(service.findUserByDid.mock.calls.length, 0);
+    });
+
     test("returns 404 when user not found", async () => {
       const { app, headers } = makeApp({
+        session: SIGNED_IN,
         serviceOverride: { findUserByDid: mock(async () => null) },
       });
       const res = await app.request("/oauth/consume", {
@@ -551,7 +609,7 @@ describe("Auth (Hono)", () => {
     });
 
     test("returns success and sets nf-region cookie based on PDS (bsky.social → us)", async () => {
-      const { app, headers } = makeApp();
+      const { app, headers } = makeApp({ session: SIGNED_IN });
       const res = await app.request("/oauth/consume", {
         method: "POST",
         headers: jsonHeaders(headers),
@@ -565,6 +623,7 @@ describe("Auth (Hono)", () => {
 
     test("sets eu cookie for non-bsky PDS", async () => {
       const { app, headers } = makeApp({
+        session: SIGNED_IN,
         ctxOverrides: {
           idResolver: {
             did: {
@@ -584,6 +643,7 @@ describe("Auth (Hono)", () => {
 
     test("returns success even when PDS resolution fails (no region cookie)", async () => {
       const { app, headers } = makeApp({
+        session: SIGNED_IN,
         ctxOverrides: {
           idResolver: {
             did: {
@@ -610,6 +670,7 @@ describe("Auth (Hono)", () => {
 
     test("returns 400 when findUserByDid throws", async () => {
       const { app, headers } = makeApp({
+        session: SIGNED_IN,
         serviceOverride: {
           findUserByDid: mock(async () => {
             throw new Error("db error");
