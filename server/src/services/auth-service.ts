@@ -25,13 +25,14 @@ export class AuthService {
   constructor(private ctx: AppContext) {}
   /* v8 ignore stop */
 
-  async getOAuthRedirectUrl(handle: string) {
+  async getOAuthRedirectUrl(handle: string, state: string) {
     if (typeof handle !== "string" || !isValidHandle(handle)) {
       throw new Error("invalid handle");
     }
     try {
       const url = await this.ctx.oauthClient.authorize(handle, {
         scope: OAUTH_SCOPE,
+        state,
       });
       return url.toString();
     } catch (err: unknown) {

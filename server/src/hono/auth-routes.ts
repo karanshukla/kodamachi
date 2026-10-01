@@ -1,3 +1,5 @@
+import { randomBytes } from "node:crypto";
+
 import { z } from "zod";
 import { Hono, type Context } from "hono";
 import { setCookie } from "hono/cookie";
@@ -46,7 +48,9 @@ export function createAuthHono(ctx: AppContext, deps: AuthDeps = {}): Hono {
     }
     try {
       ctx.logger.info({ handle }, "Starting OAuth authorize");
-      const redirectUrl = await service.getOAuthRedirectUrl(handle);
+      const oauthState = randomBytes(16).toString("base64url");
+      const redirectUrl = await service.getOAuthRedirectUrl(handle, oauthState);
+      await setSession(c, { ...getSession(c), oauthState });
       ctx.logger.info({ redirectUrl }, "OAuth authorize succeeded");
       return c.json({ redirectUrl });
     } catch (err: unknown) {
@@ -214,19 +218,32 @@ export function createAuthHono(ctx: AppContext, deps: AuthDeps = {}): Hono {
 
   app.get("/client-metadata.json", (c) => c.json(ctx.oauthClient.clientMetadata));
 
+  /**
+   * Completes only a login this browser started: `/login` stores the OAuth
+   * state in the session cookie, and `/oauth/consume` only confirms the DID
+   * this callback set.
+   *
+   * @see [auth-controller.test.ts](../tests/auth-controller.test.ts): "rejects
+   * a callback whose state this browser did not start" and "rejects a token
+   * for an account this browser did not sign in as".
+   */
   app.get("/oauth/callback", async (c) => {
     const params = new URLSearchParams(c.req.url.split("?")[1] ?? "");
     try {
       const callbackResult = await ctx.oauthClient.callback(params);
       const did = callbackResult.session.did;
+      const existing = getSession(c) ?? ({} as AppSessionData);
+      if (!callbackResult.state || callbackResult.state !== existing.oauthState) {
+        ctx.logger.warn({ did }, "OAuth callback state does not match this browser");
+        return c.redirect(`${env.CLIENT_URL}/login?error=oauth_failed`);
+      }
       try {
         await service.createOrConfirmUserProfile(did);
         ctx.logger.info({ did }, "User profile entry created or confirmed.");
       } catch (dbErr) {
         ctx.logger.error({ err: dbErr, did }, "Failed to create or confirm user profile entry.");
       }
-      const existing = getSession(c) ?? ({} as AppSessionData);
-      await setSession(c, { ...existing, did });
+      await setSession(c, { ...existing, did, oauthState: undefined });
       ctx.logger.info({ did }, "OAuth callback successful, session created");
       let token: string;
       try {
@@ -261,7 +278,7 @@ export function createAuthHono(ctx: AppContext, deps: AuthDeps = {}): Hono {
       ctx.logger.error("OAUTH_TOKEN_SECRET is not set");
       return c.json(errorBody("SERVER_MISCONFIGURED", "Server misconfiguration"), 500);
     }
-    if (!did) {
+    if (!did || did !== getSession(c)?.did) {
       return c.json(errorBody("INVALID_OAUTH_TOKEN", "Invalid or expired token"), 400);
     }
     try {
@@ -269,9 +286,7 @@ export function createAuthHono(ctx: AppContext, deps: AuthDeps = {}): Hono {
       if (!user) {
         return c.json(errorBody("USER_NOT_FOUND", "User not found"), 404);
       }
-      const existing = getSession(c) ?? ({} as AppSessionData);
-      await setSession(c, { ...existing, did });
-      ctx.logger.info({ did }, "Session set from oauth_token");
+      ctx.logger.info({ did }, "Session confirmed from oauth_token");
 
       // Non-fatal: without the hint Caddy falls back to the EU backend.
       try {
