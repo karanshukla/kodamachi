@@ -20,14 +20,20 @@ const localeTag = z.string().refine(isSupportedLocaleTag);
 
 const CUSTOM_PROMPT_MAX_LENGTH = 100;
 const DEFAULT_CLIENT_ID_MAX_LENGTH = 64;
+/**
+ * @see [settings-controller.test.ts](../tests/settings-controller.test.ts):
+ * "rejects an over-long image theme" and "rejects an over-long profile card
+ * theme".
+ */
+const THEME_ID_MAX_LENGTH = 32;
 
 const updateSchema = z.object({
   pdsSyncEnabled: z.boolean().optional(),
-  imageTheme: z.string().min(1).nullable().optional(),
+  imageTheme: z.string().min(1).max(THEME_ID_MAX_LENGTH).nullable().optional(),
   inboxEnabled: z.boolean().optional(),
   profanityFilterEnabled: z.boolean().optional(),
   customPrompt: z.string().max(CUSTOM_PROMPT_MAX_LENGTH).nullable().optional(),
-  profileCardTheme: z.string().nullable().optional(),
+  profileCardTheme: z.string().max(THEME_ID_MAX_LENGTH).nullable().optional(),
   touchpointLocale: localeTag.nullable().optional(),
   uiLocale: localeTag.nullable().optional(),
   /**
