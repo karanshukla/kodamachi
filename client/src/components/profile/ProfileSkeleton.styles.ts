@@ -9,5 +9,4 @@ export const body: CSSProperties = {
   position: "relative",
 };
 
-/** Same geometry as the real ask card, on the default fill. */
 export const askCard: CSSProperties = card(profileCardFill(null), false);

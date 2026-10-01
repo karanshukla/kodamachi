@@ -1,5 +1,4 @@
-// The harness registers this suite's module mocks, so it has to be imported
-// before anything that pulls in the modules it mocks.
+// Import the harness first: it registers this suite's module mocks.
 /* eslint-disable import/order */
 import {
   MESSAGES,
@@ -72,8 +71,7 @@ describe("Messages page — composing and posting a reply", () => {
   });
 
   it("pressing Enter while a response is already in flight does not submit again", async () => {
-    // The other side of the test above. A cold image render leaves the composer
-    // silent for seconds, and an unguarded Enter is how one reply became four.
+    // A cold image render leaves the composer silent for seconds; an unguarded Enter once sent four replies.
     const mockRespondMutate = vi.fn();
     setupMocks();
     mockUseRespondToMessage.mockReturnValue({
@@ -102,7 +100,6 @@ describe("Messages page — composing and posting a reply", () => {
     fireEvent.click(replyButtons.find((b) => b.textContent?.includes("↩"))!);
     await waitFor(() => screen.getByRole("textbox", { name: en.replyComposer.responseAriaLabel }));
 
-    // Click Reply without typing anything
     fireEvent.click(screen.getByRole("button", { name: en.replyComposer.reply }));
     await waitFor(() => {
       expect(screen.getByText(en.messagesPage.emptyResponseTitle)).toBeInTheDocument();
@@ -222,7 +219,6 @@ describe("Messages page — composing and posting a reply", () => {
     fireEvent.click(replyButtons.find((b) => b.textContent?.includes("↩"))!);
     await waitFor(() => screen.getByRole("textbox", { name: en.replyComposer.responseAriaLabel }));
 
-    // Fire Escape on the document (not the textarea) to hit the global keydown handler
     fireEvent.keyDown(document, { key: "Escape" });
     await waitFor(() => {
       expect(
@@ -238,13 +234,11 @@ describe("Messages page — composing and posting a reply", () => {
     const card = document.getElementById("message-card-msg-1");
     if (card) {
       fireEvent.focus(card);
-      // Enter when not expanded → expand
       fireEvent.keyDown(card, { key: "Enter" });
       await waitFor(() =>
         screen.getByRole("textbox", { name: en.replyComposer.responseAriaLabel })
       );
 
-      // Enter when expanded → collapse
       fireEvent.keyDown(card, { key: "Enter" });
       await waitFor(() => {
         expect(
@@ -267,12 +261,10 @@ describe("Messages page — composing and posting a reply", () => {
     setupMocks();
     renderWithProviders(<Messages />);
 
-    // Open reply via the "↩ Reply" button
     const replyButtons = screen.getAllByRole("button", { name: isReplyTriggerName });
     fireEvent.click(replyButtons.find((b) => b.textContent?.includes("↩"))!);
     await waitFor(() => screen.getByRole("textbox", { name: en.replyComposer.responseAriaLabel }));
 
-    // Click the message text to hit the card's onClick with isExpanded=true
     const msgText = screen.getByText("Hello?");
     fireEvent.click(msgText);
     await waitFor(() => {
@@ -294,18 +286,15 @@ describe("Messages page — composing and posting a reply", () => {
     } as any);
     renderWithProviders(<Messages />);
 
-    // Click the "↩ Reply" button (text button to open the response area)
     const replyButtons = screen.getAllByRole("button", { name: isReplyTriggerName });
     const openReplyBtn = replyButtons.find((b) => b.textContent?.includes("↩"));
     fireEvent.click(openReplyBtn!);
 
-    // Wait for the response textarea to appear
     await waitFor(() => screen.getByRole("textbox", { name: en.replyComposer.responseAriaLabel }));
     fireEvent.change(screen.getByRole("textbox", { name: en.replyComposer.responseAriaLabel }), {
       target: { value: "Great question!" },
     });
 
-    // Click the "Reply" send button (the gradient button inside the response box)
     const sendReplyBtn = screen.getByRole("button", { name: en.replyComposer.reply });
     fireEvent.click(sendReplyBtn);
     await waitFor(() => expect(mockRespondMutate).toHaveBeenCalled());
@@ -328,10 +317,8 @@ describe("Messages page — composing and posting a reply", () => {
     const collapsedBtn = replyBtns.find((b) => b.textContent?.includes("↩"))!;
     const boxDiv = collapsedBtn.parentElement!;
 
-    // Click the Box div directly — fires stopPropagation, Paper's onClick is NOT called
     fireEvent.click(boxDiv);
 
-    // Card should NOT expand (no textarea) since the click was stopped before Paper onClick
     expect(screen.queryByRole("textbox", { name: en.replyComposer.responseAriaLabel })).toBeNull();
   });
 
@@ -363,7 +350,7 @@ describe("Messages page — composing and posting a reply", () => {
       name: en.replyComposer.responseAriaLabel,
     });
 
-    const longText = "a".repeat(260); // > 90% of the default 277 char limit
+    const longText = "a".repeat(260);
     fireEvent.change(textarea, { target: { value: longText } });
 
     await waitFor(() => {
@@ -384,11 +371,8 @@ describe("Messages page — composing and posting a reply", () => {
     const realReplyBtn = screen.getAllByRole("button", { name: "↩ Reply" })[0];
     fireEvent.click(realReplyBtn);
     await screen.findByRole("textbox", { name: en.replyComposer.responseAriaLabel });
-    // With includeQuestionAsImage off, the question text is subtracted from the base 277 limit.
     expect(screen.queryByText(/^0\/277$/)).toBeNull();
 
-    // Simulate the message list refreshing without msg-1 while still "responding" to it
-    // (e.g. it was deleted from another tab, or a refetch raced the in-progress reply).
     mockUseMessages.mockReturnValue({
       data: { messages: [MESSAGES[1]] },
       isLoading: false,

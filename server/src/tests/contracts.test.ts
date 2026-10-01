@@ -7,11 +7,7 @@ import { LEXICON_NSID, OAUTH_SCOPE } from "../lib/contracts";
 
 const CLIENT_METADATA_PATH = join(import.meta.dir, "../../../client/public/client-metadata.json");
 
-/**
- * The literal below is deliberate. Composing OAUTH_SCOPE from its parts must
- * reproduce the string users are already authorized against — a stray space or
- * a reordered term is a silent logout for everyone.
- */
+// Literal on purpose: composing OAUTH_SCOPE must reproduce it exactly, or every user is silently logged out.
 const REGISTERED_SCOPE =
   "atproto repo:app.bsky.feed.post repo:app.navyfragen.message blob:image/* rpc:app.bsky.actor.getProfile?aud=* rpc:app.bsky.graph.getFollows?aud=*";
 

@@ -52,7 +52,6 @@ describe("Notifications (Hono)", () => {
     const res = await app.request("/notifications/vapid-public-key", {
       headers: { "x-test-session": "{not json" },
     });
-    // No session → still a public endpoint, returns 200 with the key.
     assert.strictEqual(res.status, 200);
   });
 

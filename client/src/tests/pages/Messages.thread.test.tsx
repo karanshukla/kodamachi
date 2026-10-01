@@ -1,5 +1,4 @@
-// The harness registers this suite's module mocks, so it has to be imported
-// before anything that pulls in the modules it mocks.
+// Import the harness first: it registers this suite's module mocks.
 /* eslint-disable import/order */
 import {
   mockUseDeleteMessage,
@@ -66,10 +65,8 @@ describe("Messages page — pinning and threaded replies", () => {
     fireEvent.click(pinBtn);
     await waitFor(() => screen.getByRole("button", { name: en.questionCard.unpinThreadRootLabel }));
 
-    // The card should have the pinned entry animation class briefly
     const card = document.getElementById("message-card-msg-1");
     expect(card).toBeInTheDocument();
-    // After the setTimeout(420ms) the class clears; just verifying the flow doesn't throw
     expect(document.body).toBeInTheDocument();
   });
 
@@ -107,7 +104,6 @@ describe("Messages page — pinning and threaded replies", () => {
     fireEvent.click(pinBtn);
     await waitFor(() => screen.getByRole("button", { name: en.questionCard.unpinThreadRootLabel }));
 
-    // Pinned message's delete button has a different aria-label; clicking it is a no-op
     const pinnedDeleteBtn = screen.getByRole("button", {
       name: en.questionCard.cannotDeleteThreadRootLabel,
     });
@@ -134,9 +130,7 @@ describe("Messages page — pinning and threaded replies", () => {
       expect(screen.getByRole("link", { name: /bsky\.app/i })).toBeInTheDocument();
     });
 
-    // Asserted rather than clicked: happy-dom follows a real https href, fetching
-    // bsky.app and its script bundles, and the async continuation has outlived
-    // the worker and taken a whole green run down with it.
+    // Asserted, not clicked: happy-dom follows real https hrefs, and the fetch outlived the worker and failed the run.
     const threadAnchor = screen.getByRole("link", { name: /bsky\.app/i });
     expect(threadAnchor).toHaveAttribute("href", "https://bsky.app/profile/user/post/abc");
     expect(threadAnchor).toHaveAttribute("target", "_blank");
@@ -158,7 +152,6 @@ describe("Messages page — pinning and threaded replies", () => {
 
     await waitFor(() => screen.getByRole("button", { name: en.questionCard.unpinThreadRootLabel }));
 
-    // Click the card itself (not the ↩ Reply button) to expand the pinned message
     const card = document.getElementById("message-card-msg-1")!;
     fireEvent.click(card);
     await waitFor(() => screen.getByRole("textbox", { name: en.replyComposer.responseAriaLabel }));
@@ -177,11 +170,9 @@ describe("Messages page — pinning and threaded replies", () => {
       });
     });
 
-    // Pinned message response shows "Response sent!" (not "Added to thread!" which is for replies-to-thread)
     await waitFor(() => {
       expect(screen.getByText(en.messagesPage.responseSentTitle)).toBeInTheDocument();
     });
-    // Verify localStorage threadLinks was updated
     const stored = JSON.parse(localStorage.getItem("threadLinks-did:example:1") || "{}");
     expect(stored["msg-1"]?.uri).toBe("at://did/app.bsky.feed.post/xyz");
   });
@@ -192,7 +183,7 @@ describe("Messages page — pinning and threaded replies", () => {
       "threadLinks-did:example:1",
       JSON.stringify({ "ghost-tid": { uri: "at://x", cid: "y" } })
     );
-    setupMocks(); // MESSAGES contains only msg-1 / msg-2, not "ghost-tid"
+    setupMocks();
     renderWithProviders(<Messages />);
 
     await waitFor(() => {
@@ -222,7 +213,6 @@ describe("Messages page — pinning and threaded replies", () => {
     renderWithProviders(<Messages />);
     await act(async () => {});
 
-    // msg-1 is not the root, and threadLinks["msg-2"] has a uri/cid, so it's unblocked.
     const replyBtn = screen.getByRole("button", { name: en.questionCard.replyToThread });
     fireEvent.click(replyBtn);
     await screen.findByRole("textbox", { name: en.replyComposer.responseAriaLabel });
@@ -284,7 +274,6 @@ describe("Messages page — pinning and threaded replies", () => {
 
   it("the expanded send button is disabled when the thread root has no link yet (blocked)", async () => {
     localStorage.setItem("threadRootTid-did:example:1", JSON.stringify("msg-2"));
-    // No threadLinks entry for msg-2 → responding to msg-1 is blocked.
     const mockRespondMutate = vi.fn();
     setupMocks();
     mockUseRespondToMessage.mockReturnValue({
@@ -294,8 +283,7 @@ describe("Messages page — pinning and threaded replies", () => {
     renderWithProviders(<Messages />);
     await act(async () => {});
 
-    // Click the card body directly (not the small Reply button, which itself blocks opening)
-    // to get into the expanded/blocked state and exercise the Send button's disabled branch.
+    // Click the card body: the Reply button itself blocks opening.
     const card = document.getElementById("message-card-msg-1")!;
     fireEvent.click(card);
     await screen.findByRole("textbox", { name: en.replyComposer.responseAriaLabel });

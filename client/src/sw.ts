@@ -40,7 +40,6 @@ registerRoute(({ url }) => {
   return networkOnlyUrls.some((p) => url.pathname.startsWith(p));
 }, new NetworkFirst());
 
-// Network-first, falling back to the precached app shell when offline.
 const navigationRoute = new NavigationRoute(
   new NetworkFirst({
     cacheName: CACHE_STATIC,
@@ -62,9 +61,7 @@ const APP_BADGE = "/favicon-32x32.png";
 self.addEventListener("push", (event) => {
   let data: PushPayload = {
     title: APP_NAME,
-    // A push payload carries a server-localized body (#405); this default
-    // only covers one that failed to parse. A service worker has neither the
-    // React context nor localStorage, so it cannot resolve `uiLocale` itself.
+    // Fallback for an unparseable payload; a service worker cannot resolve `uiLocale`.
     body: "You have a new update" /* i18n-allow */,
     url: "/messages",
   };

@@ -110,9 +110,6 @@ describe("template literals as prose candidates", () => {
     assert.match(failures[0], /Foo\.tsx:1/);
   });
 
-  // The blind spot #402's review caught: interpolation *first* means there is
-  // no leading static char to test "starts uppercase" against, so only the
-  // "contains a space" half of the heuristic catches it — and it must.
   test("flags a template literal whose prose follows a leading interpolation", () => {
     const failures = failuresFor(
       "Settings.tsx",
@@ -130,8 +127,7 @@ describe("template literals as prose candidates", () => {
   });
 
   test("reduces a template literal to its static text before testing, ignoring the expression source", () => {
-    // The interpolated expression contains a space and looks prose-shaped,
-    // but it is code, not copy — only "px, " (the static text) should count.
+    // Only the static text counts, not the expression source.
     const failures = failuresFor(
       "Foo.tsx",
       "el.style.transform = `translate(${state.x + offset}px)`;\n"
@@ -153,8 +149,6 @@ describe("template literals as prose candidates", () => {
   });
 
   test("captures the attribute name through JSX's `attr={` + backtick wrapping", () => {
-    // JSX never allows a bare backtick as an attribute value — it is always
-    // `attr={\`...\`}` — so the name-capture has to see through the `{`.
     const failures = failuresFor(
       "CharRing.tsx",
       "<svg viewBox={`0 0 ${SIZE} ${SIZE}`} transform={`rotate(-90 ${C} ${C})`} />;\n"
@@ -353,8 +347,6 @@ describe("stripComments", () => {
       "Foo.tsx",
       `const url = "https://example.test/path";\nconst title = "Not logged in";\n`
     );
-    // The URL line has no space, so it is not prose-shaped and stays clean —
-    // but stripComments must not eat line 2 just because line 1 contains "//".
     assert.strictEqual(failures.length, 1);
     assert.ok(failures[0].includes(":2:"));
     assert.ok(failures[0].includes("Not logged in"));

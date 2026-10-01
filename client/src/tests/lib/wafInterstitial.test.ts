@@ -6,10 +6,8 @@ const ORIGIN = "https://navyfragen.app";
 const CHALLENGE_TYPE = "text/html; charset=utf-8";
 
 describe("isWafInterstitial", () => {
-  // The pair that matters: on 2026-08-11 Anubis answered a precache fetch for
-  // /assets/index-DeIhOTij.js with 200 text/html, and workbox cached the
-  // challenge page as the app bundle. A navigation getting HTML is the normal
-  // case and must stay cacheable.
+  // 2026-08-11: Anubis answered a precache fetch of the JS bundle with 200 text/html and workbox cached it.
+  // A navigation getting HTML is normal and must stay cacheable.
   it("rejects an HTML body served for an asset URL", () => {
     expect(isWafInterstitial(`${ORIGIN}/assets/index-DeIhOTij.js`, CHALLENGE_TYPE)).toBe(true);
   });

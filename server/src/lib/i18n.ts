@@ -1,15 +1,8 @@
 /**
- * Server-side catalog for the strings built with no browser in the loop: push
- * notification title/body and the seeded example questions. Distinct from the
- * client's `Messages` catalog (`client/src/lib/i18n/`) — zero overlapping
- * keys, different lifecycles, so this is a standalone module rather than a
- * shared package. Keyed off `uiLocale` (the account owner's own language),
- * never `touchpointLocale` (the owner's audience) — both push and the seeded
- * questions are read by the owner, not their audience.
- *
- * Ships `en`, `es`, `pt`, `de`, and `fr`. Adding a locale is one object below
- * plus one entry in `CATALOGS`; nothing else in this module (or its callers)
- * changes.
+ * Server-side catalog for strings built with no browser: push notification
+ * title/body and seeded example questions. Separate from the client's catalog
+ * (`client/src/lib/i18n/`); no shared keys. Keyed off `uiLocale`, never
+ * `touchpointLocale`: the owner reads both, not their audience.
  */
 import { APP_NAME } from "./brand";
 
@@ -116,22 +109,15 @@ const fr = {
 
 const CATALOGS: Record<ServerLocale, ServerMessages> = { en, es, pt, de, fr };
 
-/**
- * The primary subtag, lowercased: the part of a BCP-47 tag that picks the
- * words. `es-419` and `ES` both reduce to `es`.
- */
+/** The lowercased primary subtag: `es-419` and `ES` both reduce to `es`. */
 function primarySubtag(tag: string): string {
   return tag.split("-")[0].toLowerCase();
 }
 
 /**
- * Whether `value` is a well-formed BCP-47 tag whose primary subtag has a
- * catalog — the check the `/settings` route runs before persisting a locale,
- * so a stored `uiLocale`/`touchpointLocale` is always something every reader
- * of it (this module, the client's `Intl` formatters, the Go OG service) can
- * accept. Well-formedness is `Intl.getCanonicalLocales`' answer rather than a
- * regex of our own: it is the same grammar the formatters themselves throw
- * `RangeError` on.
+ * Whether `value` is a well-formed BCP-47 tag with a catalog. Run before
+ * persisting, so every reader (this module, client `Intl`, the Go OG service)
+ * accepts what is stored.
  *
  * @see [i18n.test.ts](../tests/i18n.test.ts) — pins the regional-variant,
  * malformed-tag, and unsupported-language cases.
@@ -146,16 +132,9 @@ export function isSupportedLocaleTag(value: string): boolean {
 }
 
 /**
- * Falls back to `en` for an unset, unrecognized, or not-yet-shipped locale —
- * the same "fall back rather than widen" contract as the client's
- * `loadCatalog`, and matched on the primary subtag for the same reason, so a
- * regional variant reads its language's catalog instead of English.
- *
- * `Object.hasOwn`, not `in`: `in` answers true for every name on
- * `Object.prototype`, so a locale of `toString` or `__proto__` would return a
- * prototype member typed as a catalog and every caller would throw on the
- * first property read. Never throws: a caller with a bad or missing locale
- * string still gets a full catalog.
+ * Falls back to `en` for an unset or unsupported locale; matches the primary
+ * subtag. Never throws. `Object.hasOwn`, not `in`, so `toString` or
+ * `__proto__` cannot return a prototype member.
  *
  * @see [i18n.test.ts](../tests/i18n.test.ts) — pins the prototype-key and
  * regional-variant cases alongside the plain fallback.

@@ -1,16 +1,10 @@
 /**
- * Sourced by machine-translating the English `obscenity` dataset into each
- * language and keeping only what survived back-translation and a
- * cross-language collision review (#412). Words a reviewer could not call
- * confidently are recorded on the issue rather than shipped: the filter drops
- * a flagged message silently, so a false positive is invisible censorship
- * while a false negative merely lets a rude message through.
+ * Machine-translated from the English `obscenity` dataset, keeping only what
+ * survived back-translation and a collision review. Uncertain words are left
+ * out: a false positive is silent censorship, a false negative is harmless.
  *
- * Entries are stems, not dictionary forms — the matcher anchors on the left
- * and stays open on the right, so `puta` covers `putas` and `fick` covers
- * `ficken`. `boundedEnd` closes the right side for a stem that is also the
- * prefix of an ordinary word, and applies in every language once any language
- * needs it.
+ * Entries are stems, open on the right (`puta` covers `putas`). `boundedEnd`
+ * closes the right side for a stem that prefixes an ordinary word.
  *
  * @see [profanity.test.ts](../tests/profanity.test.ts) — every entry matches
  * itself, and no entry fires on the ordinary-sentence corpus.
@@ -135,11 +129,7 @@ export const profaneWordsByLanguage: Readonly<
   ],
 };
 
-/**
- * Ordinary words that contain a listed stem, or that the English dataset
- * matches by accident. `obscenity` gives the whitelist priority over the
- * blacklist, so these keep their meaning without narrowing any stem.
- */
+/** Ordinary words containing a listed stem; the whitelist outranks the blacklist. */
 export const ordinaryWordsToNeverFlag: readonly string[] = [
   "abo",
   "anale",

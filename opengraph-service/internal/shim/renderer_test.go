@@ -10,8 +10,6 @@ import (
 	"time"
 )
 
-// wakeServer answers the first failCount requests with status, then serves the
-// PNG — the shape of a Railway service coming out of sleep.
 func wakeServer(t *testing.T, status int, failCount int32, png string) (*httptest.Server, *int32) {
 	t.Helper()
 	var calls int32
@@ -36,9 +34,6 @@ func newTestRenderer(url string, timeout time.Duration) *HTMLToImageRenderer {
 }
 
 func TestRenderRetriesWakeStatuses(t *testing.T) {
-	// Railway's edge answers 502 while the container is still waking, and the
-	// image service answers 503 while Chromium is still launching. Neither means
-	// the render is impossible.
 	for _, status := range []int{http.StatusRequestTimeout, http.StatusBadGateway, http.StatusServiceUnavailable, http.StatusGatewayTimeout} {
 		srv, calls := wakeServer(t, status, 2, "PNGDATA")
 		r := newTestRenderer(srv.URL, 10*time.Second)
@@ -57,8 +52,6 @@ func TestRenderRetriesWakeStatuses(t *testing.T) {
 }
 
 func TestRenderDoesNotRetryClientErrors(t *testing.T) {
-	// A rejected payload fails identically on every attempt; retrying only burns
-	// the deadline.
 	for _, status := range []int{http.StatusBadRequest, http.StatusUnsupportedMediaType, http.StatusTooManyRequests} {
 		srv, calls := wakeServer(t, status, 100, "")
 		r := newTestRenderer(srv.URL, 5*time.Second)
@@ -76,7 +69,7 @@ func TestRenderDoesNotRetryClientErrors(t *testing.T) {
 func TestRenderRetriesNetworkErrors(t *testing.T) {
 	srv, _ := wakeServer(t, http.StatusOK, 0, "PNGDATA")
 	dead := srv.URL
-	srv.Close() // nothing is listening — every dial fails
+	srv.Close()
 
 	r := newTestRenderer(dead, 1500*time.Millisecond)
 	start := time.Now()
@@ -107,9 +100,6 @@ func TestRenderGivesUpAfterDeadlineOnPersistentWakeStatus(t *testing.T) {
 }
 
 func TestRenderPerAttemptTimeoutLeavesBudgetForRetry(t *testing.T) {
-	// The first attempt hangs. With a client timeout equal to the overall
-	// deadline it would swallow the entire budget; a per-attempt bound must cut
-	// it loose in time for the retry that succeeds.
 	var calls int32
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if atomic.AddInt32(&calls, 1) == 1 {
@@ -150,7 +140,6 @@ func TestRenderStopsOnContextCancel(t *testing.T) {
 	if !errors.Is(err, ErrRenderFailed) {
 		t.Fatalf("expected ErrRenderFailed, got %v", err)
 	}
-	// Must abandon the loop on cancellation rather than sleeping out the 30s.
 	if elapsed := time.Since(start); elapsed > 5*time.Second {
 		t.Fatalf("cancellation ignored, took %v", elapsed)
 	}
@@ -174,8 +163,6 @@ func TestNewHTMLToImageRendererDefaults(t *testing.T) {
 	if r.Timeout != 30*time.Second {
 		t.Fatalf("unexpected default timeout %v", r.Timeout)
 	}
-	// A client-level timeout would bound the whole retry loop instead of one
-	// attempt, which is the bug the per-attempt deadline replaces.
 	if r.Client.Timeout != 0 {
 		t.Fatalf("client timeout must stay unset, got %v", r.Client.Timeout)
 	}
@@ -183,7 +170,6 @@ func TestNewHTMLToImageRendererDefaults(t *testing.T) {
 		t.Fatalf("attempt timeout %v must be positive and within the overall budget", r.AttemptTimeout)
 	}
 
-	// A short overall budget must clamp the per-attempt bound, not exceed it.
 	short := NewHTMLToImageRenderer("http://x/", 2*time.Second)
 	if short.AttemptTimeout != 2*time.Second {
 		t.Fatalf("expected attempt timeout clamped to 2s, got %v", short.AttemptTimeout)
@@ -195,7 +181,7 @@ func TestRender_AlreadyCanceledContext_FailsImmediately(t *testing.T) {
 	r := newTestRenderer(srv.URL, 5*time.Second)
 
 	ctx, cancel := context.WithCancel(context.Background())
-	cancel() // canceled before Render is ever called
+	cancel()
 
 	_, err := r.Render(ctx, "<h1>hi</h1>")
 	if !errors.Is(err, ErrRenderFailed) {
@@ -219,8 +205,6 @@ func TestAttempt_MalformedURL_ReturnsError(t *testing.T) {
 	}
 }
 
-// errorReadCloser fails on Read after the headers are already sent, simulating
-// a connection that dies mid-body (a transient wake-adjacent failure).
 type errorReadCloser struct{}
 
 func (errorReadCloser) Read([]byte) (int, error) { return 0, errors.New("connection reset") }
@@ -259,8 +243,6 @@ func TestAttemptTimeout_FallsBackToDefaultWhenUnset(t *testing.T) {
 }
 
 func TestRender_ZeroWaitBudgetBreaksRetryLoop(t *testing.T) {
-	// A deadline that expires between a retryable failure and the backoff sleep
-	// must break the loop (wait <= 0) rather than sleep past its own budget.
 	srv, calls := wakeServer(t, http.StatusBadGateway, 1000, "")
 	r := newTestRenderer(srv.URL, 50*time.Millisecond)
 	r.AttemptTimeout = 40 * time.Millisecond

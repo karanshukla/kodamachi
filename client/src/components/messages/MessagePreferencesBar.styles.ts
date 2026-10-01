@@ -59,7 +59,6 @@ export const chipMark = (on: boolean): CSSProperties =>
         border: `1.5px solid ${borderColor}`,
       };
 
-/** The image chip: one shell, a toggle half and a theme half. */
 export const splitChip = (on: boolean): CSSProperties => ({
   ...chipShell(on),
   display: "inline-flex",

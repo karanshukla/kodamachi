@@ -1,7 +1,6 @@
 import { WAYPOINT_ICONS } from "@aturi.to/waypoints-react";
 import type { ReactNode } from "react";
 
-/** One app as the server resolved it: already named and already addressed. */
 export interface AtmosphereAppLink {
   id: string;
   name: string;
@@ -9,7 +8,6 @@ export interface AtmosphereAppLink {
 }
 
 export interface AtmosphereApp extends AtmosphereAppLink {
-  /** The catalog's brand mark, or null for an app it does not carry. */
   icon: ReactNode | null;
 }
 

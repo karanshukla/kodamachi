@@ -31,7 +31,6 @@ func TestClassify_BrowserOnProfilePath_Proxies(t *testing.T) {
 }
 
 func TestClassify_CardybAsSubstring_Generates(t *testing.T) {
-	// Real crawlers append version info. Match on substring, not equality.
 	if got := Classify("Bluesky Cardyb/1.2 (like Googlebot)", "/profile/foo"); got != DecisionGenerate {
 		t.Fatalf("Cardyb+version = %v, want DecisionGenerate", got)
 	}
@@ -68,17 +67,12 @@ func TestProfileHandle_BareProfileRoute_Empty(t *testing.T) {
 }
 
 func TestProfileHandle_NestedPath_Empty(t *testing.T) {
-	// /profile/a/b is not a single handle; must not match.
 	if got := ProfileHandle("/profile/a/b"); got != "" {
 		t.Fatalf("got %q, want empty", got)
 	}
 }
 
 func TestProfileHandle_TrailingSlashOnlyBecomesEmptyAfterTrim(t *testing.T) {
-	// TrimPrefix leaves a non-empty "/" (so the earlier rest=="" check doesn't
-	// fire); TrimSuffix("/") then collapses it to "", which must still be
-	// rejected as "no handle" rather than falling through to the nested-path
-	// check with an empty string.
 	if got := ProfileHandle("/profile//"); got != "" {
 		t.Fatalf("got %q, want empty", got)
 	}
@@ -141,10 +135,6 @@ func TestParseTTL_NonPositive_FallsBack(t *testing.T) {
 	}
 }
 
-// These are the acceptance criteria for "sensible fallbacks when banner/avatar
-// are unset." Each variation must produce valid HTML that names the OG size and
-// does NOT contain an empty src attribute that would break the renderer.
-
 func TestBuildOGTemplate_BothSet(t *testing.T) {
 	html := BuildOGTemplate(OGInput{
 		DisplayName: "Alice",
@@ -157,8 +147,8 @@ func TestBuildOGTemplate_BothSet(t *testing.T) {
 	mustContain(t, html, "https://cdn.bsky.app/banner.jpg")
 	mustContain(t, html, "https://cdn.bsky.app/avatar.jpg")
 	mustContain(t, html, "Ask me anything")
-	mustContain(t, html, "1200") // width
-	mustContain(t, html, "630")  // height
+	mustContain(t, html, "1200")
+	mustContain(t, html, "630")
 	mustNotContain(t, html, `src=""`)
 }
 
@@ -166,14 +156,14 @@ func TestBuildOGTemplate_BannerEmpty(t *testing.T) {
 	html := BuildOGTemplate(OGInput{
 		DisplayName: "Bob",
 		Handle:      "bob.bsky.social",
-		Banner:      "", // fallback bg expected
+		Banner:      "",
 		Avatar:      "https://cdn.bsky.app/avatar.jpg",
 		Prompt:      "p",
 	})
 	mustContain(t, html, "bob.bsky.social")
-	mustNotContain(t, html, `url()`)                // no empty CSS url()
-	mustNotContain(t, html, `src=""`)               // no empty img src
-	mustContain(t, html, "background: "+ogFillNavy) // navy fallback bg
+	mustNotContain(t, html, `url()`)
+	mustNotContain(t, html, `src=""`)
+	mustContain(t, html, "background: "+ogFillNavy)
 }
 
 func TestBuildOGTemplate_AvatarEmpty(t *testing.T) {
@@ -181,12 +171,11 @@ func TestBuildOGTemplate_AvatarEmpty(t *testing.T) {
 		DisplayName: "Carol",
 		Handle:      "carol.bsky.social",
 		Banner:      "https://cdn.bsky.app/banner.jpg",
-		Avatar:      "", // fallback glyph expected
+		Avatar:      "",
 		Prompt:      "p",
 	})
 	mustContain(t, html, "carol.bsky.social")
 	mustNotContain(t, html, `src=""`)
-	// Avatar fallback = first letter of display name as a glyph.
 	mustContain(t, html, "C")
 }
 
@@ -202,7 +191,7 @@ func TestBuildOGTemplate_BothEmpty(t *testing.T) {
 	mustNotContain(t, html, `url()`)
 	mustNotContain(t, html, `src=""`)
 	mustContain(t, html, "background: "+ogFillNavy)
-	mustContain(t, html, "D") // glyph
+	mustContain(t, html, "D")
 }
 
 func TestBuildOGTemplate_EmptyDisplayName_UsesHandleForGlyph(t *testing.T) {
@@ -213,7 +202,7 @@ func TestBuildOGTemplate_EmptyDisplayName_UsesHandleForGlyph(t *testing.T) {
 		Prompt:      "p",
 	})
 	mustContain(t, html, "eve.bsky.social")
-	mustContain(t, html, "e") // glyph falls back to first letter of handle
+	mustContain(t, html, "e")
 }
 
 func TestBuildOGTemplate_PromptHTMLEscaped(t *testing.T) {

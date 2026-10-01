@@ -1,10 +1,4 @@
-/**
- * Shared setup for the Messages page suites, which are split by feature —
- * `Messages.test.tsx` (page shell), `.reply`, `.delete`, `.thread`, and
- * `.questionImage`. The module mocks live here because a `vi.mock` call in an
- * imported module still registers for the test file that imported it, so each
- * suite gets the same fakes without restating them.
- */
+/** Shared setup for the Messages suites. A `vi.mock` in an imported module still registers for the importing test file. */
 import { notifications } from "@mantine/notifications";
 import { screen, fireEvent, waitFor } from "@testing-library/react";
 import { expect, vi } from "vitest";
@@ -56,23 +50,13 @@ export const mockUseRenderStatus = vi.mocked(messageService.useRenderStatus);
 
 export const RENDER_ID = "render-abc";
 
-/**
- * getAllByRole name matcher for a QuestionCard's own reply-trigger button --
- * matches both catalog labels ("reply" vs "reply to thread", pinned vs not)
- * rather than English text, so it survives a locale switch.
- */
+/** Name matcher for a QuestionCard's reply trigger: both catalog labels ("reply", "reply to thread"). */
 export const isReplyTriggerName = (name: string) =>
   name === en.questionCard.reply || name === en.questionCard.replyToThread;
 
 /**
- * The render pipeline stands in for a server that answers instantly: the start
- * mutation hands back a key synchronously and the poll reports it ready, so a
- * send that queues on the render still lands in the same act() flush. Tests that
- * care about the wait drive `render.poll` themselves, keyed by attempt the way
- * the real poll is.
- *
- * Held on one object rather than as loose `let`s so a suite can reassign them
- * across the module boundary.
+ * Fake render pipeline that answers instantly (ready on the first poll); tests that care about the wait
+ * drive `render.poll` by attempt. One object so suites can reassign across the module boundary.
  */
 export const render: {
   poll: (attempt: number) => { status: string; error?: string } | undefined;
@@ -160,8 +144,7 @@ export function resetMessagesPage() {
   vi.clearAllMocks();
   localStorage.clear();
   notifications.clean();
-  // The inbox card's OG warm is the page's only same-origin fetch; left real
-  // it dials localhost from every test that copies or shares the link.
+  // The inbox card's OG warm is the page's only same-origin fetch; real, it dials localhost.
   vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(null, { status: 202 })));
   render.poll = () => ({ status: "ready" });
   render.startFails = false;
@@ -186,11 +169,7 @@ export async function typeAndSend(text = "My answer!") {
   fireEvent.click(screen.getByRole("button", { name: en.replyComposer.reply }));
 }
 
-/**
- * Opens msg-1's composer, types a reply and sends it, leaving the send queued
- * on a render that never settles. Returns the textarea so a test can force the
- * re-render that a settled poll would otherwise arrive on.
- */
+/** Opens msg-1's composer and sends a reply that stays queued on a render that never settles; returns the textarea. */
 export async function queueSendOnAStuckRender(
   respondMutate: ReturnType<typeof vi.fn>,
   deleteMutate?: ReturnType<typeof vi.fn>
@@ -216,11 +195,7 @@ export async function queueSendOnAStuckRender(
   return textarea;
 }
 
-/**
- * Flips a posting preference the way a reader does now: the switches live behind
- * the preferences bar's button rather than on the page, so the panel has to be
- * opened and shut around the click.
- */
+/** Flips a posting preference; the switches live behind the preferences bar's button. */
 export async function togglePreference(label: string) {
   const openPanel = () =>
     fireEvent.click(screen.getByRole("button", { name: en.preferencesBar.open }));

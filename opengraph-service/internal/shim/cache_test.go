@@ -50,7 +50,6 @@ func TestFileCache_ExpiredEntry_TreatedAsMiss(t *testing.T) {
 	if err := c.Store("did:plc:abc", []byte("PNGDATA"), "image/png"); err != nil {
 		t.Fatalf("store: %v", err)
 	}
-	// Backdate the entry past TTL by rewriting mtime.
 	pngPath := filepath.Join(c.dir, "did-plc-abc.png")
 	past := time.Now().Add(-2 * time.Hour)
 	if err := os.Chtimes(pngPath, past, past); err != nil {
@@ -71,7 +70,6 @@ func TestFileCache_PersistsAcrossReopen(t *testing.T) {
 		t.Fatalf("store: %v", err)
 	}
 
-	// Simulate a restart: a new FileCache pointed at the same dir must see it.
 	c2, err := NewFileCache(dir, 100, time.Hour)
 	if err != nil {
 		t.Fatalf("reopen: %v", err)
@@ -87,14 +85,11 @@ func TestFileCache_PersistsAcrossReopen(t *testing.T) {
 
 func TestFileCache_LRU_EvictsOldest(t *testing.T) {
 	c := newTestCache(t, 2, time.Hour)
-	// Fill to capacity.
 	mustStore(t, c, "did:plc:a", "A")
 	mustStore(t, c, "did:plc:b", "B")
-	// Touch "a" so "b" becomes least-recently-used.
 	if _, err := c.Load("did:plc:a"); err != nil {
 		t.Fatalf("load a: %v", err)
 	}
-	// Insert "c" — this exceeds capacity and must evict the LRU ("b").
 	mustStore(t, c, "did:plc:c", "C")
 	if _, err := c.Load("did:plc:a"); err != nil {
 		t.Fatalf("a should still be present (was touched), got %v", err)
@@ -108,8 +103,6 @@ func TestFileCache_LRU_EvictsOldest(t *testing.T) {
 }
 
 func TestFileCache_LRUBoundTriggersActualEvictionAtCapacity(t *testing.T) {
-	// Inserting the (capacity+1)th entry must reduce on-disk count back to
-	// capacity — the eviction is eager, not lazy.
 	c := newTestCache(t, 3, time.Hour)
 	for _, k := range []string{"did:plc:1", "did:plc:2", "did:plc:3", "did:plc:4"} {
 		mustStore(t, c, k, "x")
@@ -121,7 +114,6 @@ func TestFileCache_LRUBoundTriggersActualEvictionAtCapacity(t *testing.T) {
 			pngCount++
 		}
 	}
-	// Each entry has 1 PNG + 1 sidecar meta, so total files = capacity * 2.
 	if pngCount != 6 {
 		t.Fatalf("expected 6 files (3 entries x 2 files), got %d", pngCount)
 	}
@@ -134,8 +126,6 @@ func mustStore(t *testing.T, c *FileCache, did, payload string) {
 	}
 }
 
-// Reading an entry must not extend its TTL, or a profile popular enough to be
-// read once per window would never pick up a banner/avatar edit.
 func TestFileCache_LoadDoesNotRefreshTTL(t *testing.T) {
 	c := newTestCache(t, 100, time.Hour)
 	if err := c.Store("did:plc:ttl", []byte("X"), "image/png"); err != nil {
@@ -147,15 +137,11 @@ func TestFileCache_LoadDoesNotRefreshTTL(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Simulate the .png mtime being just inside TTL at generation time by
-	// backdating it close to the TTL edge. The .png must stay there across
-	// many Load calls — Load must NOT refresh it.
-	nearExpiry := time.Now().Add(-55 * time.Minute) // TTL is 1h, so 5m of life left
+	nearExpiry := time.Now().Add(-55 * time.Minute)
 	if err := os.Chtimes(pngPath, nearExpiry, nearExpiry); err != nil {
 		t.Fatal(err)
 	}
 
-	// Many generate-path hits (a popular profile).
 	for i := 0; i < 50; i++ {
 		if _, err := c.Load("did:plc:ttl"); err != nil {
 			t.Fatalf("load %d: %v", i, err)
@@ -170,31 +156,23 @@ func TestFileCache_LoadDoesNotRefreshTTL(t *testing.T) {
 		t.Fatalf("Load refreshed the TTL clock: .png mtime moved from %v to %v (expected unchanged)",
 			nearExpiry, gotMod.ModTime())
 	}
-	// Sanity: the store-time mtime we captured above should still be later than
-	// the backdated nearExpiry, confirming we are asserting against a real
-	// change, not a no-op.
 	if !gotMod.ModTime().Before(storeMod.ModTime()) {
 		t.Fatalf("test setup invariant: backdated mtime %v should be before store mtime %v",
 			gotMod.ModTime(), storeMod.ModTime())
 	}
 }
 
-// The serve path must participate in LRU ordering, or a heavily-served image
-// gets evicted as "least recently used".
 func TestFileCache_LoadByPathUpdatesLRURecency(t *testing.T) {
 	c := newTestCache(t, 2, time.Hour)
 	mustStore(t, c, "did:plc:a", "A")
 	mustStore(t, c, "did:plc:b", "B")
 
-	// Serve "b" many times via LoadByPath — the route real crawlers hit.
 	p := c.pngPath("did:plc:b")
 	for i := 0; i < 10; i++ {
 		if _, err := c.LoadByPath(p); err != nil {
 			t.Fatalf("loadbypath %d: %v", i, err)
 		}
 	}
-	// "a" is untouched since store; "b" was just served repeatedly. Inserting
-	// "c" exceeds capacity and must evict the LRU, which is "a" (not "b").
 	mustStore(t, c, "did:plc:c", "C")
 	if _, err := c.Load("did:plc:b"); err != nil {
 		t.Fatalf("heavily-served b should be retained, got %v", err)
@@ -204,7 +182,6 @@ func TestFileCache_LoadByPathUpdatesLRURecency(t *testing.T) {
 	}
 }
 
-// The serve-path counterpart: serving an image must not extend its TTL.
 func TestFileCache_LoadByPathDoesNotRefreshTTL(t *testing.T) {
 	c := newTestCache(t, 100, time.Hour)
 	mustStore(t, c, "did:plc:x", "X")
@@ -227,13 +204,6 @@ func TestFileCache_LoadByPathDoesNotRefreshTTL(t *testing.T) {
 	}
 }
 
-// TestFileCache_StoreIsAtomic pins the atomic-store invariant: a concurrent
-// reader (Load / LoadByPath) never observes a truncated or partially-written
-// .png. Store writes to a temp file and renames; a reader either sees the
-// previous complete entry or the new complete entry, never a half-written one.
-// We assert the load-bearing property: after Store, the .png on disk is
-// byte-for-byte what was stored (no torn write), and a re-Store over an
-// existing entry leaves a consistent file.
 func TestFileCache_StoreOverwritesAtomically(t *testing.T) {
 	c := newTestCache(t, 100, time.Hour)
 	first := bytes.Repeat([]byte{0x01}, 4096)
@@ -241,7 +211,6 @@ func TestFileCache_StoreOverwritesAtomically(t *testing.T) {
 	if err := c.Store("did:plc:atom", first, "image/png"); err != nil {
 		t.Fatal(err)
 	}
-	// Overwrite with different content.
 	if err := c.Store("did:plc:atom", second, "image/png"); err != nil {
 		t.Fatal(err)
 	}
@@ -253,7 +222,6 @@ func TestFileCache_StoreOverwritesAtomically(t *testing.T) {
 		t.Fatalf("atomic overwrite failed: got %d bytes of value %d, want %d bytes of value %d",
 			len(got.Bytes), got.Bytes[0], len(second), second[0])
 	}
-	// No leftover temp files in the cache dir.
 	entries, _ := os.ReadDir(c.dir)
 	for _, e := range entries {
 		if strings.HasPrefix(e.Name(), ".tmp-") {
@@ -466,8 +434,6 @@ func TestFileCache_EvictIfNeeded_ReadDirFailureIsNoop(t *testing.T) {
 	if err := os.RemoveAll(c.dir); err != nil {
 		t.Fatal(err)
 	}
-	// Must not panic when the cache directory itself has been removed out from
-	// under it.
 	c.evictIfNeeded()
 }
 
@@ -481,12 +447,10 @@ func TestFileCache_EvictIfNeeded_RemovesOrphanedMetaAndSkipsSubdirs(t *testing.T
 	if err := os.WriteFile(orphan, []byte(`{"mimeType":"image/png"}`), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	// A stray subdirectory must be skipped, not treated as an entry.
 	if err := os.MkdirAll(filepath.Join(c.dir, "stray-subdir"), 0o755); err != nil {
 		t.Fatal(err)
 	}
 
-	// Store triggers evictIfNeeded.
 	mustStore(t, c, "did:plc:b", "B")
 
 	if _, err := os.Stat(orphan); !os.IsNotExist(err) {
@@ -506,23 +470,17 @@ func TestFileCache_EvictIfNeeded_FallsBackToPngModTimeWhenMetaMissing(t *testing
 	if err := os.Remove(c.metaPath("did:plc:a")); err != nil {
 		t.Fatal(err)
 	}
-	// Backdate "a"'s .png so it is the oldest by the fallback clock.
 	past := time.Now().Add(-time.Hour / 2)
 	if err := os.Chtimes(c.pngPath("did:plc:a"), past, past); err != nil {
 		t.Fatal(err)
 	}
 	mustStore(t, c, "did:plc:b", "B")
-	// Exceeding capacity must evict "a" (oldest by png-modtime fallback).
 	mustStore(t, c, "did:plc:c", "C")
 	if _, err := c.Load("did:plc:a"); err != ErrCacheMiss {
 		t.Fatalf("did:plc:a should have been evicted via the png-modtime fallback, got %v", err)
 	}
 }
 
-// Fresh is the generate path's cheap freshness probe, so it has to agree with
-// Load on both sides of the TTL boundary — a disagreement would either schedule
-// a render the cache route then answers from disk, or skip one the route then
-// answers with the fallback forever.
 func TestFileCache_FreshWithinTTL_ReportsTrue(t *testing.T) {
 	c := newTestCache(t, 100, time.Hour)
 	if err := c.Store("did:plc:fresh", []byte("X"), "image/png"); err != nil {
@@ -553,8 +511,6 @@ func TestFileCache_FreshPastTTL_ReportsFalse(t *testing.T) {
 	}
 }
 
-// Fresh runs on every crawl, so like Load it must move only the LRU clock —
-// otherwise a popular profile would never expire and never be re-rendered.
 func TestFileCache_FreshDoesNotRefreshTTL(t *testing.T) {
 	c := newTestCache(t, 100, time.Hour)
 	if err := c.Store("did:plc:probe", []byte("X"), "image/png"); err != nil {

@@ -13,10 +13,6 @@ import {
   MantineColorsTuple,
 } from "@mantine/core";
 
-/**
- * Navy — the one fill, and the primary colour in light mode. Shade 6 is the
- * brand navy every filled control uses.
- */
 const navy: MantineColorsTuple = [
   "#EDF2FB",
   "#C9D5EA",
@@ -49,7 +45,6 @@ const inverse: MantineColorsTuple = [
   "#10224A",
 ];
 
-/** Link — the second hue, for inline links and the composing-card border. */
 const accent: MantineColorsTuple = [
   "#EDF2FB",
   "#D6E0F3",
@@ -63,7 +58,6 @@ const accent: MantineColorsTuple = [
   "#0E1D3B",
 ];
 
-/** Text ink and its greys; shade 7 is the body ink, 4–6 the muted steps. */
 const ink: MantineColorsTuple = [
   "#F7F9FC",
   "#E3E8F0",
@@ -77,7 +71,6 @@ const ink: MantineColorsTuple = [
   "#070E1C",
 ];
 
-/** Destructive actions: the one hue outside navy and link. */
 const danger: MantineColorsTuple = [
   "#FBF3F3",
   "#F3E0E0",
@@ -139,7 +132,6 @@ function toneFor(color: unknown) {
   return ALERT_TONES[color as keyof typeof ALERT_TONES] ?? NAVY_TONE;
 }
 
-/** The card `Alert` and `Notification` share: paper, a hairline, a toned left rule. */
 function toneCard(tone: typeof NAVY_TONE) {
   return {
     root: {

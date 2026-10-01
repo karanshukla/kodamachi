@@ -5,8 +5,7 @@ import { flipSettingsSwitch, settingsSwitch } from "../helpers/settings-switch";
 
 test.use({ storageState: "e2e/.auth/user.json" });
 
-// The PDS-sync toggle writes through to the server, so each test restores the
-// original value — the account is shared with the other spec files.
+// Tests restore the PDS-sync toggle: it writes through on a shared account.
 
 async function pdsSyncEnabled(page: Page) {
   const res = await page.request.get("/api/settings");

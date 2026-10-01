@@ -241,7 +241,6 @@ function sendFailureMessage(messages: Messages, err: unknown): string {
   );
 }
 
-/** Keeps the composer in view when a soft keyboard opens under it. */
 function useFocusScroll(ref: React.RefObject<HTMLTextAreaElement | null>) {
   useEffect(() => {
     const el = ref.current;
@@ -252,7 +251,6 @@ function useFocusScroll(ref: React.RefObject<HTMLTextAreaElement | null>) {
   }, [ref]);
 }
 
-/** Scrolls the ask card up if a tall banner or bio pushed it off screen. */
 function useRevealAskCard(ref: React.RefObject<HTMLDivElement | null>, ready: boolean) {
   useEffect(() => {
     if (!ready || !ref.current) return;

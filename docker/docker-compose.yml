@@ -1,14 +1,8 @@
 services:
 
-  # ── Entry points ────────────────────────────────────────────────────────────
-
-  # Bot-protection WAF, matching the production topology — http://localhost:8080
-  # Anubis's PoW check requires an upstream proxy to set X-Real-Ip (production:
-  # Railway's edge; CI: DockerSmoke sets it explicitly). A plain browser hitting
-  # this port directly gets a "[misconfiguration] X-Real-Ip header is not set"
-  # error instead of the challenge page. For everyday local dev, use caddy
-  # directly (below) — this is here for testing Anubis itself or the full
-  # production-like chain.
+  # Anubis needs an upstream proxy to set X-Real-Ip (Railway's edge; DockerSmoke
+  # sets it explicitly), so a plain browser here gets "[misconfiguration]". For
+  # local dev use caddy directly.
   anubis:
     build: ../anubis
     ports:
@@ -23,14 +17,10 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
-  # Anubis's challenge store. Anubis validates the store during config parsing —
-  # it dials and PINGs before serving — so an unreachable Valkey is a boot
-  # failure, not a degraded mode. Hence condition: service_healthy above.
-  #
-  # The hostname alias is not cosmetic: Anubis cannot interpolate env vars into
-  # its policy file (TecharoHQ/anubis#1152), so the store URL is one committed
-  # literal shared by local and production. The alias makes
-  # valkey.railway.internal resolve here too, matching Railway's private domain.
+  # Anubis PINGs its store at boot, so an unreachable Valkey is a boot failure
+  # (hence service_healthy). The alias exists because Anubis can't interpolate
+  # env vars in its policy file (TecharoHQ/anubis#1152): the store URL is one
+  # literal shared with production.
   valkey:
     image: valkey/valkey:8-alpine
     command: ["valkey-server", "--save", "", "--appendonly", "no"]
@@ -45,8 +35,6 @@ services:
       retries: 10
     restart: unless-stopped
 
-  # Short-URL redirector.  fragen.navy equivalent — http://localhost:8081
-  # e.g. localhost:8081/handle  →  localhost:8080/profile/handle
   redirector:
     image: zappi/redirector
     ports:
@@ -55,17 +43,7 @@ services:
       REDIRECT_TARGET: "${PUBLIC_URL:-http://127.0.0.1:8080}/profile"
     restart: unless-stopped
 
-  # ── Reverse proxy ───────────────────────────────────────────────────────────
-
-  # Routes /*  →  opengraph-service (→ client),  /api/*  →  server (strips /api prefix)
-  # The opengraph-service shim sits between Caddy and the client so it can
-  # synthesize per-profile OG responses for the Bluesky Cardyb crawler while
-  # passing all other /* traffic through unchanged. /api/* is split by Caddy
-  # upstream and never reaches the shim.
-  #
-  # Published directly on 8082 (distinct from Anubis's 8080) as the default
-  # local dev entry point — skips Anubis's PoW/X-Real-Ip check entirely, so a
-  # plain browser just works.
+  # Default local dev entry point: skips Anubis's PoW/X-Real-Ip check.
   caddy:
     build: ../caddy
     ports:
@@ -76,7 +54,6 @@ services:
       FRONTEND_PORT: 8080
       BACKEND_DOMAIN: server
       BACKEND_PORT: 3000
-      # Both regions point to the single server container in Docker
       BACKEND_EU_DOMAIN: server
       BACKEND_EU_PORT: 3000
       BACKEND_NA_DOMAIN: server
@@ -86,25 +63,17 @@ services:
       - server
     restart: unless-stopped
 
-  # ── Application services ────────────────────────────────────────────────────
-
-  # React SPA served by serve
   client:
     build:
       context: ..
       dockerfile: docker/Dockerfile.client
       args:
-        # /api is stripped by Caddy before forwarding to the server
         VITE_API_URL: /api
-        # Short-URL domain shown in the inbox link card
         VITE_SHORTLINK_URL: "localhost:8081"
     restart: unless-stopped
 
-  # Bun.serve + Hono API
-  #
-  # Published directly on 3000: the loopback OAuth client format below
-  # redirects the browser to http://127.0.0.1:3000/oauth/callback, which only
-  # resolves if this port reaches the host — not just the compose network.
+  # Port 3000 is published because the loopback OAuth client redirects the
+  # browser to http://127.0.0.1:3000/oauth/callback.
   server:
     build:
       context: ..
@@ -115,14 +84,11 @@ services:
       NODE_ENV: production
       PORT: 3000
       HOST: 0.0.0.0
-      # Leave PUBLIC_URL unset so the server uses the loopback OAuth client
-      # format (http://localhost?...) which is valid for local/CI testing.
-      # In production, pass PUBLIC_URL as an env var and it will be used here.
+      # Unset selects the loopback OAuth client format (valid for local/CI).
       PUBLIC_URL: "${PUBLIC_URL:-}"
-      # CLIENT_URL is required by envalid in production; use the loopback host.
       CLIENT_URL: "${PUBLIC_URL:-http://127.0.0.1:8080}"
       EXPORT_HTML_URL: http://html-to-image:3033/
-      # DB_PATH is required by the env validator even when POSTGRESQL_URL is set
+      # Required by the env validator even when POSTGRESQL_URL is set.
       DB_PATH: ""
       OAUTH_TOKEN_SECRET: "${OAUTH_TOKEN_SECRET:?Set OAUTH_TOKEN_SECRET in .env (openssl rand -hex 32)}"
       COOKIE_SECRET: "${COOKIE_SECRET:?Set COOKIE_SECRET in .env (openssl rand -hex 32)}"
@@ -134,35 +100,22 @@ services:
         condition: service_started
     restart: unless-stopped
 
-  # Puppeteer image renderer (Bun runtime, #314)
   html-to-image:
     build:
       context: ..
       dockerfile: docker/Dockerfile.html-to-image
-    # Chromium needs a larger /dev/shm than Docker's default 64 MB
+    # Chromium needs more than the default 64 MB /dev/shm.
     shm_size: "256m"
     restart: unless-stopped
 
-  # Go OG-preview shim. Sits between Caddy and the client. The fast path
-  # (all /* traffic except Bluesky Cardyb on /profile/:handle) is a near-zero
-  # overhead reverse-proxy pass-through. The generate path resolves the profile
-  # via indigo, composites a banner+avatar OG image via html-to-image, caches it
-  # by DID on a volume, and serves a rewritten index.html whose og:image points
-  # at the cached PNG.
   opengraph-service:
     build: ../opengraph-service
     environment:
-      # The shim proxies to the client (the previous FRONTEND upstream).
       FRONTEND_URL: "http://client:3000"
-      # html-to-image, reached by the generation path.
       EXPORT_HTML_URL: "http://html-to-image:3033/"
-      # ~1 month TTL cache, keyed by DID (accepted staleness tradeoff).
       OG_CACHE_TTL: "720h"
-      # AT Protocol AppView — matches the TS ProfileService exactly.
       ATPROTO_APPVIEW_HOST: "https://api.bsky.app"
-      # NF server, reached for the owner's customPrompt/touchpointLocale (#409).
       NF_SERVER_URL: "http://server:3000"
-      # Public site origin used to build absolute og:image URLs for crawlers.
       PUBLIC_URL: "${PUBLIC_URL:-https://kodamachi.app}"
       PORT: "8080"
     volumes:
@@ -172,8 +125,6 @@ services:
       - html-to-image
       - server
     restart: unless-stopped
-
-  # ── Data ────────────────────────────────────────────────────────────────────
 
   postgres:
     image: postgres:16-alpine

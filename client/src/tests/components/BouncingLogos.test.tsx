@@ -72,7 +72,6 @@ describe("BouncingLogos", () => {
 
   it("renders one logo per variant on each side when enabled with enough room", () => {
     renderWithBounceProvider("true");
-    // 3 variants x 2 sides
     expect(screen.queryAllByTestId("bouncing-logo")).toHaveLength(6);
   });
 
@@ -107,20 +106,17 @@ describe("BouncingLogos", () => {
 
     const { unmount } = renderWithBounceProvider("true");
 
-    // Each of the six logos schedules its first frame on mount.
     expect(frames).toHaveLength(6);
 
     const logos = screen.getAllByTestId("bouncing-logo");
     const initialTransform = logos[0].style.transform;
 
-    // First invocation only records the timestamp (no delta yet) and reschedules.
     act(() => {
       frames[0](1000);
     });
     expect(logos[0].style.transform).toBe(initialTransform);
     expect(frames).toHaveLength(7);
 
-    // Second invocation has a delta, so the logo should move.
     act(() => {
       frames[6](1100);
     });

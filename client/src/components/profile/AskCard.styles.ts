@@ -83,11 +83,9 @@ export const clearButton: CSSProperties = {
   height: 40,
 };
 
-/** White with navy text on a dark fill; the ordinary navy button on paper. */
 export const sendButton = (fill: ProfileCardFill): CSSProperties =>
   fill.paper ? { height: 40 } : { ...onFillButton, height: 40 };
 
-/** Mantine's `default` variant carries the white on-fill button; `filled` is navy. */
 export const sendButtonVariant = (fill: ProfileCardFill): "default" | "filled" =>
   fill.paper ? "filled" : "default";
 

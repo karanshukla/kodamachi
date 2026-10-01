@@ -10,7 +10,6 @@ interface ConfirmationModalProps {
   message: string;
   confirmLabel?: string;
   cancelLabel?: string;
-  /** Colours the confirm button as a destructive action rather than a primary one. */
   destructive?: boolean;
   loading?: boolean;
 }

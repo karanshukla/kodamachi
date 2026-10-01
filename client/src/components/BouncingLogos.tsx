@@ -17,7 +17,6 @@ interface LogoVariant {
   speedScale: number;
 }
 
-/** Marks drift in the side gutters: one glyph at three opacities, no spin. */
 const VARIANTS: LogoVariant[] = [
   { size: 48, opacity: 0.5, speedScale: 1 },
   { size: 30, opacity: 0.35, speedScale: 1.3 },

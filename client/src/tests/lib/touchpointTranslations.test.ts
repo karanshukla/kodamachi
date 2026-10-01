@@ -6,8 +6,6 @@ import {
   type TouchpointTranslations,
 } from "../../lib/touchpointTranslations";
 
-// Every property a locale must define, so a new locale that misses a key is
-// caught by the structural check below rather than rendering undefined.
 const REQUIRED_STRING_KEYS: (keyof TouchpointTranslations)[] = [
   "placeholder",
   "sendLabel",
@@ -43,8 +41,6 @@ describe("touchpointTranslations (#266)", () => {
   });
 
   it("every parameterized touchpoint returns a non-empty string for every locale", () => {
-    // Invoke each function for each locale so every locale object's function
-    // bodies are covered (not just en/es).
     for (const { value } of touchpointLocales) {
       const t = getTouchpointTranslations(value);
       for (const key of REQUIRED_FN_KEYS) {
@@ -80,9 +76,7 @@ describe("touchpointTranslations (#266)", () => {
   });
 
   it("falls back to English for a prototype key rather than throwing", () => {
-    // `in` would answer true for every one of these and hand back a member of
-    // Object.prototype, which the first `headline(name)` call would throw on —
-    // and this catalog renders on the public profile, for every visitor.
+    // `in` is true for Object.prototype members, and `headline(name)` would throw on one.
     for (const key of ["toString", "constructor", "__proto__", "hasOwnProperty", "valueOf"]) {
       const t = getTouchpointTranslations(key);
       expect(t.sendLabel).toBe("Send");
@@ -98,8 +92,6 @@ describe("touchpointTranslations (#266)", () => {
   });
 
   it("returns distinct copy for a non-English locale", () => {
-    // Sanity check that the table actually localizes — not just en under
-    // every key. Spanish send label is "Enviar".
     const t = getTouchpointTranslations("es");
     expect(t.sendLabel).toBe("Enviar");
     expect(t.headline("Ada")).toBe("Envía a Ada un mensaje anónimo");

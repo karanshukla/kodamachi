@@ -8,7 +8,6 @@ export const root: CSSProperties = {
   height: "100%",
 };
 
-/** Nav items get a solid tint when active — deliberately never a gradient. */
 export const navItem = (active: boolean) => ({
   root: {
     borderRadius: radiusControl,

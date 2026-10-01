@@ -2,7 +2,6 @@ const RADIUS = 9;
 const SIZE = 22;
 const CENTRE = SIZE / 2;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
-/** Fraction of the budget at which the ring switches to the warning colour. */
 const DANGER_AT = 0.9;
 
 /**

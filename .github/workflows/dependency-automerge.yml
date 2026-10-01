@@ -30,17 +30,14 @@ jobs:
         run: |
           safe=false
           if [ "$ACTOR" = "dependabot[bot]" ]; then
-            # Only semver patch/minor bumps auto-merge; majors always wait for review.
             case "$DEPENDABOT_UPDATE_TYPE" in
               version-update:semver-patch|version-update:semver-minor) safe=true ;;
             esac
           elif [ "$ACTOR" = "karanshukla" ]; then
-            # The dependency-update routine commits under this account rather than a
-            # bot identity. The `dependencies` label is the reliable signal; the title
-            # pattern is a fallback for when it is missing. Either way, a title
-            # mentioning "major"/"breaking" is left for manual merge. Only the
-            # title is scanned -- dependency-audit bodies routinely mention other
-            # packages' major versions, which used to veto safe patch-level PRs.
+            # The dependency-update routine commits under this account, not a bot. Trust the
+            # `dependencies` label, falling back to the title pattern. A title mentioning
+            # "major"/"breaking" is left for manual merge. Only the title is scanned: audit
+            # bodies mention other packages' majors and used to veto safe patch PRs.
             matched=false
             case ",$LABELS," in
               *,dependencies,*) matched=true ;;

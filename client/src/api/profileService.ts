@@ -20,7 +20,6 @@ export interface ProfileResponse extends Partial<AskCardCustomisation> {
   } | null;
   exists: boolean;
   inboxEnabled?: boolean; // true unless the owner explicitly closed their inbox
-  /** The other Atmosphere apps this account publishes to, named and addressed. */
   atmosphereApps?: AtmosphereAppLink[];
 }
 

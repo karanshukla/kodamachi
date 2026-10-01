@@ -6,34 +6,10 @@ import (
 	"unicode/utf8"
 )
 
-// Edge-case coverage for BuildOGTemplate:
-//   - Very long display names / handles (truncation behavior — must not overflow
-//     the 1200×630 canvas).
-//   - Non-Latin display names (Cyrillic, CJK, emoji, RTL scripts) — confirm the
-//     template's Noto font stack is present and the first-rune glyph fallback
-//     works for non-ASCII.
-//
-// These are unit tests against BuildOGTemplate's HTML output. They can't assert
-// pixel-level rendering (that's html-to-image's job and is e2e-only), but they
-// CAN assert: the CSS rules that bound text overflow are present; the font
-// stacks that cover non-Latin scripts are emitted; the glyph fallback is
-// rune-aware (not byte-aware); and very long strings are carried without
-// breaking the HTML structure.
-
-// longName is a display name far longer than the 1200px canvas can fit at 56px.
-// At 56px font-size, the canvas fits roughly 20-25 Latin characters in the
-// meta row's available width (1088px - avatar 132px - gaps). Anything over ~40
-// chars is guaranteed overflow territory.
 const longName = "This Is A Really Exceptionally Long Display Name That Will Definitely Overflow The 1200 Pixel Wide Canvas Without Truncation Rules In Place And Keeps Going And Going"
 
-// longHandle mirrors the same risk for the @handle row.
 const longHandle = "a-very-long-handle-with-many-segments-that-exceeds-the-canvas-width.bsky.social"
 
-// TestBuildOGTemplate_LongDisplayName_HasTruncationCSS asserts the template
-// emits CSS that bounds the display-name element so it cannot overflow the
-// canvas.
-// This test is RED until the template's .name rule includes a max-width /
-// overflow / text-overflow directive.
 func TestBuildOGTemplate_LongDisplayName_HasTruncationCSS(t *testing.T) {
 	html := BuildOGTemplate(OGInput{
 		DisplayName: longName,
@@ -41,25 +17,15 @@ func TestBuildOGTemplate_LongDisplayName_HasTruncationCSS(t *testing.T) {
 		Avatar:      "https://cdn.bsky.app/a.jpg",
 		Prompt:      "p",
 	})
-	// The full name must still appear in the HTML (we don't truncate the source
-	// string — truncation is a render-time CSS concern, so crawlers and the
-	// accessible DOM still see the full name). What we assert is that the CSS
-	// bounds the rendered width.
 	if !strings.Contains(html, longName) {
 		t.Fatalf("full display name should be present in HTML (CSS truncates, not the source)")
 	}
-	// The .name rule must include overflow control. We look for the combination
-	// of properties that make CSS ellipsis truncation work. At minimum: a
-	// max-width (or width) constraint AND overflow:hidden AND text-overflow.
 	if !hasTruncationCSS(t, html, ".name") {
 		t.Fatalf("template .name rule lacks truncation CSS; long display names will overflow the canvas\n--- CSS excerpt ---\n%s",
 			extractCSS(html))
 	}
 }
 
-// TestBuildOGTemplate_LongHandle_HasTruncationCSS is the same property for the
-// @handle row. Handles can be long (multi-segment .sky.social subdomains) and
-// overflow the meta column just like display names.
 func TestBuildOGTemplate_LongHandle_HasTruncationCSS(t *testing.T) {
 	html := BuildOGTemplate(OGInput{
 		DisplayName: "Ok",
@@ -76,10 +42,6 @@ func TestBuildOGTemplate_LongHandle_HasTruncationCSS(t *testing.T) {
 	}
 }
 
-// TestBuildOGTemplate_LongNamesDoNotBreakHTMLStructure verifies that even an
-// adversarially long name (no spaces — can't wrap) produces well-formed HTML:
-// the doctype, closing tags, and OG dimensions are all intact. A buggy template
-// (e.g. an unterminated fmt verb) would fail this.
 func TestBuildOGTemplate_LongNamesDoNotBreakHTMLStructure(t *testing.T) {
 	noSpaces := strings.Repeat("W", 500)
 	html := BuildOGTemplate(OGInput{
@@ -94,20 +56,12 @@ func TestBuildOGTemplate_LongNamesDoNotBreakHTMLStructure(t *testing.T) {
 	}
 }
 
-// TestBuildOGTemplate_NotoFontStacksPresent asserts the template loads the Noto
-// font stacks that cover Cyrillic, CJK, Arabic, Hebrew, Devanagari, Thai, and
-// emoji. Font coverage "relies on html-to-image's font
-// loading" — but the template itself must REQUEST those stacks; if a future
-// edit drops them, non-Latin names silently tofu. This test pins the
-// requirement at the template level.
 func TestBuildOGTemplate_NotoFontStacksPresent(t *testing.T) {
 	html := BuildOGTemplate(OGInput{
 		DisplayName: "Test",
 		Handle:      "test.bsky.social",
 		Prompt:      "p",
 	})
-	// Every Noto family the template declares. If any is dropped, a script
-	// family loses coverage.
 	for _, want := range []string{
 		"Noto Sans",
 		"Noto Sans JP", // Japanese
@@ -127,12 +81,6 @@ func TestBuildOGTemplate_NotoFontStacksPresent(t *testing.T) {
 	}
 }
 
-// TestBuildOGTemplate_NonLatinDisplayName_PreservedAndGlyphWorks is a table
-// test covering each script family. For each:
-//   - The full display name survives in the HTML (HTML-escaped but not
-//     mangled) — crawlers see the correct name.
-//   - When avatar is unset, the first-rune glyph fallback extracts the correct
-//     first character (rune-aware, not byte-aware — critical for multibyte).
 func TestBuildOGTemplate_NonLatinDisplayName_PreservedAndGlyphWorks(t *testing.T) {
 	cases := []struct {
 		name      string
@@ -153,7 +101,6 @@ func TestBuildOGTemplate_NonLatinDisplayName_PreservedAndGlyphWorks(t *testing.T
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			// With avatar set: full name must be present verbatim.
 			withAvatar := BuildOGTemplate(OGInput{
 				DisplayName: tc.display,
 				Handle:      "test.bsky.social",
@@ -164,8 +111,6 @@ func TestBuildOGTemplate_NonLatinDisplayName_PreservedAndGlyphWorks(t *testing.T
 				t.Fatalf("display name %q not preserved verbatim in HTML", tc.display)
 			}
 
-			// With avatar UNSET: the glyph fallback must be the first rune,
-			// uppercased. firstGlyph is rune-aware so multibyte leads survive.
 			noAvatar := BuildOGTemplate(OGInput{
 				DisplayName: tc.display,
 				Handle:      "test.bsky.social",
@@ -180,10 +125,6 @@ func TestBuildOGTemplate_NonLatinDisplayName_PreservedAndGlyphWorks(t *testing.T
 	}
 }
 
-// TestFirstGlyph_RuneAwareNotByteAware directly pins the rune-awareness of the
-// glyph fallback. A byte-based implementation would emit the first byte of a
-// multibyte UTF-8 sequence (garbage); the rune-based implementation emits the
-// full first character.
 func TestFirstGlyph_RuneAwareNotByteAware(t *testing.T) {
 	cases := []struct {
 		in   string
@@ -204,8 +145,6 @@ func TestFirstGlyph_RuneAwareNotByteAware(t *testing.T) {
 			if got != tc.want {
 				t.Fatalf("firstGlyph(%q) = %q, want %q", tc.in, got, tc.want)
 			}
-			// The result must be valid UTF-8 (a byte-based impl would produce
-			// an invalid prefix of a multibyte sequence).
 			if !utf8.ValidString(got) {
 				t.Fatalf("firstGlyph(%q) = %q is not valid UTF-8", tc.in, got)
 			}
@@ -213,9 +152,6 @@ func TestFirstGlyph_RuneAwareNotByteAware(t *testing.T) {
 	}
 }
 
-// TestFirstGlyph_EmptyAfterTrim confirms the empty-name path: when the display
-// name is empty/whitespace, firstGlyph returns "" and buildAvatarElement falls
-// through to the handle. This is the defensive contract the template relies on.
 func TestFirstGlyph_EmptyReturnsEmpty(t *testing.T) {
 	for _, in := range []string{"", "   ", "\t\n"} {
 		if got := firstGlyph(in); got != "" {
@@ -231,33 +167,23 @@ func TestBuildOGTemplate_RTLDisplayName_StructureIntact(t *testing.T) {
 		Avatar:      "https://cdn.bsky.app/a.jpg",
 		Prompt:      "p",
 	})
-	// The HTML scaffolding must remain intact — an RTL string must not escape
-	// its containing element or break the doctype/structure.
 	for _, want := range []string{"<!DOCTYPE html>", "</html>", "<body>", "</body>"} {
 		if !strings.Contains(html, want) {
 			t.Fatalf("RTL name broke HTML structure; missing %q", want)
 		}
 	}
-	// The name should be HTML-escaped but the Arabic characters pass through
-	// unchanged (html.EscapeString does not touch non-ASCII letters).
 	if !strings.Contains(html, "محمد والعائلة") {
 		t.Fatalf("RTL display name not preserved in HTML")
 	}
 }
 
-// hasTruncationCSS reports whether the CSS rule for selector (e.g. ".name")
-// contains the overflow-control trio: a width bound, overflow:hidden, and
-// text-overflow. It does a coarse scan of the <style> block — this is a test
-// helper, not a real CSS parser.
 func hasTruncationCSS(t *testing.T, html, selector string) bool {
 	t.Helper()
 	css := extractCSS(html)
-	// Find the rule block for the selector.
 	idx := strings.Index(css, selector)
 	if idx < 0 {
 		return false
 	}
-	// Take the rule body: from the first { after the selector to the next }.
 	braceStart := strings.IndexByte(css[idx:], '{')
 	if braceStart < 0 {
 		return false

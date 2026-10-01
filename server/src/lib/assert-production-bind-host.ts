@@ -1,6 +1,4 @@
-// A loopback bind in production is unreachable but boots "healthy", so the
-// failure surfaces only in Caddy's logs — a restart loop is strictly more
-// debuggable. The thrown message below carries the full rationale.
+// A loopback bind boots "healthy" but is unreachable; a restart loop is more debuggable.
 
 import { env } from "./env";
 

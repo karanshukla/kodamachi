@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-// OGWidth/OGHeight are the standard Open Graph image dimensions.
+// OGWidth and OGHeight are the Open Graph image dimensions.
 const (
 	OGWidth  = 1200
 	OGHeight = 630
@@ -18,62 +18,33 @@ const (
 type OGInput struct {
 	DisplayName string
 	Handle      string
-	Banner      string // empty → navy fallback
-	Avatar      string // empty → glyph fallback
-	Prompt      string // owner's customPrompt; empty → resolvePrompt's locale/English default
-	Locale      string // owner's touchpointLocale; empty → English default
+	Banner      string
+	Avatar      string
+	Prompt      string
+	Locale      string
 }
 
-// DefaultPrompt is the last-resort fallback: no customPrompt, no recognized
-// touchpointLocale, or the NF settings read failed outright. It is
-// deliberately short: Bluesky renders a link card at roughly 500px wide, so the
-// headline is downscaled ~2.4x and every extra word costs legibility. The
-// brand name is carried by the wordmark lockup rather than repeated here.
+// DefaultPrompt is the last-resort headline. It is short because Bluesky
+// downscales the card ~2.4x.
 const DefaultPrompt = "Ask me anything, anonymously"
 
-// touchpointPrompts is the localized default headline, one entry per locale in
-// client/src/lib/touchpointTranslations.ts's touchpointLocales.
-//
-// Deliberately NOT reused from touchpointTranslations.ts: every field there
-// that plays this role (`headline`) takes a display-name argument, and this
-// key can't — it's a plain map[string]string, and the prompt line is
-// name-free by design (the name already renders in the identity block above
-// it, the same shape DefaultPrompt itself has). `placeholder` was tried as a
-// substitute in an earlier pass and rejected: it drops "anonymously" entirely
-// (e.g. es "Pregunta algo…" = "Ask something…"), and anonymity is the
-// product's entire value proposition — the OG card is the first thing a
-// stranger sees on Bluesky, so losing that word isn't a tone mismatch, it's
-// the pitch going missing. These four are therefore fresh headline
-// translations of DefaultPrompt itself, each keeping the "anonymously"
-// adverb, sized to stay legible at the card's ~2.4x downscale (DefaultPrompt's
-// own doc comment explains why), and free of `placeholder`'s trailing
-// ellipsis, which reads as truncation at headline size.
-//
-// "en" is DefaultPrompt itself, so resolvePrompt's locale lookup and its final
-// English fallback agree by construction.
-//
-// [TestResolvePrompt_LocalizedDefault_UsesCatalogWhenNoCustomPrompt] and
-// [TestResolvePrompt_UnrecognizedLocale_FallsBackToEnglish] pin the lookup;
-// [TestTouchpointPrompts_CoversEveryTouchpointLocale] pins that this map never
-// drifts out of sync with the TS locale list.
+// touchpointPrompts is the localized default headline, one per locale in
+// client/src/lib/touchpointTranslations.ts. These are translations of
+// DefaultPrompt, not the client's strings, which take a display name or drop
+// "anonymously". [TestResolvePrompt_LocalizedDefault_UsesCatalogWhenNoCustomPrompt]
+// pins the lookup; [TestTouchpointPrompts_CoversEveryTouchpointLocale] pins
+// that the map matches the TS locale list.
 var touchpointPrompts = map[string]string{
-	"en": DefaultPrompt,                    // "Ask me anything, anonymously" (28 chars)
-	"es": "Pregúntame algo, anónimamente",  // "Ask me something, anonymously" (29 chars)
-	"pt": "Pergunte-me algo, anonimamente", // "Ask me something, anonymously" (30 chars)
-	"de": "Frag mich alles, anonym",        // "Ask me everything, anonymous(ly)" (23 chars)
-	"fr": "Demande-moi tout, anonymement",  // "Ask me everything, anonymously" (29 chars)
+	"en": DefaultPrompt,
+	"es": "Pregúntame algo, anónimamente",
+	"pt": "Pergunte-me algo, anonimamente",
+	"de": "Frag mich alles, anonym",
+	"fr": "Demande-moi tout, anonymement",
 }
 
-// resolvePrompt implements the precedence /customise already promises visitors
-// ("Your custom message prompt overrides this setting."):
-//
-//  1. customPrompt, if set and non-empty after trimming
-//  2. the localized default for touchpointLocale
-//  3. English (DefaultPrompt)
-//
-// [TestResolvePrompt_CustomPrompt_TakesPrecedenceOverLocale] and
-// [TestResolvePrompt_UnrecognizedLocale_FallsBackToEnglish] pin both ends of
-// the fallback chain.
+// resolvePrompt picks the trimmed customPrompt, else the localized default,
+// else DefaultPrompt. [TestResolvePrompt_CustomPrompt_TakesPrecedenceOverLocale]
+// and [TestResolvePrompt_UnrecognizedLocale_FallsBackToEnglish] pin both ends.
 func resolvePrompt(customPrompt, locale string) string {
 	if p := strings.TrimSpace(customPrompt); p != "" {
 		return p
@@ -84,11 +55,9 @@ func resolvePrompt(customPrompt, locale string) string {
 	return DefaultPrompt
 }
 
-// primarySubtag is the part of a BCP-47 tag that picks the language, matching
-// how the TS side resolves a locale (client/src/lib/touchpointTranslations.ts,
-// server/src/lib/i18n.ts): "pt-BR" reads the pt prompt rather than falling all
-// the way back to English.
-// [TestResolvePrompt_RegionalVariant_UsesItsLanguage] pins it.
+// primarySubtag returns the language of a BCP-47 tag, as the TS side does:
+// "pt-BR" reads the pt prompt. [TestResolvePrompt_RegionalVariant_UsesItsLanguage]
+// pins it.
 func primarySubtag(locale string) string {
 	if i := strings.Index(locale, "-"); i >= 0 {
 		locale = locale[:i]
@@ -96,39 +65,27 @@ func primarySubtag(locale string) string {
 	return strings.ToLower(locale)
 }
 
-// ── Palette ──────────────────────────────────────────────────────────────────
-//
-// Mirrors client/src/index.css's design tokens so a shared link looks like the
-// page it points at: paper and ink, the light scheme, since a link card has no
-// colour scheme to follow and the design is light-mode-centric.
-//
-// [TestOGPalette_EveryTextColourClearsAAOnEverySurface] checks every text
-// colour here against every surface it can land on, and
-// [TestOGTemplate_NoTextSitsOnTheBanner] pins the reachability argument that
-// makes those numbers exhaustive. Together they are the Go counterpart of
-// client/src/tests/theme/contrast.test.ts: changing a value below fails a test
-// rather than silently shipping unreadable text.
+// The palette mirrors client/src/index.css's light-scheme tokens.
+// [TestOGPalette_EveryTextColourClearsAAOnEverySurface] checks every text colour
+// against every surface, and [TestOGTemplate_NoTextSitsOnTheBanner] pins that
+// no text sits on the banner, which makes that check exhaustive.
 const (
-	// ogFillNavy matches --ds-fill-ink: the banner fallback, the mark tile and
-	// the prompt headline.
+	// ogFillNavy matches --ds-fill-ink.
 	ogFillNavy = "#10224A"
 
 	ogSurface = "#FFFFFF"
 
 	ogText      = "#111C36" // --ds-ink
-	ogTextMuted = "#63708C" // the design's "muted" step
+	ogTextMuted = "#63708C"
 
-	// Chip and hairline are solid rather than alpha so their contrast is a
-	// fixed number the test can assert, not a function of what is behind them.
+	// Solid rather than alpha so their contrast is fixed for the test.
 	ogChipBG   = "#F4F6FA"
 	ogHairline = "#E3E8F0"
 
-	// The on-navy glyph.
 	ogMarkGlyph = "#FFFFFF"
 
-	// The flat darken over a user banner, copied from ProfileCard.styles.ts's
-	// bannerScrim. It exists to keep the avatar ring readable on a bright photo,
-	// not to make text legible — no text sits on the banner.
+	// Copied from ProfileCard.styles.ts's bannerScrim; keeps the avatar ring
+	// readable on a bright photo.
 	ogBannerScrim = "rgba(0,0,0,0.2)"
 )
 
@@ -139,38 +96,20 @@ var (
 	ogTextColors = []string{ogText, ogTextMuted, ogFillNavy}
 )
 
-// ── Typography ───────────────────────────────────────────────────────────────
-
-// ogFontStack leads with 'Noto Sans' and its per-script siblings. The app's
-// --ds-font-sans is the platform system stack, which this renderer cannot use:
-// system-ui in the Chromium container resolves to whatever fontconfig happens
-// to hold, so the same input would render in a different face per deploy. Noto
-// is the webfont stand-in that keeps the render deterministic and covers the
-// scripts a container's system font does not.
+// ogFontStack leads with Noto rather than the app's system stack, which would
+// resolve to a different face per container.
 // [TestOGFontStack_LeadsWithNotoNotABrandWebfont] pins that.
 //
-// 'Noto Color Emoji' MUST stay last, after the generic `sans-serif`. It ships a
-// U+0020 whose advance is 1.25em, so any earlier position makes it the winning
-// font for the space character whenever the webfonts above it are unavailable,
-// and every gap in the image blows out to 4.5x. Emoji still resolve from it
-// there, because no text font in the stack has emoji glyphs to preempt it.
+// 'Noto Color Emoji' MUST stay last: its U+0020 advance is 1.25em, so any
+// earlier position blows out every space when the webfonts are unavailable.
 // [TestOGFontStack_EmojiFamilyIsLast] pins the ordering.
 const ogFontStack = `'Noto Sans', 'Noto Sans JP', 'Noto Sans KR', 'Noto Sans SC', 'Noto Sans TC', 'Noto Sans Arabic', 'Noto Sans Devanagari', 'Noto Sans Hebrew', 'Noto Sans Thai', 'Liberation Sans', 'DejaVu Sans', sans-serif, 'Noto Color Emoji'`
 
-// ogFontLink loads the stack above. Without it the render falls back to
-// whatever the container happens to have installed.
+// ogFontLink loads the webfonts in ogFontStack.
 const ogFontLink = `<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700&family=Noto+Sans+JP:wght@400;700&family=Noto+Sans+KR:wght@400;700&family=Noto+Sans+SC:wght@400;700&family=Noto+Sans+TC:wght@400;700&family=Noto+Sans+Arabic:wght@400;700&family=Noto+Sans+Devanagari:wght@400;700&family=Noto+Sans+Hebrew:wght@400;700&family=Noto+Sans+Thai:wght@400;700&family=Noto+Color+Emoji&display=swap" rel="stylesheet">`
 
-// ── Geometry ─────────────────────────────────────────────────────────────────
-//
-// The banner is a strip rather than a full-bleed background: no text sits on
-// it, so an arbitrary user photo cannot drag any contrast pair below AA, and
-// the banner gets to be genuinely visible instead of buried under a scrim.
-//
-// Every band is a named constant because the canvas is a fixed 1200x630 with no
-// scroll: the bands have to add up, and when they do not the prompt silently
-// grows over the footer. [TestOGGeometry_VerticalBandsFitTheCanvas] adds them
-// up, so a future type-scale tweak fails a test instead of shipping a collision.
+// The canvas is fixed at 1200x630, so the bands must add up or the prompt
+// grows over the footer. [TestOGGeometry_VerticalBandsFitTheCanvas] adds them up.
 const (
 	bannerHeight  = 170
 	gutter        = 64
@@ -186,9 +125,7 @@ const (
 	promptGap        = 28
 	promptFontSize   = 56
 	promptLineHeight = 115
-	// A prompt longer than this is ellipsised by -webkit-line-clamp rather than
-	// allowed to push into the footer.
-	promptMaxLines = 2
+	promptMaxLines   = 2
 
 	footerPadTop = 26
 	footerBorder = 2
@@ -204,8 +141,7 @@ const (
 	hairlineWidth = footerBorder
 )
 
-// A line height is a percentage of the font size, the way the CSS below states
-// it, so the band table and the stylesheet cannot drift apart.
+// lineBox is the height of a line, from a line-height percentage as the CSS states it.
 func lineBox(fontSize, lineHeightPct int) int {
 	return int(math.Ceil(float64(fontSize) * float64(lineHeightPct) / 100))
 }
@@ -220,25 +156,18 @@ var (
 	handleLineBox = lineBox(handleFontSize, handleLineHeight)
 	promptLineBox = lineBox(promptFontSize, promptLineHeight)
 
-	// The chip's padding and border sit outside its line box, so the footer row
-	// is taller than the text in it.
+	// Chip padding and border sit outside its line box.
 	footerRowBox = lineBox(chipFontSize, chipLineHeight) + 2*(chipPadY+chipBorder)
 )
 
-// The avatar overhangs the banner by half its height and the name sits *below*
-// it, matching ProfileCard.styles.ts (`top: -AVATAR_SIZE / 2`, then `pt={48}`
-// on the name row) rather than sitting beside it.
+// avatarOverlap is how far the avatar overhangs the banner, as in ProfileCard.styles.ts.
 const avatarOverlap = avatarSize / 2
 
-// avatarRadius keeps Mantine's `radius="xl"` proportion — the theme sets xl to
-// 22px and ProfileCard renders an 84px avatar, so the app's avatar is a rounded
-// square, not a circle. Scaling the ratio keeps that shape at OG size.
-//
-// [TestOGGeometry_AvatarIsARoundedSquareNotACircle] pins it.
+// avatarRadius scales ProfileCard's 22px radius on an 84px avatar.
+// [TestOGGeometry_AvatarIsARoundedSquareNotACircle] pins that it is not a circle.
 const avatarRadius = avatarSize * 22 / 84
 
-// ogVerticalBands is the stack of bands down the canvas, in order. The avatar
-// is pulled up into the banner, so it only occupies the half below the seam.
+// ogVerticalBands lists the bands down the canvas; the avatar counts only below the seam.
 var ogVerticalBands = []int{
 	bannerHeight,
 	avatarSize - avatarOverlap,
@@ -251,31 +180,19 @@ var ogVerticalBands = []int{
 	contentPadBot,
 }
 
-// promptMaxHeight is the clamp's hard ceiling. -webkit-line-clamp alone counts
-// lines, not pixels, so a font that renders taller than promptLineBox would
-// still overrun; this bounds it either way.
+// promptMaxHeight backs up -webkit-line-clamp, which counts lines, not pixels.
 var promptMaxHeight = promptMaxLines * promptLineBox
 
-// shareDomain is the short domain the app hands out for a profile — the form
-// PublicProfile.tsx builds and ProfileUrlBar.tsx displays. The OG card shows
-// the same string so the link someone reads off a preview is the link they were
-// given, not the /profile/:handle path the crawler happened to fetch.
+// shareDomain is the share-link domain PublicProfile.tsx and ProfileUrlBar.tsx use.
 const shareDomain = "kodamachi.online"
 
-// brandMark is the app's mark inlined as SVG: the navy tile with the glyph.
-// Inlining keeps it independent of the network: an OG render that cannot
-// reach a CDN still carries brand identity.
-//
-// Built by concatenation rather than through the template's slots: the
-// Replacer is single-pass, so a slot inside a substituted value would be
-// inserted literally ([TestBuildOGTemplate_LeavesNoUnfilledSlots]).
+// brandMark is the app's mark inlined as SVG so it needs no network. It is
+// built by concatenation because the single-pass Replacer would insert a slot
+// in a substituted value literally ([TestBuildOGTemplate_LeavesNoUnfilledSlots]).
 var brandMark = `<svg class="mark" viewBox="0 0 160 160" aria-hidden="true"><rect width="160" height="160" rx="` + fmt.Sprint(MarkTileRadius) + `" fill="` + ogFillNavy + `"/><path d="` + MarkGlyphPath + `" fill="` + ogMarkGlyph + `"/></svg>`
 
-// ogTemplate is expanded by a strings.Replacer, not fmt.Sprintf. The CSS is
-// dense with percentages, and under fmt every one of them has to be written
-// `%%` — a rule that is invisible when it is followed and produces garbled
-// output the moment it is not. Named slots also survive reordering the layout,
-// which positional verbs do not.
+// ogTemplate is expanded by a strings.Replacer, not fmt.Sprintf, because the
+// CSS is full of percentages.
 const ogTemplate = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -297,8 +214,6 @@ const ogTemplate = `<!DOCTYPE html>
     flex-direction: column;
   }
 
-  /* Banner strip, ending in a hard edge — the app's ProfileCard cuts here too,
-     and a fade would read as a blur over the user's photo. */
   .banner {
     position: relative;
     height: {{BANNER_H}}px;
@@ -311,19 +226,14 @@ const ogTemplate = `<!DOCTYPE html>
     object-fit: cover; object-position: center;
     display: block;
   }
-  /* Flat 20% darken, the same scrim ProfileCard.styles.ts applies, and for the
-     same reason: it keeps the avatar's ring readable on a bright photo. It is
-     deliberately not a gradient — no text sits here, so nothing needs more. */
   .banner::after {
     content: "";
     position: absolute; inset: 0;
     background: {{BANNER_SCRIM}};
   }
 
-  /* Positioned so it paints above .banner. .banner is position:relative for its
-     ::after scrim, which puts it in the positioned layer — an in-flow .content
-     would render underneath it and the avatar's overhang would be clipped by
-     the banner's own overflow:hidden. */
+  /* Must be positioned to paint above .banner (position:relative), or the
+     banner's overflow:hidden clips the avatar overhang. */
   .content {
     position: relative;
     z-index: 1;
@@ -333,21 +243,16 @@ const ogTemplate = `<!DOCTYPE html>
     padding: 0 {{GUTTER}}px {{PAD_BOT}}px;
   }
 
-  /* The avatar overhangs the banner by half its height and the name stacks
-     underneath, the arrangement ProfileCard uses. */
   .identity {
     margin-top: -{{AVATAR_OVERLAP}}px;
     min-width: 0;
   }
   .avatar {
     width: {{AVATAR}}px; height: {{AVATAR}}px;
-    /* A rounded square, not a circle — Mantine radius="xl" on ProfileCard's
-       Avatar. */
     border-radius: {{AVATAR_RADIUS}}px;
     object-fit: cover;
     background: {{FILL_NAVY}};
     border: 6px solid {{SURFACE}};
-    /* Glyph fallback shares this box, so it centres its letter. */
     display: flex; align-items: center; justify-content: center;
     color: {{MARK_GLYPH}};
     font-size: 58px; font-weight: 600; line-height: 1;
@@ -367,10 +272,7 @@ const ogTemplate = `<!DOCTYPE html>
     max-width: 900px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
   }
 
-  /* Absorbs whatever the identity row and footer leave over, and centres the
-     prompt in it — so a one-line prompt sits in the optical middle of the card
-     instead of stranding 200px of empty surface above the footer. The padding
-     is the minimum gap; the centring only ever adds to it. */
+  /* Absorbs the leftover space and centres the prompt in it. */
   .prompt-wrap {
     flex: 1;
     min-height: 0;
@@ -399,10 +301,6 @@ const ogTemplate = `<!DOCTYPE html>
   .wordmark {
     font-size: 30px; font-weight: 600; letter-spacing: -0.03em; line-height: 1;
   }
-  /* The share link, in the same "kodamachi.online/<handle>" pill the profile page
-     uses (client/src/components/profile/ProfileUrlBar.tsx): bordered, domain
-     muted and the handle emphasised, because the handle is the part a reader
-     has to retype. */
   .chip {
     min-width: 0;
     background: {{CHIP_BG}};
@@ -438,22 +336,16 @@ const ogTemplate = `<!DOCTYPE html>
 </body>
 </html>`
 
-// BuildOGTemplate renders an OG-sized (1200x630) HTML page laid out like the
-// profile page it previews: a banner strip (or solid navy when the profile has
-// none), the avatar straddling the seam, name and handle, the ask prompt as the
-// headline, and the wordmark lockup.
-//
-// All user-supplied strings are HTML-escaped — the output is fed to a headless
-// browser, so an unescaped payload would be a code-injection vector. Remote URLs
-// additionally go through safeImageURL.
+// BuildOGTemplate renders the 1200x630 card HTML. User-supplied strings are
+// HTML-escaped and remote URLs go through safeImageURL, since a headless
+// browser renders the output.
 func BuildOGTemplate(in OGInput) string {
 	prompt := resolvePrompt(in.Prompt, in.Locale)
 
 	handle := strings.TrimPrefix(strings.TrimSpace(in.Handle), "@")
 
-	// A profile with no display name shows its handle as the headline, and then
-	// the @handle row underneath would just repeat it.
-	// [TestBuildOGTemplate_NoDisplayName_DoesNotPrintTheHandleTwice] pins it.
+	// [TestBuildOGTemplate_NoDisplayName_DoesNotPrintTheHandleTwice] pins that
+	// the handle is not printed twice.
 	name := strings.TrimSpace(in.DisplayName)
 	handleRow := fmt.Sprintf(`<div class="handle">@%s</div>`, html.EscapeString(handle))
 	if name == "" {
@@ -463,10 +355,8 @@ func BuildOGTemplate(in OGInput) string {
 
 	shareLink := fmt.Sprintf("%s/<b>%s</b>", shareDomain, html.EscapeString(handle))
 
-	// strings.Replacer substitutes in a single pass, so a display name that
-	// itself contains a "{{...}}" slot is inserted literally rather than
-	// re-expanded. [TestBuildOGTemplate_UserContentCannotInjectTemplateSlots]
-	// pins that.
+	// Single-pass, so a "{{...}}" in user content is inserted literally.
+	// [TestBuildOGTemplate_UserContentCannotInjectTemplateSlots] pins that.
 	return strings.NewReplacer(
 		"{{FONT_LINK}}", ogFontLink,
 		"{{FONT_STACK}}", ogFontStack,
@@ -516,9 +406,7 @@ func BuildOGTemplate(in OGInput) string {
 	).Replace(ogTemplate)
 }
 
-// buildBannerElement returns the banner <img>, or nothing at all when the
-// profile has no banner — .banner's own brand-gradient background is then what
-// shows through.
+// buildBannerElement returns the banner <img>, or "" so the .banner background shows.
 func buildBannerElement(bannerURL string) string {
 	url := safeImageURL(bannerURL)
 	if url == "" {
@@ -527,9 +415,8 @@ func buildBannerElement(bannerURL string) string {
 	return fmt.Sprintf(`<img src=%q alt="">`, url)
 }
 
-// buildAvatarElement returns the avatar HTML element. When the URL is missing
-// or unusable, a circular brand-gradient tile (styled by .avatar's CSS) with
-// the first letter of the display name (or handle) as a glyph is emitted.
+// buildAvatarElement returns the avatar <img>, or a tile with the first letter
+// of the name (or handle) when the URL is missing or unusable.
 func buildAvatarElement(avatarURL, displayName, handle string) string {
 	if url := safeImageURL(avatarURL); url != "" {
 		return fmt.Sprintf(`<img class="avatar" src=%q alt="">`, url)
@@ -541,14 +428,9 @@ func buildAvatarElement(avatarURL, displayName, handle string) string {
 	return fmt.Sprintf(`<div class="avatar">%s</div>`, html.EscapeString(glyph))
 }
 
-// safeImageURL returns the HTML-escaped URL if it is an ordinary remote image
-// reference, and "" otherwise so the caller falls back. The profile fields it
-// guards come from a third-party PDS, and the result is interpolated into
-// markup that a browser will execute: anything but a plain http(s) URL — a
-// javascript: or data: scheme, or embedded whitespace or control characters
-// that could break out of the attribute — is refused rather than sanitised.
-//
-// [TestSafeImageURL] pins the accepted and rejected shapes.
+// safeImageURL returns the escaped URL if it is a plain http(s) URL, else "".
+// Profile fields come from a third-party PDS, so javascript:/data: schemes and
+// whitespace or control characters are refused. [TestSafeImageURL] pins the shapes.
 func safeImageURL(raw string) string {
 	u := strings.TrimSpace(raw)
 	if u == "" {
@@ -563,7 +445,7 @@ func safeImageURL(raw string) string {
 	return html.EscapeString(u)
 }
 
-// firstGlyph returns the first meaningful character of s (rune-aware), uppercased.
+// firstGlyph returns the first rune of s, uppercased.
 func firstGlyph(s string) string {
 	s = strings.TrimSpace(s)
 	if s == "" {

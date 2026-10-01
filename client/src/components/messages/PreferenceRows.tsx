@@ -10,11 +10,6 @@ interface PreferenceRowsProps {
   state: MessagePreferencesState;
 }
 
-/**
- * The posting preferences as a labelled list: name and description on the left,
- * the switch on the right. Shown inside whatever the preferences bar opens — a
- * popover on a pointer, a bottom sheet on a phone — never on the page itself.
- */
 export function PreferenceRows({ state }: PreferenceRowsProps) {
   const { preferences, setPreference } = state;
   const copy = useTranslations().postingPreferences;

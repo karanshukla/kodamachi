@@ -13,17 +13,9 @@ export interface Shortcut {
 interface ShortcutListProps {
   title: string;
   shortcuts: Shortcut[];
-  /**
-   * Folds the list behind its own heading, closed until opened. The preferences
-   * sheet uses it so the settings above are not pushed off a phone screen.
-   */
   collapsible?: boolean;
 }
 
-/**
- * Keyboard-shortcut reference, shared by the home page and the Messages
- * preferences panel.
- */
 export function ShortcutList({ title, shortcuts, collapsible = false }: ShortcutListProps) {
   const [opened, setOpened] = useState(false);
 

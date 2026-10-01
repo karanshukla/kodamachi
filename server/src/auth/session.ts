@@ -12,9 +12,7 @@ export interface AccountEntry {
 }
 
 export interface AppSessionData {
-  /** DID of the currently active account. */
   did?: string;
-  /** All accounts authenticated in this browser session. */
   accounts?: AccountEntry[];
   oauthState?: string;
 }

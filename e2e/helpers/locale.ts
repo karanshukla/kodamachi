@@ -1,11 +1,8 @@
 import type { Page } from "@playwright/test";
 
 /**
- * Mirrors `client/src/lib/contracts.ts`'s `STORAGE_PREFIX` ("navyfragen") plus
- * the `_ui_locale` suffix `client/src/lib/i18n/index.tsx` appends to it.
- * Spelled out as a literal rather than imported, same convention
- * `contracts.ts` documents for its own consumers: a rename over there should
- * fail this instead of silently following it.
+ * Literal copy of `STORAGE_PREFIX` ("navyfragen", client/src/lib/contracts.ts) plus the
+ * `_ui_locale` suffix, so a rename there fails here instead of silently following.
  */
 const UI_LOCALE_STORAGE_KEY = "navyfragen_ui_locale";
 

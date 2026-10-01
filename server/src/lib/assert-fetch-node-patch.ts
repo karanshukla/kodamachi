@@ -1,16 +1,8 @@
-// Side-effect module, imported first in src/index.ts.
-//
-// It cannot front-run a module-load crash, and it no longer claims to. Under
-// Bun the rest of index.ts's import graph evaluates before this module's body
-// runs at all (verified: a console.error on line 1 never prints when booting on
-// 1.3.14), so on a runtime below the floor what you actually see is undici's
-// raw "webidl.util.markAsUncloneable is not a function" stack. That failure is
-// loud and greppable, and docs/runtime-notes.md names it.
-//
-// What this module does buy: the floor check fires for anything that imports it
-// without dragging in the OAuth graph first, and withFetchNodePatchDiagnostic
-// below catches the case that actually still bites above the floor, an install
-// that skipped patchedDependencies.
+// Under Bun the rest of index.ts's import graph evaluates before this body, so
+// below the floor you see undici's raw "markAsUncloneable is not a function"
+// stack (docs/runtime-notes.md). The floor check still fires for importers that
+// skip the OAuth graph; withFetchNodePatchDiagnostic covers an install that
+// skipped patchedDependencies.
 
 import { isBunVersionBelowFloor, MINIMUM_BUN_VERSION } from "#/lib/bun-version-floor";
 
@@ -40,11 +32,9 @@ if (isBunVersionBelowFloor(process.versions.bun)) {
 }
 
 /**
- * Rethrows the unpatched-install failure with actionable guidance. Wrap OAuth
- * client construction in this: that is where an unpatched
- * `@atproto-labs/fetch-node` first calls `unicastFetchWrap`, which throws
- * because Bun exposes no `process.versions.undici`. Above the floor the import
- * itself succeeds, so a missing patch has no earlier tell.
+ * Rethrows the unpatched-install failure with guidance. Wrap OAuth client
+ * construction: `unicastFetchWrap` first throws there (Bun has no
+ * `process.versions.undici`), with no earlier tell above the floor.
  */
 export function withFetchNodePatchDiagnostic<T>(create: () => T): T {
   try {

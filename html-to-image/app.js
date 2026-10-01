@@ -13,10 +13,7 @@ const FORMATS = {
   webp: { contentType: 'image/webp', args: { type: 'webp' } },
 };
 
-// Chromium's multi-process architecture spawns a new renderer subprocess per
-// tab (no --single-process). Without a cap, a burst of concurrent requests
-// spawns one renderer per request, multiplying RSS. Excess requests queue
-// instead of piling onto the browser at once.
+// Cap concurrent pages: uncapped bursts spawn one renderer per request and multiply RSS; excess requests queue.
 export const MAX_CONCURRENT_RENDERS = 3;
 
 class Semaphore {
@@ -46,8 +43,7 @@ class Semaphore {
   }
 }
 
-// Long enough to absorb a slow CDN fetch, short enough that a hung host cannot
-// stall a render. A timeout screenshots anyway rather than failing the request.
+// A hung host must not stall a render: on timeout, screenshot anyway rather than fail.
 const VISUAL_READINESS_TIMEOUT_MS = 8000;
 
 function waitForWebfonts(page) {
@@ -68,20 +64,13 @@ function waitForDecodedImages(page) {
     .catch(() => {});
 }
 
-/**
- * page.goto's 'load' event fires once the HTML's direct resources resolve, but
- * CDN-hosted avatars/banners and webfonts are often still in flight then —
- * screenshotting at that point yields blank banners and fallback-font text.
- */
+/** 'load' fires before CDN avatars/banners and webfonts settle; screenshotting then yields blanks and fallback fonts. */
 async function waitForVisualReadiness(page) {
   await Promise.all([waitForWebfonts(page), waitForDecodedImages(page)]);
 }
 
-// Railway's app-sleeping measures inactivity in *outbound packets*, and a
-// resident Chromium is never that quiet: its component updater, safe-browsing
-// lists, field trials, domain-reliability uploads, and mDNS/SSDP media-route
-// discovery all emit traffic on timers with no page open. These flags silence
-// those subsystems; the rest trim per-render RSS.
+// Railway sleeps apps on outbound-packet inactivity; these flags silence Chromium's timer-driven
+// background traffic (updater, safe-browsing, field trials, mDNS). The rest trim RSS.
 export const CHROMIUM_LAUNCH_ARGS = [
   '--no-sandbox',
   '--no-zygote',
@@ -106,18 +95,13 @@ export const CHROMIUM_LAUNCH_ARGS = [
   '--mute-audio',
 ];
 
-// Must stay comfortably under Railway's 10-minute inactivity window, so a
-// genuinely silent stretch can accumulate after the browser exits.
+// Under Railway's 10-minute inactivity window.
 export const BROWSER_IDLE_TIMEOUT_MS = 90_000;
 
-// Chromium accumulates RSS across renders even with every page closed, and
-// under sustained traffic the idle timer never fires — so growth is bounded by
-// forcing a close at the first moment nothing is in flight.
+// Chromium accumulates RSS across renders, and under sustained traffic the idle timer never fires: close at the first moment nothing is in flight.
 export const RENDERS_BEFORE_RECYCLE = 100;
 
-// Launch on first use, close once idle: keeping Chromium out of the process
-// between renders is what lets the container fall silent (and drops idle RSS
-// from ~500MB to just the server). Do not prewarm it.
+// Launch on first use, close once idle, so the container falls silent (~500MB to just the server). Do not prewarm.
 export function createBrowserPool({
   launch,
   idleTimeoutMs = BROWSER_IDLE_TIMEOUT_MS,
@@ -141,7 +125,6 @@ export function createBrowserPool({
       idleTimer = null;
       closeBrowser('idle');
     }, idleTimeoutMs);
-    // Never let the idle timer be the reason the process stays alive.
     idleTimer.unref?.();
   }
 
@@ -169,8 +152,7 @@ export function createBrowserPool({
     return discard(stale);
   }
 
-  // A rejected launch must not be cached, or every later request inherits the
-  // same failure and the service never recovers without a redeploy.
+  // Do not cache a rejected launch, or the service never recovers without a redeploy.
   async function resolveOrForget(promise) {
     try {
       return await promise;
@@ -186,8 +168,7 @@ export function createBrowserPool({
     const browser = await resolveOrForget(pending);
     if (browser.connected) return browser;
 
-    // The browser crashed out from under us. Relaunch, unless a concurrent
-    // caller already noticed and did so.
+    // Browser crashed: relaunch unless a concurrent caller already did.
     if (browserPromise === pending) {
       discard(pending);
       startBrowser();
@@ -197,7 +178,6 @@ export function createBrowserPool({
 
   function onRenderComplete(activeRenders) {
     rendersSinceLaunch++;
-    // Closing mid-render would pull the browser out from under a request.
     if (activeRenders > 0) return;
     if (rendersSinceLaunch >= rendersBeforeRecycle) {
       closeBrowser(`recycle after ${rendersSinceLaunch} renders`);
@@ -206,9 +186,7 @@ export function createBrowserPool({
     }
   }
 
-  // Launches ahead of a render the caller knows is coming. Arms the idle close
-  // itself because no onRenderComplete follows a warm.
-  //
+  // Arms the idle close itself, since no onRenderComplete follows a warm.
   // @see [app.test.js](./app.test.js): 'a warm that is never followed by a
   // render still closes on idle' pins that this cannot pin the container awake.
   async function warm() {
@@ -232,8 +210,7 @@ export function createApp(getBrowser, { onRenderComplete = () => {}, warm = asyn
   app.use(express.json({ limit: '2mb' }));
   app.use(rateLimit({ windowMs: 60_000, limit: 60, standardHeaders: true, legacyHeaders: false }));
 
-  // Health check responds immediately so Railway can mark the instance ready
-  // without waiting for the browser to finish launching.
+  // Answers before the browser launches so Railway can mark the instance ready.
   app.get('/', (_req, res) => res.json({ status: 'ok' }));
 
   // Must stay ahead of the render validation below, which rejects a POST

@@ -1,5 +1,3 @@
-/* ── Viewport / PWA ── */
-
 /* dvh: address bar show/hide no longer snaps the layout */
 html {
   height: 100%;
@@ -191,7 +189,6 @@ body {
   --ds-fill-paper: var(--ds-paper);
 }
 
-/* ── Layer 1c: structural primitives — type, motion, radius ── */
 :root {
   --ds-font-sans:
     "Schibsted Grotesk", "Noto Sans JP", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
@@ -205,7 +202,6 @@ body {
   --ds-radius-pill: 999px;
 }
 
-/* ── Layer 2: semantic tokens — light ── */
 :root {
   /* Cards are paper on the canvas; the ghost step is the canvas itself, for
      inset rows and inputs sitting on a paper card. */
@@ -273,7 +269,6 @@ body {
   --ds-card-input-bg: var(--ds-surface-ghost);
 }
 
-/* ── Layer 2: semantic tokens — dark ── */
 /* Dark mode is light mode inverted: white ink on navy paper over a midnight
    page, and the navy hero surfaces turn off-white with navy ink. Shadows
    vanish, so elevation becomes the dark line. */
@@ -318,7 +313,6 @@ body {
   --ds-tone-red: #f0b3b3;
 }
 
-/* ── Mantine bridges ── */
 /* Scoped to `:root[…]` rather than the bare attribute so these match the
    specificity of Mantine's own scheme blocks; at (0,1,0) they were being
    outranked and silently doing nothing. Only variables Mantine does not
@@ -370,7 +364,6 @@ body {
   outline-offset: 2px;
 }
 
-/* ── Layer 3: fixed foregrounds ── */
 /* Text on an ask-card preset. The presets keep their colour in both schemes,
    so these do not flip. -muted is the lightest alpha that still clears AA over
    the lightest dark preset. */
@@ -385,7 +378,6 @@ body {
   --ds-on-paper-muted: var(--ds-muted);
 }
 
-/* ── Reply composer ── */
 /* The composer is a canvas well inside a paper card in both schemes, because it
    stands for the post being written rather than for the app around it. */
 :root {
@@ -398,7 +390,6 @@ body {
   --ds-compose-track: #dde4ef;
 }
 
-/* ── Card-local foreground ── */
 /* A question card is painted either as a hero surface or with the ordinary
    surface, and its contents have to follow. The card sets these on its own
    root (see QuestionCard.styles.ts) and every descendant reads them, so the
@@ -410,7 +401,6 @@ body {
   color: var(--ds-card-fg-muted);
 }
 
-/* ── Atmosphere app marks ── */
 /* Every mark in Aturi's catalog hardcodes width="24" height="24" on its own
    <svg>, which beats any size set on the element wrapping it. These marks sit
    beside the 14px copy and share icons in the profile URL bar, so the size has
@@ -430,7 +420,6 @@ body {
   display: block;
 }
 
-/* ── Icon buttons on a question card ── */
 .ds-delete-btn:hover,
 .ds-delete-btn:focus-visible {
   color: var(--ds-danger-fg) !important;
@@ -450,7 +439,6 @@ body {
   background: var(--ds-card-wash) !important;
 }
 
-/* ── Animation ── */
 @keyframes ds-pin-settle {
   from {
     opacity: 0.55;
@@ -472,7 +460,6 @@ body {
   }
 }
 
-/* ── Chrome details ── */
 /* Selection is tint-deep on navy so highlighted Japanese stays legible. */
 :focus-visible {
   outline: 2px solid var(--ds-focus-ring);

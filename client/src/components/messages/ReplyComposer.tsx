@@ -17,13 +17,9 @@ interface ReplyComposerProps {
   onSend: () => void;
   onCancel: () => void;
   sending: boolean;
-  /** True while an unanswered thread root is holding this reply back. */
   blocked: boolean;
-  /** Whether sending will chain onto an existing thread rather than post fresh. */
   inThread: boolean;
-  /** Whether this reply will carry a rendered question image, which is the slow path. */
   includesImage: boolean;
-  /** True while the send is held back by the question image, not by Bluesky. */
   awaitingRender: boolean;
   textareaRef: React.RefObject<HTMLTextAreaElement | null>;
 }

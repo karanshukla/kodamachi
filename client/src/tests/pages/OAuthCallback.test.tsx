@@ -26,7 +26,7 @@ describe("OAuthCallback page", () => {
   });
 
   it("shows loading spinner while consuming the token", async () => {
-    mockPost.mockReturnValue(new Promise(() => {})); // never resolves
+    mockPost.mockReturnValue(new Promise(() => {}));
     renderWithProviders(<OAuthCallback />, {
       route: "/oauth_callback?oauth_token=abc123",
     });
@@ -84,7 +84,7 @@ describe("OAuthCallback page", () => {
   });
 
   it("renders correctly in dark mode (covers dark-style branches)", async () => {
-    mockPost.mockReturnValue(new Promise(() => {})); // never resolves
+    mockPost.mockReturnValue(new Promise(() => {}));
     renderWithProviders(<OAuthCallback />, {
       route: "/oauth_callback?oauth_token=abc123",
       colorScheme: "dark",

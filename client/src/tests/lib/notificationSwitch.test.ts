@@ -4,7 +4,6 @@ import { consumeNotificationSwitchRequest } from "../../lib/notificationSwitch";
 
 describe("notificationSwitch", () => {
   beforeEach(() => {
-    // Reset to a clean origin between tests so leftover params don't leak.
     window.history.replaceState({}, "", "/");
   });
 

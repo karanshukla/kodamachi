@@ -24,11 +24,7 @@ async function settle(): Promise<void> {
   for (let i = 0; i < 5; i++) await new Promise((resolve) => setImmediate(resolve));
 }
 
-/**
- * The inbox the render route checks against. `question: null` is an inbox that
- * holds nothing under the tid, which is what a render of a question the caller
- * does not own looks like from the DB.
- */
+/** `question: null` is an inbox with nothing under the tid (a question the caller does not own). */
 function stubDb(question: string | null = RESPOND_BODY.original): any {
   return {
     selectFrom: mock((table: string) => {

@@ -4,7 +4,6 @@ import { useTranslations } from "../../lib/i18n";
 
 import * as styles from "./AccountOverview.styles";
 
-/** Deliberately unequal, to create visual hierarchy. */
 const SIZE = { large: 32, medium: 22, small: 13 } as const;
 
 export interface Stat {

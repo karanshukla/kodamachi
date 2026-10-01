@@ -30,8 +30,6 @@ func TestIsErrServerClosed(t *testing.T) {
 }
 
 func TestProxyErrorHandler_ContextCanceled_IsNoop(t *testing.T) {
-	// A client disconnect (context.Canceled) must not be logged as an error or
-	// write a response — the caller hung up, there's nothing to report.
 	rec := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodGet, "/profile/alice", nil)
 	proxyErrorHandler(rec, req, context.Canceled)

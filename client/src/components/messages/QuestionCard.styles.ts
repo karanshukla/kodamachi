@@ -18,7 +18,6 @@ import {
 } from "../../styles/tokens";
 
 export interface CardState {
-  /** Painted as a hero surface rather than a plain card — the "ink backgrounds" preference. */
   ink: boolean;
   pinned: boolean;
   focused: boolean;

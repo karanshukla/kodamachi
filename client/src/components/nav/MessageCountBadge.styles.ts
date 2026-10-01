@@ -2,7 +2,6 @@ import type { CSSProperties } from "react";
 
 import { radiusPill } from "../../styles/tokens";
 
-/** Navy pill, white numeral: the one attention colour in the design. */
 export const badge: CSSProperties = {
   background: "var(--ds-attention-bg)",
   color: "var(--ds-attention-fg)",

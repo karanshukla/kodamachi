@@ -1,10 +1,5 @@
 // Command indigo-fetch resolves a Bluesky handle to a DID and fetches the
-// profile via indigo (bluesky-social/indigo), printing the banner/avatar URLs.
-// It validates the indigo API surface, error behaviour, and AppView target
-// against the TS ProfileService (which targets https://api.bsky.app).
-//
-// This is poc slice #2. The decision it drives: does indigo-direct work
-// cleanly, or does the shim fall back to the Express endpoints?
+// profile via indigo, printing the banner/avatar URLs.
 //
 // Usage:
 //
@@ -25,9 +20,7 @@ import (
 	"github.com/bluesky-social/indigo/xrpc"
 )
 
-// appViewHost matches the TS ProfileService's AtpAgent service URL
-// (server/src/services/profile-service.ts:19). The shim targets the same
-// AppView so resolution semantics stay consistent.
+// appViewHost is the AppView the TS ProfileService also targets.
 const appViewHost = "https://api.bsky.app"
 
 func main() {

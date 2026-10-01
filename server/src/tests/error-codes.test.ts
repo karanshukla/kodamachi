@@ -7,24 +7,14 @@ import { ERROR_CODES } from "../lib/contracts";
 
 const HONO_DIR = join(import.meta.dir, "../hono");
 
-/**
- * Discovered rather than listed: a hand-maintained list silently stops
- * covering the domain that gets split out of an existing route file next.
- */
+/** Discovered, not listed, so a newly split route file is covered. */
 const ROUTE_FILES = readdirSync(HONO_DIR).filter((file) => file.endsWith("-routes.ts"));
 
 const CLIENT_CONTRACTS_PATH = join(import.meta.dir, "../../../client/src/lib/contracts.ts");
 
 const SCREAMING_SNAKE_CASE = /^[A-Z][A-Z0-9_]*$/;
 
-/**
- * Every route error response is built through `errorBody(code, message)`
- * (`../lib/errors.ts`), never a literal `{ error: "some prose" }`. The two
- * zod schema custom messages (`.min(1, { error: "INVALID_HANDLE" })`) are the
- * one place a literal `error: "..."` legitimately remains, so this scans for
- * that shape and only fails when the quoted value isn't itself a
- * SCREAMING_SNAKE code — i.e. it's prose, not a machine code.
- */
+/** Route errors go through `errorBody(code, message)`; fails on a literal `error: "prose"` (zod custom-message codes are exempt). */
 describe("Route error responses carry a machine code, never bare prose", () => {
   for (const file of ROUTE_FILES) {
     it(`${file} has no literal { error: "prose" } response`, () => {
@@ -37,13 +27,7 @@ describe("Route error responses carry a machine code, never bare prose", () => {
   }
 });
 
-/**
- * The literal-prose scan above cannot see `{ error: errorMessage(err) }`,
- * which is worse than a literal: the value is whatever text the exception
- * carried, so it is both unlocalizable by the client and a way for an
- * internal message to reach the caller verbatim. Seven route handlers shipped
- * that shape past the literal scan, so the computed form gets its own check.
- */
+/** Also catches computed `{ error: errorMessage(err) }`, which leaks internal exception text. */
 describe("Route error responses never carry a computed prose value", () => {
   for (const file of ROUTE_FILES) {
     it(`${file} builds no { error: <expression> } response`, () => {

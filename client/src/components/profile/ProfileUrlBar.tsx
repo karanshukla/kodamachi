@@ -15,11 +15,9 @@ interface ProfileUrlBarProps {
   handle: string;
   url: string;
   shareTitle: string;
-  /** The other Atmosphere apps this account is on; empty for most accounts. */
   atmosphereApps: AtmosphereApp[];
 }
 
-/** The "<share domain>/<handle>" pill, with copy and native-share affordances. */
 export function ProfileUrlBar({ handle, url, shareTitle, atmosphereApps }: ProfileUrlBarProps) {
   const { triggerHaptic } = useHaptic(1);
   const messages = useTranslations();

@@ -19,7 +19,6 @@ export function imageThemeLabels(messages: Messages): Record<ImageThemeId, strin
  */
 export interface ProfileCardFill {
   background: string;
-  /** The one light fill; every other fill carries the on-fill white. */
   paper: boolean;
 }
 

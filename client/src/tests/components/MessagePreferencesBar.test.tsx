@@ -84,8 +84,6 @@ describe("MessagePreferencesBar", () => {
     expect(setPreference).toHaveBeenCalledWith("includeQuestionAsImage", false);
   });
 
-  // The three that repaint the page or guard a click are panel-only, so the row
-  // carries one meaning: what goes into the post.
   it("keeps the preferences that do not change the post off the bar", () => {
     renderBar();
 
@@ -146,7 +144,6 @@ describe("MessagePreferencesBar", () => {
     expect(await screen.findByText(en.common.shortcuts.focusCycleCards)).toBeInTheDocument();
   });
 
-  // A bar whose chips are hidden is an empty box, so the phone gets the button alone.
   it("drops the chips entirely on a small viewport", () => {
     mockUseMediaQuery.mockReturnValue(true);
     renderBar();
@@ -167,7 +164,6 @@ describe("MessagePreferencesBar", () => {
     ).toBeInTheDocument();
   });
 
-  // The chips are hidden on a phone, so the sheet is the only way to the theme.
   it("carries the image theme in the sheet", async () => {
     mockUseMediaQuery.mockReturnValue(true);
     const { onSelectImageTheme } = renderBar();
@@ -178,7 +174,6 @@ describe("MessagePreferencesBar", () => {
     expect(onSelectImageTheme).toHaveBeenCalledWith("compressed");
   });
 
-  // A phone can have a keyboard attached; the two surfaces carry the same list.
   it("carries the keyboard shortcuts in the sheet too", async () => {
     mockUseMediaQuery.mockReturnValue(true);
     renderBar();

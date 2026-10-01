@@ -1,5 +1,4 @@
-// The harness registers this suite's module mocks, so it has to be imported
-// before anything that pulls in the modules it mocks.
+// Import the harness first: it registers this suite's module mocks.
 /* eslint-disable import/order */
 import {
   isReplyTriggerName,
@@ -72,10 +71,7 @@ describe("Messages page — deleting a question", () => {
     await waitFor(() => expect(mockDeleteMutate).toHaveBeenCalled());
 
     act(() => {
-      // The delete route still passes an internal thrown message through the
-      // bare `error` field rather than a code. An unrecognized `error` value
-      // must never render verbatim, and there's no `message` field either, so
-      // this exercises the generic fallback.
+      // The delete route puts an internal message in bare `error`; an unrecognized value must never render verbatim.
       capturedCallbacks.onError({ error: "Network error" });
     });
 
@@ -208,13 +204,11 @@ describe("Messages page — deleting a question", () => {
     } as any);
     renderWithProviders(<Messages />);
 
-    // Expand msg-1 via the "↩ Reply" button
     const replyButtons = screen.getAllByRole("button", { name: isReplyTriggerName });
     const openReplyBtn = replyButtons.find((b) => b.textContent?.includes("↩"));
     fireEvent.click(openReplyBtn!);
     await waitFor(() => screen.getByRole("textbox", { name: en.replyComposer.responseAriaLabel }));
 
-    // Delete the same expanded card (msg-1 is first)
     const deleteButtons = screen.getAllByRole("button", {
       name: en.questionCard.deleteMessageLabel,
     });

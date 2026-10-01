@@ -17,7 +17,7 @@ describe("computeGapBounds", () => {
   });
 
   it("returns null when the gap is narrower than MIN_GAP_PX", () => {
-    const width = BOX_MAX_WIDTH + MIN_GAP_PX; // gap = MIN_GAP_PX / 2, too small
+    const width = BOX_MAX_WIDTH + MIN_GAP_PX;
     expect(computeGapBounds(width, 1000)).toBeNull();
   });
 

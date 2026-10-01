@@ -2,28 +2,21 @@ import { resolve } from "path";
 import { config as loadEnv } from "dotenv";
 import { defineConfig, devices } from "@playwright/test";
 
-// Load credentials from the same file Docker Compose reads — no manual env sourcing needed.
-// dotenv is a direct root devDep so it resolves regardless of installer hoisting.
 loadEnv({ path: resolve(__dirname, "docker/.env") });
 
 export default defineConfig({
   testDir: "./e2e",
   fullyParallel: false,
-  // All specs drive one shared live Bluesky test account (see E2E.yml's
-  // concurrency group), so cross-file parallelism races specs against each
-  // other's inbox/message state. One worker serializes them.
+  // Specs share one live Bluesky test account; parallel files race on its state.
   workers: 1,
   retries: process.env.CI ? 1 : 0,
   reporter: [["html", { open: "never" }]],
   use: {
-    // Caddy exposed directly on 8090 by docker-compose.e2e.yml (bypasses Anubis)
+    // Caddy on 8090 via docker-compose.e2e.yml, bypassing Anubis.
     baseURL: process.env.PLAYWRIGHT_BASE_URL || "http://localhost:8090",
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
-    // Pins the browser's resolved language so `navigator.languages` — and
-    // therefore `resolveUiLocale`'s fallback rung — is deterministic across
-    // CI runners regardless of the host machine's own locale. Applies to
-    // every project below; neither overrides it.
+    // Pinned so navigator.languages (resolveUiLocale's fallback) ignores the host locale.
     locale: "en-US",
   },
   projects: [
@@ -31,16 +24,13 @@ export default defineConfig({
       name: "setup",
       testMatch: /.*\.setup\.ts/,
     },
-    // Desktop / web — full Chrome viewport, sidebar always visible.
     {
       name: "chromium",
       use: { ...devices["Desktop Chrome"] },
       testMatch: /.*\.spec\.ts/,
-      // Specs at the e2e root (e.g. happy-path.spec.ts) and under e2e/web/.
       testIgnore: [/mobile\/.*\.spec\.ts/],
       dependencies: ["setup"],
     },
-    // Mobile — small viewport, navbar collapses behind the burger.
     {
       name: "mobile-chromium",
       use: { ...devices["Pixel 7"] },

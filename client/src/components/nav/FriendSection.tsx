@@ -17,11 +17,9 @@ interface FriendSectionProps {
   friends: Friend[];
   emptyText: string;
   onLinkClick: () => void;
-  /** The signed-in account; the collapsed/expanded choice is stored per DID. */
   did: string;
 }
 
-/** One collapsible group of kodamachi users in the sidebar. */
 export function FriendSection({ label, friends, emptyText, onLinkClick, did }: FriendSectionProps) {
   const [opened, { toggle }] = useDisclosure(isSectionOpen(label, did));
   const { triggerHaptic } = useHaptic(1);

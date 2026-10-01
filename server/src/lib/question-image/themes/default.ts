@@ -3,7 +3,6 @@ import { markTile } from "../mark";
 import { BASE_CSS, NOTO_LINK, NOTO_STACK, PRECONNECT } from "../shared-css";
 import type { RenderedTemplate } from "../templates";
 
-/** "Quote": a white card on the navy fill, the design's default question image. */
 export function renderDefaultCard(
   escapedMessage: string,
   footerText: string,

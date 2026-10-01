@@ -179,7 +179,6 @@ describe("Settings (Hono)", () => {
       });
       const passed = service.updateSettings.mock.calls[0][1];
       assert.strictEqual(passed.inboxEnabled, false);
-      // Fields the client didn't send come through as undefined (skip).
       assert.strictEqual(passed.pdsSyncEnabled, undefined);
       assert.strictEqual(passed.profanityFilterEnabled, undefined);
     });

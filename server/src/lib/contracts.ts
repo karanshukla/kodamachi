@@ -1,14 +1,8 @@
 /**
- * Identifiers that outlive the brand.
- *
- * These are on the wire, not on the page. `LEXICON_NSID` names records already
- * written to users' PDSes, and `OAUTH_SCOPE` must match the `scope` in
- * `client/public/client-metadata.json` byte for byte or every login fails.
- * Renaming the app does not rename these — derive nothing here from
- * `brand.ts`.
- *
- * Tests spell these out as literals rather than importing these constants, so
- * that renaming one fails them instead of silently following it.
+ * Identifiers that outlive the brand: `LEXICON_NSID` names records already in
+ * users' PDSes, and `OAUTH_SCOPE` must match `client/public/client-metadata.json`
+ * byte for byte. Derive nothing here from `brand.ts`. Tests use literals so a
+ * rename fails them.
  *
  * @see [contracts.test.ts](../tests/contracts.test.ts): pins `OAUTH_SCOPE`
  * against the published client metadata.
@@ -28,14 +22,10 @@ export const OAUTH_SCOPE = [
 ].join(" ");
 
 /**
- * Stable machine codes for `{ error, message }` route responses
- * (`errorBody` in `./errors.ts`). `error` is this code, part of the API
- * contract and never localized or reworded; `message` is the untranslated
- * English sentence, kept for logs and for clients that don't know the code.
- *
- * A client maps a code to a localized string; an unmapped code is a bug, not
- * a fallback path, which is why `client/src/lib/contracts.ts` mirrors this
- * list as an exhaustive `Record<ErrorCode, string>` rather than a partial one.
+ * Stable machine codes for `{ error, message }` route responses (`errorBody`
+ * in `./errors.ts`). `error` is never localized or reworded; `message` is
+ * untranslated English for logs. An unmapped code on the client is a bug, so
+ * `client/src/lib/contracts.ts` mirrors this as an exhaustive record.
  *
  * @see [contracts.test.ts](../tests/contracts.test.ts): pins this list
  * byte-for-byte against the client's mirror.

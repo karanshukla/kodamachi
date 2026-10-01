@@ -1,11 +1,9 @@
 #!/bin/sh
 
-# Auto-fix staged files with Prettier and oxlint.
-# Run per-workspace so each picks up its own .oxlintrc.json config.
+# Per-workspace so each picks up its own .oxlintrc.json.
 (cd client && bunx lint-staged --allow-empty)
 (cd server && bunx lint-staged --allow-empty)
 
-# TypeScript type check — catches errors auto-fix can't resolve
 echo "TypeScript: client..."
 bun run --cwd client typecheck
 

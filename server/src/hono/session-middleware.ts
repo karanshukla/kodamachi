@@ -12,7 +12,6 @@ export interface SessionVars {
   [SESSION_VAR]: AppSessionData | null;
 }
 
-/** A tampered or unreadable cookie yields null, i.e. logged out. */
 export const sessionMiddleware: MiddlewareHandler = async (c, next) => {
   const data = await getSignedCookie(c, env.COOKIE_SECRET, SESSION_COOKIE);
   if (data === false) {

@@ -1,12 +1,6 @@
 import type { Messages } from "./types";
 
-/**
- * Counts are formatted inside the catalog rather than by the caller, because
- * a plural form has to branch on the number — so the number is what an entry
- * receives. #406 adds an `Intl.PluralRules` beside this in each locale file;
- * English needs none, which is exactly why the shape has to be settled here
- * and not discovered by the first locale that does.
- */
+/** Count entries receive the number, not a string: a plural form has to branch on it. */
 const numberFormat = new Intl.NumberFormat("en");
 
 export const en = {

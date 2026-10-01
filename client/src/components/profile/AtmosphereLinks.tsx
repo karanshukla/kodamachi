@@ -24,7 +24,6 @@ interface AtmosphereLinksProps {
   apps: AtmosphereApp[];
 }
 
-/** The catalog's brand mark, or a neutral one for an app it does not carry. */
 function AppMark({ app }: { app: AtmosphereApp }) {
   return (
     <Box className="ds-atmosphere-mark" style={styles.mark}>

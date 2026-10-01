@@ -225,7 +225,6 @@ describe("settings hooks", () => {
     const { result } = renderHook(() => useUserSettings(), {
       wrapper: makeWrapper(),
     });
-    // Access the query's retry config by checking that the hook initializes properly
     expect(result.current).toBeDefined();
   });
 
@@ -323,7 +322,6 @@ describe("settings hooks", () => {
       void result.current.save({ uiLocale: "de" });
     });
     await waitFor(() => expect(result.current.isSaving("uiLocale")).toBe(true));
-    // Both requests are open at once: neither waited on the other.
     expect(result.current.isSaving("inboxEnabled")).toBe(true);
 
     await act(async () => {

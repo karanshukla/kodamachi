@@ -12,7 +12,6 @@ describe("formatTimestamp", () => {
   });
 
   it("includes a timezone abbreviation", () => {
-    // e.g. UTC, GMT, EST, EDT, AEST — at least two consecutive uppercase letters
     expect(formatTimestamp("2024-03-15T14:30:00.000Z", "en-US")).toMatch(/[A-Z]{2,}/);
   });
 
@@ -23,9 +22,6 @@ describe("formatTimestamp", () => {
   });
 
   it("formats in the requested non-English locale, not just the runtime default", () => {
-    // German orders day-before-month with a trailing period and spells the
-    // month natively ("März", not "Mar") — a genuinely different shape from
-    // the en-US case above, not just a different string.
     const result = formatTimestamp("2024-03-15T14:30:00.000Z", "de-DE");
     expect(result).toMatch(/^\d{1,2}\.\s?März/);
   });

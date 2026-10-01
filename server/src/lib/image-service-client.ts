@@ -2,32 +2,21 @@ import type { Logger } from "pino";
 
 import { env } from "#/lib/env";
 
-// The image service runs with Railway's Serverless (app-sleeping) enabled and
-// launches Chromium lazily, so a request that arrives after an idle stretch
-// pays a container wake plus a browser launch before it can render. The
-// deadline has to cover both, not just a warm render.
+// Railway app-sleeping plus lazy Chromium: the deadline must cover a container wake and a browser launch.
 export const IMAGE_SERVICE_DEADLINE_MS = 30_000;
 
-// Shorter than a render's budget since nobody is blocked on it, but still a
-// retry budget and not a bare fetch: the first packet wakes the container, and
-// Railway's edge answers 502 until that wake finishes.
 const IMAGE_SERVICE_WARM_DEADLINE_MS = 15_000;
 
-// A sleeping service answers before it is ready, and those answers are HTTP
-// responses rather than network errors: Railway's edge returns 502 while the
-// container is still waking, and the image service itself returns 503 while
-// Chromium is still launching. Treating any response as final would turn every
-// wake into a user-visible failure. 4xx is excluded on purpose — a rejected
-// payload fails identically on every attempt — as is 429, where retrying only
-// adds load to a limiter that is already shedding.
+// Wake-time answers: Railway's edge 502s while the container wakes, the image
+// service 503s while Chromium launches. 4xx and 429 are not retried: they fail
+// identically or add load to a limiter already shedding.
 const WAKE_RETRYABLE_STATUSES = new Set([408, 502, 503, 504]);
 
 const INITIAL_RETRY_DELAY_MS = 500;
 const MAX_RETRY_DELAY_MS = 2000;
 const RETRY_BACKOFF_FACTOR = 1.5;
 
-// Each attempt gets its own AbortController so one hung connection cannot eat
-// the whole deadline and starve the retry that would have succeeded.
+// One AbortController per attempt so a hung connection cannot eat the whole deadline.
 export async function fetchWithRetry(
   url: string,
   init: RequestInit,
@@ -48,8 +37,7 @@ export async function fetchWithRetry(
         clearTimeout(abortTimer);
         return response;
       }
-      // Drained (with the abort timer still armed) so the connection returns to
-      // the pool instead of being held open by the next retry.
+      // Drained under the armed timer so the connection returns to the pool.
       lastRetryableResponse = {
         status: response.status,
         statusText: response.statusText,
@@ -65,8 +53,7 @@ export async function fetchWithRetry(
     await new Promise((resolve) => setTimeout(resolve, Math.min(delay, remainingAfter)));
     delay = Math.min(Math.ceil(delay * RETRY_BACKOFF_FACTOR), MAX_RETRY_DELAY_MS);
   }
-  // Exhausted while the service was still waking: hand back the last real
-  // response so the caller logs the actual status instead of a generic throw.
+  // Hand back the last real response so the caller logs its status.
   if (lastRetryableResponse) {
     const { status, statusText, body } = lastRetryableResponse;
     return new Response(body, { status, statusText });

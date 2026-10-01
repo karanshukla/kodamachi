@@ -17,13 +17,10 @@ interface AskCardProps {
   onChange: (value: string) => void;
   onSend: () => void;
   sending: boolean;
-  /** False when the owner has closed their inbox; the composer is replaced. */
   open: boolean;
-  /** True after a message went through; the composer is replaced by the confirmation. */
   sent: boolean;
   onSendAnother: () => void;
   error: string | null;
-  /** True when `error` came back from the server rather than from validation. */
   sendFailed: boolean;
   onDismissError: () => void;
   translations: TouchpointTranslations;
@@ -31,7 +28,6 @@ interface AskCardProps {
   textareaRef: React.RefObject<HTMLTextAreaElement | null>;
 }
 
-/** The anonymous-question composer: a filled card with a paper input. */
 export function AskCard({
   fill,
   headline,

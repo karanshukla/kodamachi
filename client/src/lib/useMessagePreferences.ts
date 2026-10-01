@@ -3,10 +3,7 @@ import { useLocalStorage } from "@mantine/hooks";
 /**
  * The device-local posting preferences shown on the Messages page.
  *
- * Each one is its own localStorage entry (unchanged from when they were five
- * separate `useLocalStorage` calls in the page), but callers see one record and
- * one setter, so adding a preference no longer means threading another
- * value/setter pair through the component tree.
+ * Each one is its own localStorage entry; callers see one record and one setter.
  */
 
 export const PREFERENCE_KEYS = [

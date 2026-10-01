@@ -13,19 +13,14 @@ import { isPublicPdsUrl } from "../lib/public-pds-url";
 import { withRetry } from "../lib/retry";
 import { createTtlCache } from "../lib/ttl-cache";
 
-/** The DID-document lookup this service needs, narrowed for injection. */
 export interface AtprotoDataResolver {
   did: { resolveAtprotoData(did: string): Promise<{ pds?: string } | undefined> };
 }
 
-/** What a repo scan costs, so a public page never pays for it twice in an hour. */
+/** A public page never pays for a repo scan twice in an hour. */
 const PRESENCE_TTL_MS = 60 * 60 * 1000;
 
-/**
- * A failed scan is cached too, or an unreachable PDS is re-dialled on every
- * view of that profile. Kept far shorter than a success: a transient outage
- * must not hide someone's apps for an hour.
- */
+/** Failures are cached too, but briefly: a transient outage must not hide apps for an hour. */
 const FAILURE_TTL_MS = 5 * 60 * 1000;
 
 const MAX_CACHED_REPOS = 500;
@@ -39,42 +34,22 @@ interface DescribeRepoResponse {
   collections?: string[];
 }
 
-/**
- * Records every Bluesky account already has, and so evidence of nothing. Twelve
- * catalog entries declare this prefix and nothing else — Deer, Northsky,
- * Blacksky, Bluepy and the rest are alternative readers of the same records,
- * not places their owner separately signed up for.
- */
+/** Records every Bluesky account has, so evidence of nothing: Deer, Northsky etc. are alternative readers. */
 const BLUESKY_PREFIX = "app.bsky.";
 
-/** The prefixes that would say this account writes something beyond Bluesky. */
 function beyondBluesky(entry: WaypointData): string[] {
   return (entry.expectedCollections ?? []).filter((prefix) => !prefix.startsWith(BLUESKY_PREFIX));
 }
 
-/**
- * One key per body of data, so five readers of one blog are one icon.
- *
- * `redirectCompat` is the catalog's own answer to "which of these render the
- * same records": Leaflet, Offprint, Pckt, Standard Reader and Anisota Reader
- * all sit in `standard-site` and all render the one `pub.leaflet.` repo.
- */
+/** One key per body of data, so five readers of one blog are one icon. */
 function dataFamilyOf(entry: WaypointData): string {
   return entry.redirectCompat.join("|");
 }
 
 /**
  * The Atmosphere apps whose own records `collections` contains, one per body of
- * data, in the catalog's recommendation order.
- *
- * Presence is judged only on the prefixes outside `app.bsky.`, so this answers
- * "what else does this account publish" rather than "what could open it" —
- * every Bluesky account would answer the latter identically and the row would
- * say nothing about anyone.
- *
- * `waypointActivity` reports `unknown` rather than `present` for an entry left
- * with no prefixes, which takes care of the generic record browsers (PDSls,
- * atp.tools, Aturi) and the Bluesky-only clients in one step.
+ * data, in the catalog's recommendation order. Judged only on prefixes outside
+ * `app.bsky.`: "what else does this account publish", not "what could open it".
  *
  * @see [atmosphere-service.test.ts](../tests/atmosphere-service.test.ts):
  * "omits a Bluesky-only client every account would match" and "counts five
@@ -107,7 +82,6 @@ export function appsPresentIn(collections: ReadonlySet<string>): string[] {
   return present;
 }
 
-/** An app to show in the profile row, resolved to somewhere a reader can go. */
 export interface AtmosphereAppLink {
   id: string;
   name: string;
@@ -115,11 +89,9 @@ export interface AtmosphereAppLink {
 }
 
 /**
- * Turn the ids `appsPresentIn` found into names and destinations.
- *
- * Kept apart from the repo scan because the scan is cached per DID for an hour
- * and a handle can change inside that window, which would leave the cache
- * holding links to a name its owner no longer has.
+ * Turns the ids `appsPresentIn` found into names and destinations. Separate
+ * from the scan because the scan is cached per DID and a handle can change
+ * inside that window.
  *
  * @see [atmosphere-service.test.ts](../tests/atmosphere-service.test.ts):
  * "drops an app that cannot address this account".
@@ -157,11 +129,8 @@ export class AtmosphereService {
   ) {}
 
   /**
-   * Which Atmosphere apps an account uses, read off its own PDS.
-   *
-   * Never throws and never rejects: this decorates a public profile, so a PDS
-   * that is slow, unreachable, or lying answers "no apps" rather than taking
-   * the whole page down with it.
+   * Which Atmosphere apps an account uses, read off its own PDS. Never rejects:
+   * a bad PDS answers "no apps" rather than taking the profile down.
    *
    * @see [atmosphere-service.test.ts](../tests/atmosphere-service.test.ts):
    * "answers with no apps rather than throwing when the PDS is unreachable".
@@ -197,11 +166,8 @@ export class AtmosphereService {
   }
 
   /**
-   * `redirect: "manual"` is the other half of `isPublicPdsUrl`. Validating the
-   * URL alone is not enough: a PDS on a perfectly public hostname can answer
-   * 302 and send the follow-up request to a private address, which puts the
-   * fetch back inside the network the check exists to keep it out of. A real
-   * describeRepo does not redirect, so a 3xx is refused rather than followed.
+   * `redirect: "manual"` is the other half of `isPublicPdsUrl`: a public host
+   * can 302 to a private address (SSRF). A real describeRepo never redirects.
    *
    * @see [atmosphere-service.test.ts](../tests/atmosphere-service.test.ts):
    * "refuses to follow a redirect away from the PDS it validated".

@@ -3,7 +3,6 @@ import { Box, Group, Paper, Skeleton } from "@mantine/core";
 import * as cardStyles from "./ProfileCard.styles";
 import * as styles from "./ProfileSkeleton.styles";
 
-/** Placeholder matching the loaded profile's geometry, so nothing jumps. */
 export function ProfileSkeleton() {
   return (
     <>
