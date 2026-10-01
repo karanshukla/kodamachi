@@ -6,7 +6,6 @@ import dns from "node:dns";
 import { cors } from "hono/cors";
 import { Hono } from "hono";
 import type { MiddlewareHandler } from "hono";
-import { rateLimiter } from "hono-rate-limiter";
 import pino from "pino";
 
 import { createDb, migrateToLatest } from "./database/db";
@@ -17,6 +16,7 @@ import { createMessageHono } from "./hono/message-routes";
 import { createNotificationHono } from "./hono/notification-routes";
 import { createProfileHono } from "./hono/profile-routes";
 import { createSettingsHono } from "./hono/settings-routes";
+import { perIpRateLimiter, sendRateLimiter } from "./hono/rate-limits";
 import { sessionMiddleware, type SessionVars } from "./hono/session-middleware";
 
 import type { Database } from "./database/db";
@@ -82,20 +82,6 @@ function corsForClient(clientUrl: string) {
   });
 }
 
-function perIpRateLimiter(limit: number) {
-  return rateLimiter({
-    windowMs: 60 * 1000,
-    limit,
-    standardHeaders: "draft-6",
-    message: "Too many requests, please try again later.",
-    // Local dev has no proxy hop, so all requests share the "local" bucket.
-    keyGenerator: (c) => {
-      const xff = c.req.header("x-forwarded-for");
-      return xff ? xff.split(",")[0].trim() : "local";
-    },
-  });
-}
-
 const noStore: MiddlewareHandler = async (c, next) => {
   await next();
   c.header("Cache-Control", "no-store");
@@ -118,6 +104,7 @@ function buildApp(
   app.use("*", corsForClient(clientUrl));
   if (rateLimitMax > 0) {
     app.use("*", perIpRateLimiter(rateLimitMax));
+    app.post("/messages/send", sendRateLimiter());
   }
   app.use("*", sessionMiddleware);
   app.use("*", noStore);
