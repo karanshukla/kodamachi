@@ -524,6 +524,20 @@ describe("Auth (Hono)", () => {
       assert.strictEqual(res.status, 500);
     });
 
+    test("returns 400 and sets no session when the token has expired", async () => {
+      const { app, headers } = makeApp({
+        serviceOverride: { decryptDid: mock(() => null) },
+      });
+      const res = await app.request("/oauth/consume", {
+        method: "POST",
+        headers: jsonHeaders(headers),
+        body: JSON.stringify({ oauth_token: "stale" }),
+      });
+      assert.strictEqual(res.status, 400);
+      assert.strictEqual((await res.json()).error, "INVALID_OAUTH_TOKEN");
+      assert.ok(!(res.headers.get("set-cookie") ?? "").includes("nf-session="));
+    });
+
     test("returns 404 when user not found", async () => {
       const { app, headers } = makeApp({
         serviceOverride: { findUserByDid: mock(async () => null) },

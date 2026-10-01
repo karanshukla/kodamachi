@@ -12,6 +12,15 @@ import { withRetry } from "../lib/retry";
 import type { AppContext } from "../index";
 import type { AppBskyActorDefs } from "@atproto/api";
 
+/**
+ * The callback hands this token over in a URL, which lands in browser history
+ * and access logs, so it only has to outlive the redirect to `/oauth_callback`.
+ *
+ * @see [auth-service.test.ts](../tests/auth-service.test.ts): "accepts an oauth
+ * token inside its lifetime" and "rejects an oauth token past its lifetime".
+ */
+export const OAUTH_TOKEN_TTL_MS = 5 * 60 * 1000;
+
 export class AuthService {
   constructor(private ctx: AppContext) {}
   /* v8 ignore stop */
@@ -96,20 +105,25 @@ export class AuthService {
       .execute();
   }
 
-  encryptDid(did: string) {
+  encryptDid(did: string, now = Date.now()) {
     const secret = env.OAUTH_TOKEN_SECRET;
     /* v8 ignore next 1 */
     if (!secret) throw new Error("OAUTH_TOKEN_SECRET is not set");
     const cryptr = new Cryptr(secret);
-    return encodeURIComponent(cryptr.encrypt(did));
+    return encodeURIComponent(cryptr.encrypt(JSON.stringify({ did, issuedAt: now })));
   }
 
-  decryptDid(token: string) {
+  /** The DID, or null once the token is older than `OAUTH_TOKEN_TTL_MS`. */
+  decryptDid(token: string, now = Date.now()): string | null {
     const secret = env.OAUTH_TOKEN_SECRET;
     /* v8 ignore next 1 */
     if (!secret) throw new Error("OAUTH_TOKEN_SECRET is not set");
     const cryptr = new Cryptr(secret);
-    return cryptr.decrypt(token);
+    const { did, issuedAt } = JSON.parse(cryptr.decrypt(token)) as {
+      did: string;
+      issuedAt: number;
+    };
+    return now - issuedAt <= OAUTH_TOKEN_TTL_MS ? did : null;
   }
 
   async findUserByDid(did: string) {

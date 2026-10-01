@@ -254,12 +254,15 @@ export function createAuthHono(ctx: AppContext, deps: AuthDeps = {}): Hono {
     if (!oauthToken) {
       return c.json(errorBody("MISSING_OAUTH_TOKEN", "Missing oauth_token"), 400);
     }
-    let did: string;
+    let did: string | null;
     try {
       did = service.decryptDid(oauthToken);
     } catch {
       ctx.logger.error("OAUTH_TOKEN_SECRET is not set");
       return c.json(errorBody("SERVER_MISCONFIGURED", "Server misconfiguration"), 500);
+    }
+    if (!did) {
+      return c.json(errorBody("INVALID_OAUTH_TOKEN", "Invalid or expired token"), 400);
     }
     try {
       const user = await service.findUserByDid(did);

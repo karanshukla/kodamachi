@@ -8,6 +8,7 @@ import { deleteE2EAgent, setE2EAgent } from "../auth/e2e-agent-store";
 
 // mock.module must precede the import, so AuthService is loaded lazily in beforeAll.
 let AuthService: typeof import("../services/auth-service").AuthService;
+let OAUTH_TOKEN_TTL_MS: number;
 let mockAgent: { getProfile: Mock<(...args: any[]) => Promise<any>> };
 
 beforeAll(async () => {
@@ -25,6 +26,7 @@ beforeAll(async () => {
   }));
   const mod = await import("../services/auth-service");
   AuthService = mod.AuthService;
+  OAUTH_TOKEN_TTL_MS = mod.OAUTH_TOKEN_TTL_MS;
 });
 
 // Call-history cleanup only; the mock stays registered (--isolate contains it).
@@ -122,6 +124,18 @@ describe("AuthService", () => {
       assert.strictEqual(ctx.db.deleteFrom.mock.calls.length, 1);
       assert.strictEqual(ctx.db.deleteFrom.mock.calls[0][0], "auth_session");
     });
+  });
+
+  test("accepts an oauth token inside its lifetime", () => {
+    const issuedAt = Date.now();
+    const token = decodeURIComponent(service.encryptDid("did:foo", issuedAt));
+    assert.strictEqual(service.decryptDid(token, issuedAt + OAUTH_TOKEN_TTL_MS), "did:foo");
+  });
+
+  test("rejects an oauth token past its lifetime", () => {
+    const issuedAt = Date.now();
+    const token = decodeURIComponent(service.encryptDid("did:foo", issuedAt));
+    assert.strictEqual(service.decryptDid(token, issuedAt + OAUTH_TOKEN_TTL_MS + 1), null);
   });
 
   test("encryptDid and decryptDid roundtrip", () => {
