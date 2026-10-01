@@ -71,12 +71,13 @@ describe("AuthService", () => {
   });
 
   test("getOAuthRedirectUrl throws for invalid handle", async () => {
-    await assert.rejects(() => service.getOAuthRedirectUrl(""), /invalid handle/);
+    await assert.rejects(() => service.getOAuthRedirectUrl("", "state-1"), /invalid handle/);
   });
 
   test("getOAuthRedirectUrl returns URL for valid handle", async () => {
-    const url = await service.getOAuthRedirectUrl("test.bsky.social");
+    const url = await service.getOAuthRedirectUrl("test.bsky.social", "state-1");
     assert.strictEqual(url, "https://example.com/redirect");
+    assert.strictEqual(ctx.oauthClient.authorize.mock.calls[0][1].state, "state-1");
   });
 
   test("getOAuthRedirectUrl re-throws OAuthResolverError message", async () => {
@@ -84,7 +85,7 @@ describe("AuthService", () => {
       throw new OAuthResolverError("handle not found");
     });
     await assert.rejects(
-      () => service.getOAuthRedirectUrl("unknown.bsky.social"),
+      () => service.getOAuthRedirectUrl("unknown.bsky.social", "state-1"),
       /handle not found/
     );
   });
@@ -94,7 +95,7 @@ describe("AuthService", () => {
       throw new Error("unexpected");
     });
     await assert.rejects(
-      () => service.getOAuthRedirectUrl("test.bsky.social"),
+      () => service.getOAuthRedirectUrl("test.bsky.social", "state-1"),
       /couldn't initiate login/
     );
   });
@@ -411,7 +412,7 @@ describe("AuthService", () => {
         throw null;
       });
       await assert.rejects(
-        () => service.getOAuthRedirectUrl("test.bsky.social"),
+        () => service.getOAuthRedirectUrl("test.bsky.social", "state-1"),
         /couldn't initiate login/
       );
       assert.strictEqual(ctx.logger.error.mock.calls.length, 1);
@@ -422,7 +423,7 @@ describe("AuthService", () => {
         throw "authorize failed";
       });
       await assert.rejects(
-        () => service.getOAuthRedirectUrl("test.bsky.social"),
+        () => service.getOAuthRedirectUrl("test.bsky.social", "state-1"),
         /couldn't initiate login/
       );
     });

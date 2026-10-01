@@ -2,7 +2,7 @@
 
 import { Hono } from "hono";
 
-import { SESSION_VAR, type SessionVars } from "#/hono/session-middleware";
+import { LIVE_DID_VAR, SESSION_VAR, type SessionVars } from "#/hono/session-middleware";
 
 import type { AppSessionData } from "#/auth/session";
 
@@ -20,6 +20,7 @@ export function withTestSession(subApp: Hono): Hono<{ Variables: SessionVars }> 
     } else {
       c.set(SESSION_VAR, null);
     }
+    c.set(LIVE_DID_VAR, c.get(SESSION_VAR)?.did);
     await next();
   });
   wrapper.route("/", subApp);

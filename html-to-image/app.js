@@ -69,6 +69,25 @@ async function waitForVisualReadiness(page) {
   await Promise.all([waitForWebfonts(page), waitForDecodedImages(page)]);
 }
 
+/**
+ * Inline data and public https assets (webfonts, Bluesky CDN images) only:
+ * a render never reaches local files or plain-http private-network hosts.
+ *
+ * @see [app.test.js](./app.test.js): 'lets data: and https: requests through'
+ * and 'aborts file:, http: and other requests'.
+ */
+export function isAllowedRequest(url) {
+  return url.startsWith('data:') || url.startsWith('https://');
+}
+
+async function blockDisallowedRequests(page) {
+  await page.setRequestInterception(true);
+  page.on('request', (request) => {
+    if (isAllowedRequest(request.url())) request.continue();
+    else request.abort();
+  });
+}
+
 // Railway sleeps apps on outbound-packet inactivity; these flags silence Chromium's timer-driven
 // background traffic (updater, safe-browsing, field trials, mDNS). The rest trim RSS.
 export const CHROMIUM_LAUNCH_ARGS = [
@@ -259,15 +278,13 @@ export function createApp(getBrowser, { onRenderComplete = () => {}, warm = asyn
       const { source, format: formatName, options = {} } = req.body;
       const format = FORMATS[formatName];
       const tmpoutput = tmp.fileSync({ prefix: 'htmltoimage-' });
-      const tmpinput = tmp.fileSync({ prefix: 'htmltoimage-', postfix: '.html' });
 
       try {
-        await fs.promises.writeFile(tmpinput.name, source);
-
         const page = await browser.newPage();
         try {
+          await blockDisallowedRequests(page);
           await page.setViewport({ width: options.width || 1920, height: options.height || 1080 });
-          await page.goto('file://' + tmpinput.name);
+          await page.setContent(source);
           await waitForVisualReadiness(page);
           await page.screenshot(Object.assign({}, options.args, format.args, { path: tmpoutput.name }));
         } finally {
@@ -277,11 +294,9 @@ export function createApp(getBrowser, { onRenderComplete = () => {}, warm = asyn
         res.header('Content-Type', format.contentType);
         fs.createReadStream(tmpoutput.name).pipe(res).on('close', () => {
           tmpoutput.removeCallback();
-          tmpinput.removeCallback();
         });
       } catch (err) {
         tmpoutput.removeCallback();
-        tmpinput.removeCallback();
         res.status(500).json({ error: err.message || 'Image generation failed' });
       }
     } finally {
