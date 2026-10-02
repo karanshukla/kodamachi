@@ -165,7 +165,7 @@ function WelcomeBack({ profile }: { profile: SessionProfile }) {
     <Paper p={{ base: 20, sm: 32 }} withBorder>
       <Flex direction={{ base: "column-reverse", sm: "row" }} align="center" gap={32}>
         <div style={styles.heroCopy}>
-          <Text fw={600} fz={24} style={styles.greeting}>
+          <Text fw={600} fz={24} ta={{ base: "center", sm: "left" }} style={styles.greeting}>
             {messages.home.welcomeBackGreetingPrefix} {name}
           </Text>
           <Flex direction={{ base: "column", sm: "row" }} gap={10} mt={26}>
