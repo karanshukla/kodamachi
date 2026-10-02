@@ -244,7 +244,7 @@ body {
   --ds-mark-bg: var(--ds-navy);
   --ds-mark-fg: var(--ds-paper);
 
-  /* Hero surfaces — the welcome card, the inbox link, ink question cards, a
+  /* Hero surfaces — the inbox link, ink question cards, a
      profile banner with no image: navy with white ink, inverted in the dark.
      -faint is for dashed rules and progress tracks only, never text. */
   --ds-hero: var(--ds-navy);

@@ -3,7 +3,6 @@ import {
   CopyButton,
   Divider,
   Flex,
-  Group,
   Paper,
   SimpleGrid,
   Skeleton,
@@ -25,7 +24,6 @@ import { APP_DOMAIN, APP_NAME } from "../lib/brand";
 import { useTranslations } from "../lib/i18n";
 import { usePageTitle } from "../lib/usePageTitle";
 import type { Messages } from "../lib/i18n/types";
-import { heroButton, heroOutlineButton } from "../styles/tokens";
 
 import * as styles from "./Home.styles";
 
@@ -164,54 +162,51 @@ function WelcomeBack({ profile }: { profile: SessionProfile }) {
   };
 
   return (
-    <Paper style={styles.hero}>
-      <Mascot pose="greeting" size={132} style={{ marginBottom: 18 }} />
-      <Text fw={600} fz={24} style={styles.greeting}>
-        {messages.home.welcomeBackGreetingPrefix} {name}
-      </Text>
-      <Center mt={26}>
-        <Group gap={10} align="center" wrap="wrap" justify="center">
-          <Button
-            component={Link}
-            to="/messages"
-            size="md"
-            radius="md"
-            variant="default"
-            style={heroButton}
-          >
-            {messages.home.viewYourMessages}
-          </Button>
-          <CopyButton value={url}>
-            {({ copied, copy }) => (
-              <Tooltip
-                label={copied ? messages.common.copied : messages.home.copyProfileLink}
-                withArrow
+    <Paper p={{ base: 20, sm: 32 }} withBorder>
+      <Flex direction={{ base: "column-reverse", sm: "row" }} align="center" gap={32}>
+        <div style={styles.heroCopy}>
+          <Text fw={600} fz={24} style={styles.greeting}>
+            {messages.home.welcomeBackGreetingPrefix} {name}
+          </Text>
+          <Flex direction={{ base: "column", sm: "row" }} gap={10} mt={26}>
+            <Button component={Link} to="/messages" size="md" radius="md" variant="filled">
+              {messages.home.viewYourMessages}
+            </Button>
+            <SimpleGrid cols={2} spacing={10}>
+              <CopyButton value={url}>
+                {({ copied, copy }) => (
+                  <Tooltip
+                    label={copied ? messages.common.copied : messages.home.copyProfileLink}
+                    withArrow
+                  >
+                    <Button
+                      onClick={copy}
+                      size="md"
+                      radius="md"
+                      variant="default"
+                      fullWidth
+                      leftSection={<IconClipboard size={16} />}
+                    >
+                      {copied ? messages.common.copied : messages.home.copyLinkButton}
+                    </Button>
+                  </Tooltip>
+                )}
+              </CopyButton>
+              <Button
+                size="md"
+                radius="md"
+                variant="default"
+                fullWidth
+                leftSection={<IconShare size={16} />}
+                onClick={share}
               >
-                <Button
-                  onClick={copy}
-                  size="md"
-                  radius="md"
-                  variant="default"
-                  style={heroOutlineButton}
-                  leftSection={<IconClipboard size={16} />}
-                >
-                  {copied ? messages.common.copied : messages.home.copyLinkButton}
-                </Button>
-              </Tooltip>
-            )}
-          </CopyButton>
-          <Button
-            size="md"
-            radius="md"
-            variant="default"
-            style={heroOutlineButton}
-            leftSection={<IconShare size={16} />}
-            onClick={share}
-          >
-            {messages.common.share}
-          </Button>
-        </Group>
-      </Center>
+                {messages.common.share}
+              </Button>
+            </SimpleGrid>
+          </Flex>
+        </div>
+        <Mascot pose="greeting" size={280} style={styles.heroMascot} />
+      </Flex>
     </Paper>
   );
 }
@@ -219,9 +214,9 @@ function WelcomeBack({ profile }: { profile: SessionProfile }) {
 function SignedOutHero() {
   const messages = useTranslations();
   return (
-    <Paper p={32} withBorder>
+    <Paper p={{ base: 20, sm: 32 }} withBorder>
       <Flex direction={{ base: "column-reverse", sm: "row" }} align="center" gap={32}>
-        <div style={styles.signedOutCopy}>
+        <div style={styles.heroCopy}>
           <Stack gap={22}>
             {sellingPoints(messages).map(({ title, body }) => (
               <div key={title} style={styles.sellingPoint}>
@@ -241,7 +236,7 @@ function SignedOutHero() {
             {messages.home.getStarted}
           </Button>
         </div>
-        <Mascot pose="idle" size={280} style={styles.signedOutMascot} />
+        <Mascot pose="idle" size={280} style={styles.heroMascot} />
       </Flex>
     </Paper>
   );
