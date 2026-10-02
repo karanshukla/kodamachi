@@ -1,14 +1,22 @@
-"""Cut the coloured mascot sheet into transparent sprites: <pose>.webp, plus sprout-mark.webp.
+"""Cut the coloured mascot sheet into every raster the brand ships.
 
 Run from the repo root: python3 scripts/mascot_assets.py <sheet>
+Writes the pose sprites, the mark (client/public/mark.png and the header's sprout-mark.webp),
+the favicons and app icons, and brand.json's markDataUri for the server and opengraph-service
+templates. Rerun it on the lossless master when it arrives; everything here is derived.
 """
+import base64
+import io
+import json
 import sys
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFilter, ImageOps
 
 SRC = sys.argv[1] if len(sys.argv) > 1 else "Kodamachi Coloured version.jpeg"
-OUT = "client/public/mascot"
+PUBLIC = "client/public"
+OUT = f"{PUBLIC}/mascot"
+BRAND_JSON = "brand.json"
 COL_SPLIT = 740
 ROW_SPLIT = 925
 QUADRANTS = {
@@ -23,6 +31,11 @@ EDGE_SOFTEN = 1.2
 PAD = 6
 SIZE = 640
 MARK_SIZE = 256
+MASTER_SIZE = 512
+INLINE_MARK_SIZE = 96
+PLATE = (255, 255, 255)
+APPLE_TOUCH_SCALE = 0.78
+MASKABLE_SCALE = 0.62
 
 
 def silhouette(rgb):
@@ -86,6 +99,37 @@ def square(img, size, bottom):
     return c.resize((size, size), Image.LANCZOS)
 
 
+def on_plate(mark, size, scale):
+    """iOS blacks out transparency and Android masks to a circle, so these icons get a paper plate."""
+    plate = Image.new("RGBA", (size, size), PLATE + (255,))
+    inner = round(size * scale)
+    offset = (size - inner) // 2
+    plate.alpha_composite(mark.resize((inner, inner), Image.LANCZOS), (offset, offset))
+    return plate.convert("RGB")
+
+
+def write_brand_rasters(mark):
+    mark.save(f"{PUBLIC}/mark.png", optimize=True)
+    mark.resize((MARK_SIZE, MARK_SIZE), Image.LANCZOS).save(f"{OUT}/sprout-mark.webp", quality=90, method=6)
+    for px in (16, 32):
+        mark.resize((px, px), Image.LANCZOS).save(f"{PUBLIC}/favicon-{px}x{px}.png", optimize=True)
+    mark.save(f"{PUBLIC}/favicon.ico", sizes=[(16, 16), (32, 32), (48, 48)])
+    on_plate(mark, 180, APPLE_TOUCH_SCALE).save(f"{PUBLIC}/apple-touch-icon.png", optimize=True)
+    for px in (192, 512):
+        on_plate(mark, px, MASKABLE_SCALE).save(f"{PUBLIC}/android-chrome-{px}x{px}.png", optimize=True)
+
+
+def write_inline_mark(mark):
+    buf = io.BytesIO()
+    mark.resize((INLINE_MARK_SIZE, INLINE_MARK_SIZE), Image.LANCZOS).save(buf, "WEBP", quality=85, method=6)
+    with open(BRAND_JSON) as f:
+        brand = json.load(f)
+    brand["markDataUri"] = "data:image/webp;base64," + base64.b64encode(buf.getvalue()).decode()
+    with open(BRAND_JSON, "w") as f:
+        json.dump(brand, f, indent=2)
+        f.write("\n")
+
+
 Path(OUT).mkdir(parents=True, exist_ok=True)
 src = Image.open(SRC).convert("RGB")
 for name, (x0, y0, x1, y1) in QUADRANTS.items():
@@ -94,5 +138,7 @@ for name, (x0, y0, x1, y1) in QUADRANTS.items():
     bottom = name != "sprout"
     square(cut_out(quad), SIZE, bottom).save(f"{OUT}/{name}.webp", quality=90, method=6)
     if name == "sprout":
-        square(bare_bulb(quad), MARK_SIZE, bottom).save(f"{OUT}/sprout-mark.webp", quality=90, method=6)
+        mark = square(bare_bulb(quad), MASTER_SIZE, bottom)
+        write_brand_rasters(mark)
+        write_inline_mark(mark)
     print(name, "ok")

@@ -46,14 +46,17 @@ from "./Thing.styles"`). Anything computed from props is a named function there,
   type/motion/radius primitives (1c) are free to use.
 - **No gradients, no third hue.** Navy and Link carry every state, danger is the one
   exception, and `contrast.test.ts` fails on any `gradient(` in the stylesheet.
-  Success and warning are an icon plus navy text.
+  Success and warning are an icon plus navy text. The mascot artwork is the only
+  colour outside that, and its greens never become UI colours.
 - **Palette keys are named for their role, not their hue** — `primary`, `accent`,
   `ink`, `danger`. `color="sunshine"` was a claim about a hue that a repaint would
   falsify.
-- **The mark is an interim "k" tile.** `BrandMark` draws it as an outline (no
-  webfont), and the header shows the wordmark alone. The handoff's 木 is retired;
-  a new logo comes with the mascot. The handoff's mascot slots stay empty until there is real artwork; do not draw
-  one in code. The design source is `docs/design/kodamachi-handoff/`.
+- **The mark is the sprout bulb, bare.** No tile and no border behind it; the art's
+  own outline carries it on both schemes. `BrandMark` and `Mascot` render the
+  sprites in `public/mascot/`, which `scripts/mascot_assets.py` cuts from the
+  artist's sheet, so fix a sprite there, not in an image editor. Sprites are
+  centred on the character, not on the character plus companion. The design
+  source is `docs/design/kodamachi-handoff/`.
 - **No component calls `useComputedColorScheme` to choose a colour** — light values
   sit on `:root`, dark under `:root[data-mantine-color-scheme="dark"]`, and the
   browser picks. Reaching for an `isDark` prop means you want a token.

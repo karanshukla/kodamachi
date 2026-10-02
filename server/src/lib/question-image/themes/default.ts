@@ -1,5 +1,5 @@
 import { themeLayout } from "../layout";
-import { markTile } from "../mark";
+import { brandMark } from "../mark";
 import { BASE_CSS, NOTO_LINK, NOTO_STACK, PRECONNECT } from "../shared-css";
 import type { RenderedTemplate } from "../templates";
 
@@ -72,7 +72,7 @@ export function renderDefaultCard(
   </style>
 </head>
 <body>
-  <p class="header">${markTile(16, "#FFFFFF", "#10224A")}<span>anonymous question</span></p>
+  <p class="header">${brandMark(16)}<span>anonymous question</span></p>
   <div class="bubble">
     <p class="message">${escapedMessage}</p>
   </div>

@@ -240,10 +240,6 @@ body {
   --ds-attention-bg: var(--ds-navy);
   --ds-attention-fg: var(--ds-paper);
 
-  /* The mark tile: navy with a white glyph on paper, inverted in the dark. */
-  --ds-mark-bg: var(--ds-navy);
-  --ds-mark-fg: var(--ds-paper);
-
   /* Hero surfaces — the inbox link, ink question cards, a
      profile banner with no image: navy with white ink, inverted in the dark.
      -faint is for dashed rules and progress tracks only, never text. */
@@ -299,9 +295,6 @@ body {
 
   --ds-attention-bg: var(--ds-ink-dark);
   --ds-attention-fg: var(--ds-navy);
-
-  --ds-mark-bg: var(--ds-ink-dark);
-  --ds-mark-fg: var(--ds-navy);
 
   --ds-hero: var(--ds-ink-dark);
   --ds-on-hero: var(--ds-navy);

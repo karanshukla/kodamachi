@@ -24,6 +24,13 @@ describe("renderQuestionCard", () => {
     assert.ok(result.html.includes("hello"));
   });
 
+  test("the themes that show the mark inline it as a data URI, so a render never fetches it", () => {
+    for (const theme of ["default", "twitter"] as const) {
+      const { html } = renderQuestionCard(theme, "hello", "kodamachi.online", "hello");
+      assert.match(html, /<img class="mark" src="data:image\/webp;base64,/);
+    }
+  });
+
   test("a theme name this server has never heard of is not a theme name", () => {
     assert.strictEqual(isThemeName("neon"), false);
     assert.strictEqual(isThemeName("twitter"), true);

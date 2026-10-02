@@ -82,7 +82,7 @@ const (
 	ogChipBG   = "#F4F6FA"
 	ogHairline = "#E3E8F0"
 
-	ogMarkGlyph = "#FFFFFF"
+	ogAvatarGlyph = "#FFFFFF"
 
 	// Copied from ProfileCard.styles.ts's bannerScrim; keeps the avatar ring
 	// readable on a bright photo.
@@ -186,10 +186,10 @@ var promptMaxHeight = promptMaxLines * promptLineBox
 // shareDomain is the share-link domain PublicProfile.tsx and ProfileUrlBar.tsx use.
 const shareDomain = "kodamachi.online"
 
-// brandMark is the app's mark inlined as SVG so it needs no network. It is
+// brandMark is the app's mark inlined as a data URI so it needs no network. It is
 // built by concatenation because the single-pass Replacer would insert a slot
 // in a substituted value literally ([TestBuildOGTemplate_LeavesNoUnfilledSlots]).
-var brandMark = `<svg class="mark" viewBox="0 0 160 160" aria-hidden="true"><rect width="160" height="160" rx="` + fmt.Sprint(MarkTileRadius) + `" fill="` + ogFillNavy + `"/><path d="` + MarkGlyphPath + `" fill="` + ogMarkGlyph + `"/></svg>`
+var brandMark = `<img class="mark" src="` + MarkDataURI + `" alt="" aria-hidden="true">`
 
 // ogTemplate is expanded by a strings.Replacer, not fmt.Sprintf, because the
 // CSS is full of percentages.
@@ -254,7 +254,7 @@ const ogTemplate = `<!DOCTYPE html>
     background: {{FILL_NAVY}};
     border: 6px solid {{SURFACE}};
     display: flex; align-items: center; justify-content: center;
-    color: {{MARK_GLYPH}};
+    color: {{AVATAR_GLYPH}};
     font-size: 58px; font-weight: 600; line-height: 1;
   }
   .meta {
@@ -363,7 +363,7 @@ func BuildOGTemplate(in OGInput) string {
 		"{{W}}", fmt.Sprint(OGWidth),
 		"{{H}}", fmt.Sprint(OGHeight),
 		"{{FILL_NAVY}}", ogFillNavy,
-		"{{MARK_GLYPH}}", ogMarkGlyph,
+		"{{AVATAR_GLYPH}}", ogAvatarGlyph,
 		"{{WORDMARK}}", AppName,
 		"{{SURFACE}}", ogSurface,
 		"{{TEXT}}", ogText,
