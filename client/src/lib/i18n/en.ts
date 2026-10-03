@@ -343,6 +343,7 @@ export const en = {
     githubContactLabel: "GitHub - ",
     disclaimer:
       "Disclaimer: Please follow Bluesky's ToS. Cookies are used to keep you logged in. This app does not include any moderation.",
+    mascotCredit: "Mascot art by Angela Clifford",
     welcomeBackGreetingPrefix: "Good to see you again,",
     viewYourMessages: "View your messages",
     copyProfileLink: "Copy profile link",

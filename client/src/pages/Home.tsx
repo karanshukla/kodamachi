@@ -117,6 +117,9 @@ export default function Home() {
             <Text fz={12} c="dimmed" style={styles.disclaimer}>
               {messages.home.disclaimer}
             </Text>
+            <Text fz={12} c="dimmed">
+              {messages.home.mascotCredit}
+            </Text>
           </Stack>
         </Paper>
       </SimpleGrid>

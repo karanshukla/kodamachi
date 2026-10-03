@@ -359,6 +359,7 @@ export const de = {
     githubContactLabel: "GitHub - ",
     disclaimer:
       "Hinweis: Bitte befolge die Nutzungsbedingungen von Bluesky. Cookies werden verwendet, um dich angemeldet zu halten. Diese App enthält keine Moderation.",
+    mascotCredit: "Maskottchen-Illustration von Angela Clifford",
     welcomeBackGreetingPrefix: "Schön, dich wiederzusehen,",
     viewYourMessages: "Deine Nachrichten ansehen",
     copyProfileLink: "Profillink kopieren",

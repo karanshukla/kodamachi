@@ -192,6 +192,7 @@ export interface HomeMessages {
   submitAnIssueOnGitHub: string;
   githubContactLabel: string;
   disclaimer: string;
+  mascotCredit: string;
   welcomeBackGreetingPrefix: string;
   viewYourMessages: string;
   copyProfileLink: string;
