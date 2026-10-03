@@ -1,5 +1,5 @@
 import assert from "node:assert";
-import { readdirSync, readFileSync } from "node:fs";
+import { readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, test } from "bun:test";
@@ -39,6 +39,14 @@ describe("anubis bot policy", () => {
       assert.equal(verdict("/index.html"), "ALLOW");
     });
 
+    test("allows a mascot sprite", () => {
+      assert.equal(verdict("/mascot/idle.webp"), "ALLOW");
+    });
+
+    test("challenges a webp outside the mascot directory", () => {
+      assert.equal(verdict("/other/idle.webp"), "CHALLENGE");
+    });
+
     test("challenges a profile path, which is what the OG shim answers", () => {
       assert.equal(verdict("/profile/someone.bsky.social"), "CHALLENGE");
     });
@@ -56,7 +64,10 @@ describe("anubis bot policy", () => {
 
   test("allows every file shipped in client/public", () => {
     const publicDir = join(repoRoot, "client", "public");
-    const challenged = readdirSync(publicDir).filter(
+    const files = readdirSync(publicDir, { recursive: true, encoding: "utf8" }).filter((name) =>
+      statSync(join(publicDir, name)).isFile()
+    );
+    const challenged = files.filter(
       (name) => verdict(`/${name}`) !== "ALLOW" && !name.endsWith(".html")
     );
 
