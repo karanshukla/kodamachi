@@ -22,7 +22,7 @@
     },
     {
       "name": "static-assets",
-      "path_regex": "^/(assets/.*|[^/]+\\.(css|ico|js|json|mjs|png|svg|txt|webmanifest|webp|woff|woff2|xml))$",
+      "path_regex": "^/(assets/.*|mascot/[^/]+\\.webp|[^/]+\\.(css|ico|js|json|mjs|png|svg|txt|webmanifest|webp|woff|woff2|xml))$",
       "action": "ALLOW"
     },
     {

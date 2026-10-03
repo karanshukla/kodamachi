@@ -76,6 +76,16 @@ describe("Home page", () => {
     expect(githubLink).toHaveAttribute("href", "https://github.com/karanshukla/navyfragen-app");
   });
 
+  it("credits the mascot's artist to signed-out visitors", () => {
+    mockUseSession.mockReturnValue({
+      data: { isLoggedIn: false, profile: null },
+      isLoading: false,
+    } as any);
+    renderWithProviders(<Home />);
+    expect(screen.getByText(en.home.mascotCredit)).toBeInTheDocument();
+    expect(en.home.mascotCredit).toContain("Angela Clifford");
+  });
+
   it("falls back to handle when displayName is absent", () => {
     mockUseSession.mockReturnValue({
       data: {

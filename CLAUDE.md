@@ -32,11 +32,17 @@ Exempt from the ladder: Go doc comments on exported identifiers, and coverage pr
 ## Brand
 
 The product is **kodamachi**: white paper, dark-blue ink, no gradients. The mark is
-an interim lowercase "k" tile until the new logo arrives with the mascot. The source of truth is the Claude Design handoff vendored at
+the mascot's sprout bulb, on its own with no tile. The mascot is the one place colour
+outside navy appears. The source of truth is the Claude Design handoff vendored at
 `docs/design/kodamachi-handoff/` (read `Kodamachi Foundations.dc.html` first);
 `docs/design-tokens.md` says how it maps onto the token layers. Brand strings and the
-mark outline come from the root `brand.json`; the domains in it are deployment-tier and
+inline mark come from the root `brand.json`; the domains in it are deployment-tier and
 still point at the current host until the cutover in #388.
+
+Every mascot and mark raster (pose sprites, `mark.png`, favicons, app icons,
+`brand.json`'s `markDataUri`) is derived by `python3 scripts/mascot_assets.py <dir of the four SVG masters>`
+(needs ImageMagick with librsvg). Never edit one by hand; rerun the script, then
+`go generate ./internal/...` in `opengraph-service/`.
 
 ## What this app does
 

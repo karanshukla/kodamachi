@@ -164,11 +164,6 @@ describe("controls", () => {
     const bg = flatten(token("--ds-attention-bg", scheme), BODY[scheme]);
     expect(ratio("--ds-attention-fg", bg, scheme)).toBeGreaterThanOrEqual(AA);
   });
-
-  it.each(SCHEMES)("the mark tile carries its glyph at AA (%s)", (scheme) => {
-    const bg = flatten(token("--ds-mark-bg", scheme), BODY[scheme]);
-    expect(ratio("--ds-mark-fg", bg, scheme)).toBeGreaterThanOrEqual(AA);
-  });
 });
 
 describe("alert tones", () => {

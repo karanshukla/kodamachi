@@ -6,6 +6,7 @@ import { Link, useNavigate, useLocation } from "react-router";
 import { apiClient } from "../api/apiClient";
 import { authKeys } from "../api/authService";
 import { AuthPanel } from "../components/AuthPanel";
+import { Mascot } from "../components/Mascot";
 import { useTranslations } from "../lib/i18n";
 import { resolveApiErrorMessage } from "../lib/i18n/apiErrors";
 import { dangerText } from "../styles/tokens";
@@ -42,6 +43,7 @@ export default function OAuthCallback() {
       <AuthPanel>
         {loading ? (
           <>
+            <Mascot pose="idle" size={112} />
             <Title order={1} fw={600} fz={22} ta="center">
               {messages.oauthCallback.loggingIn}
             </Title>

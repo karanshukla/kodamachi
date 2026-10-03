@@ -185,9 +185,7 @@ export const de = {
   },
   customisePage: {
     heading: "Anpassen",
-    beta: "Beta",
     yourPublicProfile: "Dein öffentliches Profil",
-    yourPublicProfileHelp: "Was Besucher sehen, bevor sie dir eine anonyme Nachricht senden.",
     profilePrompt: "Profiltext",
     profilePromptDescription:
       "Die Überschrift über deinem Nachrichtenfeld. Leer lassen, um „Sende [dir] eine anonyme Nachricht“ zu verwenden.",
@@ -196,8 +194,6 @@ export const de = {
     profileCardColourDescription:
       "Die Farbgestaltung deiner Frage-Karte. Die kuratierten Voreinstellungen halten Text und Buttons bei jeder Option gut lesbar.",
     languages: "Sprachen",
-    languagesHelp:
-      "Zwei Zielgruppen, zwei Sprachen: die, in der du die App liest, und die, in der deine Besucher lesen.",
     appLanguage: "App-Sprache",
     appLanguageDescription:
       "Die Sprache, in der du die App liest: Navigation, Buttons und Benachrichtigungen. Nur du siehst sie.",
@@ -205,7 +201,6 @@ export const de = {
     messageLanguageDescription:
       "Sprache des Prompts, des Freigabetexts und des Anonymitätshinweises, den Besucher und dein Publikum sehen. Dein eigener Profiltext hat Vorrang vor dieser Einstellung.",
     messageIntake: "Nachrichteneingang",
-    messageIntakeHelp: "Wer deinen Posteingang erreichen kann und was durchgelassen wird.",
     inbox: "Posteingang",
     inboxDescription:
       "Deaktivieren, um keine neuen Nachrichten mehr zu erhalten – dein Konto, Verlauf und deine Einstellungen bleiben erhalten. Besucher sehen den Status „nimmt keine Nachrichten an“.",
@@ -213,7 +208,6 @@ export const de = {
     profanityFilterDescription:
       "Wenn aktiviert, werden eingehende Nachrichten anhand von Wortlisten für Englisch, Spanisch, Portugiesisch, Deutsch und Französisch geprüft – jede Nachricht wird gegen alle fünf abgeglichen, unabhängig davon, welche Sprache du in der App eingestellt hast. Markierte Nachrichten werden stillschweigend verworfen – der Absender sieht eine Erfolgsmeldung, aber die Nachricht erreicht deinen Posteingang nie.",
     atmosphereLinks: "Atmosphere-Links",
-    atmosphereLinksHelp: "Wohin Links zu Beiträgen und Profilen führen.",
     openProfilesInApp: (appName) => `Profile in ${appName} öffnen`,
     openProfilesInAppDescription: (appName) =>
       `Wenn aktiv, öffnet eine @Erwähnung in einer Bio das ${appName}-Profil dieser Person. Wenn nicht, öffnet sie sich in deinem bevorzugten Client.`,
@@ -359,6 +353,7 @@ export const de = {
     githubContactLabel: "GitHub - ",
     disclaimer:
       "Hinweis: Bitte befolge die Nutzungsbedingungen von Bluesky. Cookies werden verwendet, um dich angemeldet zu halten. Diese App enthält keine Moderation.",
+    mascotCredit: "Maskottchen-Illustration von Angela Clifford",
     welcomeBackGreetingPrefix: "Schön, dich wiederzusehen,",
     viewYourMessages: "Deine Nachrichten ansehen",
     copyProfileLink: "Profillink kopieren",

@@ -186,9 +186,7 @@ export const fr = {
   },
   customisePage: {
     heading: "Personnaliser",
-    beta: "Bêta",
     yourPublicProfile: "Ton profil public",
-    yourPublicProfileHelp: "Ce que les visiteurs voient avant de t'envoyer un message anonyme.",
     profilePrompt: "Phrase de profil",
     profilePromptDescription:
       "Le titre affiché au-dessus de ta zone de message. Laisse vide pour utiliser « Envoyer un message anonyme à [toi] ».",
@@ -197,8 +195,6 @@ export const fr = {
     profileCardColourDescription:
       "Le traitement colorimétrique de ta carte de question. Les préréglages gardent le texte et les boutons lisibles quelle que soit l'option.",
     languages: "Langues",
-    languagesHelp:
-      "Deux publics, deux langues : celle dans laquelle tu lis l'appli, et celle que lisent tes visiteurs.",
     appLanguage: "Langue de l'appli",
     appLanguageDescription:
       "La langue dans laquelle tu lis l'appli : navigation, boutons et notifications. Toi seul la vois.",
@@ -206,7 +202,6 @@ export const fr = {
     messageLanguageDescription:
       "Langue de la phrase, du texte de partage et de l'avertissement d'anonymat vus par les visiteurs et ton public. Ta phrase de profil personnalisée prime sur ce réglage.",
     messageIntake: "Réception des messages",
-    messageIntakeHelp: "Qui peut atteindre ta boîte de réception, et ce qui passe.",
     inbox: "Boîte de réception",
     inboxDescription:
       "Désactive pour arrêter de recevoir de nouveaux messages tout en gardant ton compte, ton historique et tes réglages intacts. Les visiteurs verront un statut « n'accepte pas de messages ».",
@@ -214,7 +209,6 @@ export const fr = {
     profanityFilterDescription:
       "Une fois activé, les messages entrants sont filtrés à l'aide de listes de mots en anglais, espagnol, portugais, allemand et français - chaque message est vérifié dans les cinq langues, quelle que soit la langue que tu as choisie dans l'appli. Les messages signalés sont discrètement écartés - l'expéditeur voit une réponse de succès, mais le message n'atteint jamais ta boîte de réception.",
     atmosphereLinks: "Liens Atmosphere",
-    atmosphereLinksHelp: "Vers où mènent les liens vers les publications et les profils.",
     openProfilesInApp: (appName) => `Ouvrir les profils dans ${appName}`,
     openProfilesInAppDescription: (appName) =>
       `Quand c'est activé, une @mention dans une bio ouvre le profil ${appName} de cette personne. Sinon, elle s'ouvre dans ton client préféré.`,
@@ -359,6 +353,7 @@ export const fr = {
     githubContactLabel: "GitHub - ",
     disclaimer:
       "Avertissement : merci de respecter les conditions d'utilisation de Bluesky. Des cookies sont utilisés pour te garder connecté. Cette appli n'inclut aucune modération.",
+    mascotCredit: "Illustration de la mascotte par Angela Clifford",
     welcomeBackGreetingPrefix: "Ravi de te revoir,",
     viewYourMessages: "Voir tes messages",
     copyProfileLink: "Copier le lien du profil",

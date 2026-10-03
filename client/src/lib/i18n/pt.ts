@@ -184,10 +184,7 @@ export const pt = {
   },
   customisePage: {
     heading: "Personalizar",
-    beta: "Beta",
     yourPublicProfile: "Seu perfil público",
-    yourPublicProfileHelp:
-      "O que os visitantes veem antes de enviar uma mensagem anônima para você.",
     profilePrompt: "Frase do perfil",
     profilePromptDescription:
       "O título mostrado acima da sua caixa de mensagem. Deixe em branco para usar «Envie uma mensagem anônima para [você]».",
@@ -196,8 +193,6 @@ export const pt = {
     profileCardColourDescription:
       "O esquema de cores do seu cartão de perguntas. As predefinições selecionadas mantêm o texto e o botão legíveis em todas as opções.",
     languages: "Idiomas",
-    languagesHelp:
-      "Dois públicos, dois idiomas: aquele em que você lê o app e aquele que seus visitantes leem.",
     appLanguage: "Idioma do app",
     appLanguageDescription:
       "O idioma em que você lê o app: navegação, botões e notificações. Só você vê isso.",
@@ -205,7 +200,6 @@ export const pt = {
     messageLanguageDescription:
       "Idioma da frase, do texto de compartilhamento e do aviso de anonimato mostrado aos visitantes e ao seu público. Sua frase de perfil personalizada tem prioridade sobre esta configuração.",
     messageIntake: "Recebimento de mensagens",
-    messageIntakeHelp: "Quem pode alcançar sua caixa de entrada e o que passa.",
     inbox: "Caixa de entrada",
     inboxDescription:
       "Desative para parar de receber novas mensagens mantendo sua conta, histórico e configurações intactos. Os visitantes verão um estado de «não aceita mensagens».",
@@ -213,7 +207,6 @@ export const pt = {
     profanityFilterDescription:
       "Quando ativado, as mensagens recebidas são filtradas com listas de palavras em inglês, espanhol, português, alemão e francês - cada mensagem é verificada nos cinco idiomas, qualquer que seja o idioma configurado no app. Mensagens sinalizadas são descartadas silenciosamente - quem envia vê uma resposta de sucesso, mas a mensagem nunca chega à sua caixa de entrada.",
     atmosphereLinks: "Links do Atmosphere",
-    atmosphereLinksHelp: "Para onde levam os links de publicações e perfis.",
     openProfilesInApp: (appName) => `Abrir os perfis no ${appName}`,
     openProfilesInAppDescription: (appName) =>
       `Quando ativo, uma @menção numa bio abre o perfil dessa pessoa no ${appName}. Quando não, ela abre no seu cliente preferido.`,
@@ -357,6 +350,7 @@ export const pt = {
     githubContactLabel: "GitHub - ",
     disclaimer:
       "Aviso: siga os termos de serviço do Bluesky. Cookies são usados para manter você conectado. Este app não inclui nenhuma moderação.",
+    mascotCredit: "Ilustração da mascote por Angela Clifford",
     welcomeBackGreetingPrefix: "Que bom te ver de novo,",
     viewYourMessages: "Ver suas mensagens",
     copyProfileLink: "Copiar link do perfil",

@@ -172,9 +172,7 @@ export const en = {
   },
   customisePage: {
     heading: "Customise",
-    beta: "Beta",
     yourPublicProfile: "Your public profile",
-    yourPublicProfileHelp: "What visitors see before they send you an anonymous message.",
     profilePrompt: "Profile prompt",
     profilePromptDescription:
       "The headline shown above your message box. Leave blank to fall back to “Send [you] an anonymous message” in your selected language. This is overriden if you turn off your inbox. ",
@@ -183,8 +181,6 @@ export const en = {
     profileCardColourDescription:
       "The colour treatment of your ask card. Curated presets keep the text and button legible on every option.",
     languages: "Languages",
-    languagesHelp:
-      "Two audiences, two languages — the one you read the app in, and the one your visitors read.",
     appLanguage: "App language",
     appLanguageDescription:
       "The language you read the app in - nav, buttons, and toasts. Only you see it.",
@@ -192,7 +188,6 @@ export const en = {
     messageLanguageDescription:
       "Language of the prompt, share text, and anonymity disclaimer shown to visitors and your audience. Your custom message prompt overrides this setting.",
     messageIntake: "Message intake",
-    messageIntakeHelp: "Who can reach your inbox, and what gets through.",
     inbox: "Inbox",
     inboxDescription:
       "Turn off to stop receiving new messages while keeping your account, history, and settings intact. Visitors see a “not accepting messages” state.",
@@ -200,7 +195,6 @@ export const en = {
     profanityFilterDescription:
       "When on, incoming messages are screened against wordlists for English, Spanish, Portuguese, German and French - every message is checked against all five, whatever language you have the app set to. Flagged messages are silently dropped - the sender sees a success response, but the message never reaches your inbox.",
     atmosphereLinks: "Atmosphere links",
-    atmosphereLinksHelp: "Where links to posts and profiles take you.",
     openProfilesInApp: (appName) => `Open profiles in ${appName}`,
     openProfilesInAppDescription: (appName) =>
       `When on, an @mention in someone's bio opens their ${appName} profile. When off, it opens in your preferred client.`,
@@ -343,6 +337,7 @@ export const en = {
     githubContactLabel: "GitHub - ",
     disclaimer:
       "Disclaimer: Please follow Bluesky's ToS. Cookies are used to keep you logged in. This app does not include any moderation.",
+    mascotCredit: "Mascot art by Angela Clifford",
     welcomeBackGreetingPrefix: "Good to see you again,",
     viewYourMessages: "View your messages",
     copyProfileLink: "Copy profile link",

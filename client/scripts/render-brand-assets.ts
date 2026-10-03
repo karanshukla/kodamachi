@@ -1,17 +1,12 @@
-// Renders the brand-derived files in public/ from brand.json. client-metadata.json's scope must match
+// Renders the brand-derived text files in public/ from brand.json; the rasters come from
+// scripts/mascot_assets.py. client-metadata.json's scope must match
 // OAUTH_SCOPE byte-for-byte. Committed output; Tests.yml's client job reruns this and fails on drift.
 // Run with `bun scripts/render-brand-assets.ts` from client/.
 import brand from "../../brand.json";
 import { OAUTH_SCOPE } from "../../server/src/lib/contracts";
 
-const { appName, appDomain, markTileRadius, markGlyphPath } = brand;
+const { appName, appDomain } = brand;
 const origin = `https://${appDomain}`;
-
-const markTile = `<rect width="160" height="160" rx="${markTileRadius}" fill="#10224A"/><path d="${markGlyphPath}" fill="#FFFFFF"/>`;
-const faviconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160">${markTile}</svg>\n`;
-const markSvg = `<?xml version="1.0"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" width="160" height="160" role="img" aria-label="${appName}">${markTile}</svg>
-`;
 
 const sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
@@ -48,8 +43,6 @@ const clientMetadataPath = Bun.fileURLToPath(new URL("client-metadata.json", pub
 
 await Bun.write(sitemapPath, sitemapXml);
 await Bun.write(clientMetadataPath, clientMetadataJson);
-await Bun.write(new URL("favicon.svg", publicDir), faviconSvg);
-await Bun.write(new URL("mark.svg", publicDir), markSvg);
 
 // JSON.stringify breaks every array onto multiple lines; prettier restores the house style.
 await Bun.$`bunx --bun prettier --write ${clientMetadataPath}`.quiet();

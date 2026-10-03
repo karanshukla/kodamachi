@@ -3,7 +3,7 @@ import { APP_DOMAIN, APP_NAME } from "#/lib/brand";
 /* v8 ignore stop */
 
 import { themeLayout } from "../layout";
-import { markTile } from "../mark";
+import { brandMark } from "../mark";
 import { BASE_CSS, NOTO_LINK, NOTO_STACK, PRECONNECT } from "../shared-css";
 import type { RenderedTemplate } from "../templates";
 
@@ -106,7 +106,7 @@ export function renderTwitterCard(
   <div class="card">
     <div class="tweet-body">
       <div class="top">
-        ${markTile(36, "#10224A", "#FFFFFF")}
+        ${brandMark(36)}
         <div class="user-info">
           <div class="user-name">${APP_NAME}</div>
           <div class="user-handle">@${APP_DOMAIN}</div>

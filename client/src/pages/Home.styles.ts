@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 
-import { accentText, eyebrow, heroBg, link, onHero } from "../styles/tokens";
+import { accentText, eyebrow, link } from "../styles/tokens";
 
 export const title: CSSProperties = {
   textWrap: "pretty",
@@ -18,14 +18,6 @@ export const infoHeading: CSSProperties = {
 export const disclaimer: CSSProperties = {
   lineHeight: 1.55,
 };
-
-export const hero = {
-  padding: "40px 32px",
-  textAlign: "center",
-  background: heroBg,
-  color: onHero,
-  "--ds-focus-ring": onHero,
-} as CSSProperties;
 
 export const greeting: CSSProperties = {
   letterSpacing: "-0.02em",
@@ -57,4 +49,17 @@ export const contactLink: CSSProperties = {
   fontWeight: 500,
   color: link,
   textDecoration: "none",
+};
+
+export const heroCopy: CSSProperties = {
+  flex: 1,
+  width: "100%",
+  minWidth: 0,
+};
+
+export const heroMascot: CSSProperties = {
+  width: "clamp(160px, 28vw, 280px)",
+  height: "clamp(160px, 28vw, 280px)",
+  margin: 0,
+  flexShrink: 0,
 };

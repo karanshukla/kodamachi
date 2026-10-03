@@ -76,9 +76,9 @@ sits behind it.
 
 The redesign is the Claude Design handoff vendored at `docs/design/kodamachi-handoff/`
 (`Kodamachi Foundations.dc.html` holds the palette, type and chrome rules; `github.md`
-maps each screen to the files under `client/src`). The handoff reserves mascot slots
-but supplies no artwork, so the app ships no mascot until there is a real drawing.
-The rules that matter for code:
+maps each screen to the files under `client/src`). The handoff reserves mascot slots;
+the artist's SVGs fill them (idle, cheering, sad, and the sprout bulb). The rules
+that matter for code:
 
 - **Two hues plus danger.** Navy (`#10224A`) and Link (`#234B94`) carry every state;
   success and warning are an icon plus navy text, never green or amber.
@@ -86,11 +86,15 @@ The rules that matter for code:
   shadows exist only for things that float (menus, modals, toasts). In dark mode
   elevation becomes the `--ds-line-dark` border.
 - **One focus ring**: 2px Link with a 2px offset, set globally on `:focus-visible`.
-- **The mark is 木**, Noto Serif JP weight 600, drawn as an SVG outline so no serif
-  webfont ships. The path lives once, in `brand.json` (`markGlyphPath`), and every
-  renderer reads it from there: `BrandMark.tsx`, the generated `favicon.svg` and
-  `mark.svg`, the OG template and the question-image templates. The wordmark is
-  lowercase, one tone.
+- **The mark is the sprout bulb** from the mascot art, with no tile, border or
+  motion ticks. It is a raster, not an outline. `scripts/mascot_assets.py` writes
+  every copy: `public/mascot/sprout-mark.webp` (`BrandMark.tsx`), `public/mark.png`
+  (512px master), the favicons and app icons (the iOS and maskable ones on a paper
+  plate, since both platforms fill transparency), and `brand.json`'s `markDataUri`,
+  which the OG template and the question-image templates inline because
+  html-to-image fetches nothing mid-render. The wordmark is lowercase, one tone.
+- **The mascot is the one exception to two hues.** Its olive and beige stay in the
+  artwork; none of it becomes a token.
 - **Type** is Schibsted Grotesk with Noto Sans JP behind it for Japanese questions,
   600 for headings, page titles at −0.03em (the `Title` override in `Theme.tsx`), a
   1.5 body line-height set globally, `palt` on.

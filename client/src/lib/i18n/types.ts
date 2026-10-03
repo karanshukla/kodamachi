@@ -192,6 +192,7 @@ export interface HomeMessages {
   submitAnIssueOnGitHub: string;
   githubContactLabel: string;
   disclaimer: string;
+  mascotCredit: string;
   welcomeBackGreetingPrefix: string;
   viewYourMessages: string;
   copyProfileLink: string;
@@ -227,28 +228,23 @@ export interface SettingsPageMessages {
 
 export interface CustomisePageMessages {
   heading: string;
-  beta: string;
   yourPublicProfile: string;
-  yourPublicProfileHelp: string;
   profilePrompt: string;
   profilePromptDescription: string;
   profilePromptPlaceholder: string;
   profileCardColour: string;
   profileCardColourDescription: string;
   languages: string;
-  languagesHelp: string;
   appLanguage: string;
   appLanguageDescription: string;
   messageLanguage: string;
   messageLanguageDescription: string;
   messageIntake: string;
-  messageIntakeHelp: string;
   inbox: string;
   inboxDescription: string;
   profanityFilter: string;
   profanityFilterDescription: string;
   atmosphereLinks: string;
-  atmosphereLinksHelp: string;
   openProfilesInApp: (appName: string) => string;
   openProfilesInAppDescription: (appName: string) => string;
   atmosphereLinksSetting: string;

@@ -25,4 +25,4 @@ What the OSS build does honour, and what this policy sets:
 
 `openGraph.considerHost` is off because the service answers one host. If the
 upstream image is ever switched to BotStopper, the mark lives at
-`client/public/mark.svg`.
+`client/public/mark.png`.

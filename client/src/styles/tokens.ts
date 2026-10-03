@@ -44,9 +44,6 @@ export const avatarFallback = {
   placeholder: { background: surfaceHighlight, color: accentText, fontWeight: 600 },
 } as const;
 
-export const markBg = "var(--ds-mark-bg)";
-export const markFg = "var(--ds-mark-fg)";
-
 export const eyebrow = {
   fontSize: 11,
   fontWeight: 600,

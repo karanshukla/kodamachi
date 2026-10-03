@@ -22,9 +22,9 @@ describe("ProfileThemeSwatches", () => {
     expect(preview.style.aspectRatio.replace(/\s/g, "")).toBe("4/3");
   });
 
-  it("marks the paper preset with the mark tile so a white swatch does not read as empty", () => {
+  it("marks the paper preset with the brand mark so a white swatch does not read as empty", () => {
     renderWithProviders(<ProfileThemeSwatches value="royal" disabled={false} onPick={() => {}} />);
-    expect(screen.getByRole("button", { name: "Paper" }).querySelector("svg")).not.toBeNull();
-    expect(screen.getByRole("button", { name: "Ink" }).querySelector("svg")).toBeNull();
+    expect(screen.getByRole("button", { name: "Paper" }).querySelector("img")).not.toBeNull();
+    expect(screen.getByRole("button", { name: "Ink" }).querySelector("img")).toBeNull();
   });
 });

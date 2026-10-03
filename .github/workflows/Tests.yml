@@ -38,7 +38,7 @@ jobs:
         working-directory: client
         run: |
           bun run render:brand-assets
-          git diff --exit-code public/sitemap.xml public/client-metadata.json public/favicon.svg public/mark.svg
+          git diff --exit-code public/sitemap.xml public/client-metadata.json
 
       - name: Probe Vite dev server under Bun
         working-directory: client

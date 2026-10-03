@@ -151,8 +151,8 @@ func TestBuildOGTemplate_RejectedURLsFallBackToTheBrandTreatment(t *testing.T) {
 	if strings.Contains(html, "javascript:") {
 		t.Fatal("a javascript: URL reached the rendered markup")
 	}
-	if strings.Contains(html, "<img") {
-		t.Fatal("no <img> should be emitted when both URLs are refused")
+	if strings.Contains(strings.Replace(html, brandMark, "", 1), "<img") {
+		t.Fatal("no <img> besides the brand mark should be emitted when both URLs are refused")
 	}
 	if !strings.Contains(html, `<div class="avatar">E</div>`) {
 		t.Fatalf("expected the glyph fallback avatar\n%s", between(html, `class="identity"`, "</div>"))

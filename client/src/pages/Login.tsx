@@ -8,6 +8,7 @@ import * as z from "zod";
 
 import { useLogin } from "../api/authService";
 import { AuthPanel } from "../components/AuthPanel";
+import { Mascot } from "../components/Mascot";
 import { E2ELoginPanel } from "../components/login/E2ELoginPanel";
 import { HandleSuggestions } from "../components/login/HandleSuggestions";
 import { APP_DOMAIN, APP_NAME } from "../lib/brand";
@@ -67,6 +68,7 @@ function LoginForm() {
   return (
     <Box maw={480} mx="auto">
       <AuthPanel>
+        <Mascot pose="sprout" size={96} />
         <Box ta="center">
           <Title order={1} fw={600} fz={22}>
             {messages.loginPage.logInToPrefix}

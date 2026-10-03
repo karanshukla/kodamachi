@@ -240,11 +240,7 @@ body {
   --ds-attention-bg: var(--ds-navy);
   --ds-attention-fg: var(--ds-paper);
 
-  /* The mark tile: navy with a white glyph on paper, inverted in the dark. */
-  --ds-mark-bg: var(--ds-navy);
-  --ds-mark-fg: var(--ds-paper);
-
-  /* Hero surfaces — the welcome card, the inbox link, ink question cards, a
+  /* Hero surfaces — the inbox link, ink question cards, a
      profile banner with no image: navy with white ink, inverted in the dark.
      -faint is for dashed rules and progress tracks only, never text. */
   --ds-hero: var(--ds-navy);
@@ -299,9 +295,6 @@ body {
 
   --ds-attention-bg: var(--ds-ink-dark);
   --ds-attention-fg: var(--ds-navy);
-
-  --ds-mark-bg: var(--ds-ink-dark);
-  --ds-mark-fg: var(--ds-navy);
 
   --ds-hero: var(--ds-ink-dark);
   --ds-on-hero: var(--ds-navy);
@@ -454,8 +447,29 @@ body {
   animation: ds-pin-settle 0.38s cubic-bezier(0.34, 1.45, 0.64, 1) both;
 }
 
+@keyframes ds-mascot-hop {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  35% {
+    transform: translateY(-14px) rotate(-3deg);
+  }
+  60% {
+    transform: translateY(0);
+  }
+  75% {
+    transform: translateY(-4px);
+  }
+}
+
+.ds-mascot-hop {
+  animation: ds-mascot-hop 0.7s var(--ds-ease) both;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .ds-pinned-card-enter {
+  .ds-pinned-card-enter,
+  .ds-mascot-hop {
     animation: none;
   }
 }
