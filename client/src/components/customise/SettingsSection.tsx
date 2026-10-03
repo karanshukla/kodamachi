@@ -4,18 +4,14 @@ import * as styles from "./SettingsSection.styles";
 
 interface SettingsSectionProps {
   eyebrow: string;
-  help: string;
   last?: boolean;
   children: React.ReactNode;
 }
 
-export function SettingsSection({ eyebrow, help, last, children }: SettingsSectionProps) {
+export function SettingsSection({ eyebrow, last, children }: SettingsSectionProps) {
   return (
     <div style={styles.section(last)}>
       <Text style={styles.eyebrow}>{eyebrow}</Text>
-      <Text c="dimmed" fz={13} mb="md">
-        {help}
-      </Text>
       <Grid style={{ gap: "var(--mantine-spacing-md)" }}>{children}</Grid>
     </div>
   );

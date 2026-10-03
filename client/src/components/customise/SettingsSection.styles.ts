@@ -8,4 +8,7 @@ export const section = (last?: boolean): CSSProperties => ({
   marginBottom: last ? 0 : SECTION_GAP,
 });
 
-export const eyebrow: CSSProperties = eyebrowLabel;
+export const eyebrow: CSSProperties = {
+  ...eyebrowLabel,
+  marginBottom: "var(--mantine-spacing-md)",
+};

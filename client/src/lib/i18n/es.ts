@@ -186,9 +186,7 @@ export const es = {
   },
   customisePage: {
     heading: "Personalizar",
-    beta: "Beta",
     yourPublicProfile: "Tu perfil público",
-    yourPublicProfileHelp: "Lo que ven los visitantes antes de enviarte un mensaje anónimo.",
     profilePrompt: "Frase de tu perfil",
     profilePromptDescription:
       "El titular que se muestra encima de tu caja de mensajes. Déjalo en blanco para usar «Envía a [ti] un mensaje anónimo».",
@@ -197,8 +195,6 @@ export const es = {
     profileCardColourDescription:
       "El tratamiento de color de tu tarjeta de preguntas. Los ajustes predefinidos mantienen el texto y los botones legibles en todas las opciones.",
     languages: "Idiomas",
-    languagesHelp:
-      "Dos públicos, dos idiomas: el que usas para leer la app y el que leen tus visitantes.",
     appLanguage: "Idioma de la app",
     appLanguageDescription:
       "El idioma en el que lees la app: navegación, botones y notificaciones. Solo tú lo ves.",
@@ -206,7 +202,6 @@ export const es = {
     messageLanguageDescription:
       "Idioma del mensaje, el texto para compartir y el aviso de anonimato que ven los visitantes y tu público. Tu frase de perfil personalizada tiene prioridad sobre este ajuste.",
     messageIntake: "Recepción de mensajes",
-    messageIntakeHelp: "Quién puede llegar a tu bandeja y qué se deja pasar.",
     inbox: "Bandeja de entrada",
     inboxDescription:
       "Desactívala para dejar de recibir mensajes nuevos sin perder tu cuenta, historial ni configuración. Los visitantes verán un estado de «no acepta mensajes».",
@@ -214,7 +209,6 @@ export const es = {
     profanityFilterDescription:
       "Cuando está activado, los mensajes entrantes se filtran con listas de palabras en inglés, español, portugués, alemán y francés - cada mensaje se comprueba en los cinco idiomas, sea cual sea el idioma que tengas configurado en la app. Los mensajes marcados se descartan en silencio - quien lo envía ve una respuesta de éxito, pero el mensaje nunca llega a tu bandeja.",
     atmosphereLinks: "Enlaces de Atmosphere",
-    atmosphereLinksHelp: "Adónde te llevan los enlaces a publicaciones y perfiles.",
     openProfilesInApp: (appName) => `Abrir los perfiles en ${appName}`,
     openProfilesInAppDescription: (appName) =>
       `Cuando está activo, una @mención en una biografía abre el perfil de esa persona en ${appName}. Cuando no, se abre en tu cliente preferido.`,
