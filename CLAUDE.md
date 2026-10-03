@@ -40,10 +40,9 @@ inline mark come from the root `brand.json`; the domains in it are deployment-ti
 still point at the current host until the cutover in #388.
 
 Every mascot and mark raster (pose sprites, `mark.png`, favicons, app icons,
-`brand.json`'s `markDataUri`) is derived by `python3 scripts/mascot_assets.py <sheet>`.
-Never edit one by hand; rerun the script. The current sheet is a JPEG, so rerun it
-when the lossless master arrives, then `go generate ./internal/...` in
-`opengraph-service/`.
+`brand.json`'s `markDataUri`) is derived by `python3 scripts/mascot_assets.py <dir of the four SVG masters>`
+(needs ImageMagick with librsvg). Never edit one by hand; rerun the script, then
+`go generate ./internal/...` in `opengraph-service/`.
 
 ## What this app does
 

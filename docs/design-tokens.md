@@ -77,7 +77,7 @@ sits behind it.
 The redesign is the Claude Design handoff vendored at `docs/design/kodamachi-handoff/`
 (`Kodamachi Foundations.dc.html` holds the palette, type and chrome rules; `github.md`
 maps each screen to the files under `client/src`). The handoff reserves mascot slots;
-the artist's sheet fills them (idle, cheering, sad, and the sprout bulb). The rules
+the artist's SVGs fill them (idle, cheering, sad, and the sprout bulb). The rules
 that matter for code:
 
 - **Two hues plus danger.** Navy (`#10224A`) and Link (`#234B94`) carry every state;
@@ -86,7 +86,7 @@ that matter for code:
   shadows exist only for things that float (menus, modals, toasts). In dark mode
   elevation becomes the `--ds-line-dark` border.
 - **One focus ring**: 2px Link with a 2px offset, set globally on `:focus-visible`.
-- **The mark is the sprout bulb** from the mascot sheet, with no tile, border or
+- **The mark is the sprout bulb** from the mascot art, with no tile, border or
   motion ticks. It is a raster, not an outline. `scripts/mascot_assets.py` writes
   every copy: `public/mascot/sprout-mark.webp` (`BrandMark.tsx`), `public/mark.png`
   (512px master), the favicons and app icons (the iOS and maskable ones on a paper

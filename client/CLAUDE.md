@@ -54,7 +54,7 @@ from "./Thing.styles"`). Anything computed from props is a named function there,
 - **The mark is the sprout bulb, bare.** No tile and no border behind it; the art's
   own outline carries it on both schemes. `BrandMark` and `Mascot` render the
   sprites in `public/mascot/`, which `scripts/mascot_assets.py` cuts from the
-  artist's sheet, so fix a sprite there, not in an image editor. Sprites are
+  artist's SVG masters, so fix a sprite there, not in an image editor. Sprites are
   centred on the character, not on the character plus companion. The design
   source is `docs/design/kodamachi-handoff/`.
 - **No component calls `useComputedColorScheme` to choose a colour** — light values
