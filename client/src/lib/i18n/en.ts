@@ -414,7 +414,6 @@ export const en = {
       INBOX_CLOSED: "This inbox is closed and isn't accepting new messages right now.",
       MESSAGE_SEND_FAILED: "We couldn't send your message. Please try again.",
       MESSAGE_NOT_FOUND: "We couldn't find that message.",
-      MESSAGE_DELETE_NOT_AUTHORIZED: "That message isn't yours to delete.",
       MESSAGE_DELETE_FAILED: "We couldn't delete that message. Please try again.",
       BLUESKY_POST_FAILED: "We couldn't post your reply to Bluesky. Please try again.",
       ACCOUNT_DELETE_FAILED: "We couldn't delete your account data. Please try again.",

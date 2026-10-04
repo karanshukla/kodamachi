@@ -75,7 +75,7 @@ describe("InboxDrain", () => {
 
     const outcome = await drain.run(ALICE, agent);
 
-    assert.deepStrictEqual([...target.rows.keys()], ["anon-1", "anon-2"]);
+    assert.deepStrictEqual(target.tids(ALICE), ["anon-1", "anon-2"]);
     assert.deepStrictEqual(deleted(), ["anon-1", "anon-2"]);
     assert.strictEqual(outcome.drained, 2);
   });
@@ -85,7 +85,8 @@ describe("InboxDrain", () => {
 
     await drain.run(ALICE, agent);
 
-    assert.strictEqual(target.rows.get("anon-1")?.recipient, ALICE);
+    assert.deepStrictEqual(target.tids(ALICE), ["anon-1"]);
+    assert.deepStrictEqual(target.tids(BOB), []);
   });
 
   test("leaves a record that fails the lexicon in the PDS", async () => {
@@ -97,37 +98,35 @@ describe("InboxDrain", () => {
     const outcome = await drain.run(ALICE, agent);
 
     assert.deepStrictEqual(outcome.skipped, ["anon-long"]);
-    assert.ok(!target.rows.has("anon-long"));
+    assert.ok(!target.tids(ALICE).includes("anon-long"));
     assert.deepStrictEqual(deleted(), ["anon-1"]);
   });
 
   test("copies the user's table rows into the target", async () => {
-    table.rows.set("anon-t", {
+    table.seed(ALICE, {
       tid: "anon-t",
       message: "from the table",
       createdAt: "2026-09-01T00:00:00.000Z",
-      recipient: ALICE,
     });
     const { agent } = fakeAgent([]);
 
     const outcome = await drain.run(ALICE, agent);
 
-    assert.ok(target.rows.has("anon-t"));
+    assert.ok(target.tids(ALICE).includes("anon-t"));
     assert.strictEqual(outcome.backfilled, 1);
   });
 
   test("writes a question held in both the table and the PDS once, as the table has it", async () => {
-    table.rows.set("anon-1", {
+    table.seed(ALICE, {
       tid: "anon-1",
       message: "table copy",
       createdAt: "2026-09-01T00:00:00.000Z",
-      recipient: ALICE,
     });
     const { agent } = fakeAgent([legacy("anon-1")]);
 
     await drain.run(ALICE, agent);
 
-    const written = target.putCalls.flat();
+    const written = target.putCalls.flatMap((call) => call.questions);
     assert.deepStrictEqual(
       written.map((m) => [m.tid, m.message]),
       [["anon-1", "table copy"]]
@@ -161,7 +160,7 @@ describe("InboxDrain", () => {
 
     assert.deepStrictEqual(retryOutcome.deleteErrors, []);
     assert.deepStrictEqual(retry.deleted(), ["anon-1"]);
-    assert.strictEqual(target.rows.size, 2);
+    assert.strictEqual(target.size, 2);
   });
 
   describe("batching", () => {
@@ -179,7 +178,7 @@ describe("InboxDrain", () => {
       await drain.run(ALICE, agent);
 
       assert.deepStrictEqual(
-        target.putCalls.map((batch) => batch.length),
+        target.putCalls.map((call) => call.questions.length),
         [DRAIN_BATCH_SIZE, 1]
       );
     });

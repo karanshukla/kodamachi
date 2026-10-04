@@ -1,6 +1,6 @@
 import type { Logger } from "pino";
 
-import type { InboxStore, Message } from "./inbox-store";
+import type { InboxStore, Message, Question } from "./inbox-store";
 
 /**
  * Both halves must succeed for a write or delete to succeed. Writes land in the
@@ -25,22 +25,22 @@ export class DualWriteInboxStore implements InboxStore {
     );
   }
 
-  async find(tid: string): Promise<Message | undefined> {
+  async find(recipient: string, tid: string): Promise<Message | undefined> {
     return await this.readSpaceFirst(
-      () => this.space.find(tid),
-      () => this.table.find(tid),
-      { tid, op: "find" }
+      () => this.space.find(recipient, tid),
+      () => this.table.find(recipient, tid),
+      { recipient, tid, op: "find" }
     );
   }
 
-  async putIgnoringDuplicates(messages: Message[]): Promise<void> {
-    await this.table.putIgnoringDuplicates(messages);
-    await this.space.putIgnoringDuplicates(messages);
+  async putIgnoringDuplicates(recipient: string, questions: Question[]): Promise<void> {
+    await this.table.putIgnoringDuplicates(recipient, questions);
+    await this.space.putIgnoringDuplicates(recipient, questions);
   }
 
-  async remove(tid: string): Promise<void> {
-    await this.space.remove(tid);
-    await this.table.remove(tid);
+  async remove(recipient: string, tid: string): Promise<void> {
+    await this.space.remove(recipient, tid);
+    await this.table.remove(recipient, tid);
   }
 
   async clear(recipient: string): Promise<void> {

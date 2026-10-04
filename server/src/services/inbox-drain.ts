@@ -5,7 +5,7 @@ import { errorMessage } from "../lib/errors";
 import { listLegacyRecords, type LegacyRecordEntry } from "../lib/legacy-records";
 import { ids } from "../lexicon/lexicons";
 import { validateRecord } from "../lexicon/types/app/navyfragen/message";
-import type { InboxStore, Message } from "./inbox-store";
+import type { InboxStore, Question } from "./inbox-store";
 
 /**
  * @see [inbox-drain.test.ts](../tests/inbox-drain.test.ts) — "writes a full
@@ -21,23 +21,18 @@ export interface DrainOutcome {
 }
 
 /**
- * Anyone can write any record into their own repo, so the recipient a legacy
- * record names is never trusted.
+ * Drops the recipient a legacy record names: anyone can write any record into
+ * their own repo, so the draining user's space is the only recipient trusted.
  * @see [inbox-drain.test.ts](../tests/inbox-drain.test.ts) — "files a legacy
  * record under the draining user, whatever recipient it names".
  */
-function ownedBy(userDid: string, record: LegacyRecordEntry): Message {
-  return {
-    tid: record.rkey,
-    message: record.value.message,
-    createdAt: record.value.createdAt,
-    recipient: userDid,
-  };
+function asQuestion(record: LegacyRecordEntry): Question {
+  return { tid: record.rkey, message: record.value.message, createdAt: record.value.createdAt };
 }
 
-function firstPerTid(messages: Message[]): Message[] {
+function firstPerTid(questions: Question[]): Question[] {
   const seen = new Set<string>();
-  return messages.filter((m) => !seen.has(m.tid) && seen.add(m.tid));
+  return questions.filter((q) => !seen.has(q.tid) && seen.add(q.tid));
 }
 
 /**
@@ -60,9 +55,7 @@ export class InboxDrain {
     const skipped = legacy.filter((r) => !valid.includes(r)).map((r) => r.rkey);
     const fromTable = await this.table.list(userDid);
 
-    await this.writeInBatches(
-      firstPerTid([...fromTable, ...valid.map((r) => ownedBy(userDid, r))])
-    );
+    await this.writeInBatches(userDid, firstPerTid([...fromTable, ...valid.map(asQuestion)]));
     const deleteErrors = await this.deleteOriginals(valid, userDid, agent);
 
     this.logger.info(
@@ -78,9 +71,9 @@ export class InboxDrain {
     return { backfilled: fromTable.length, drained: valid.length, skipped, deleteErrors };
   }
 
-  private async writeInBatches(messages: Message[]): Promise<void> {
-    for (let i = 0; i < messages.length; i += DRAIN_BATCH_SIZE) {
-      await this.target.putIgnoringDuplicates(messages.slice(i, i + DRAIN_BATCH_SIZE));
+  private async writeInBatches(userDid: string, questions: Question[]): Promise<void> {
+    for (let i = 0; i < questions.length; i += DRAIN_BATCH_SIZE) {
+      await this.target.putIgnoringDuplicates(userDid, questions.slice(i, i + DRAIN_BATCH_SIZE));
     }
   }
 

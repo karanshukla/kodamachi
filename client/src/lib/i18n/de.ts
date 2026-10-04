@@ -439,8 +439,6 @@ export const de = {
         "Dieser Posteingang ist geschlossen und nimmt derzeit keine neuen Nachrichten an.",
       MESSAGE_SEND_FAILED: "Wir konnten deine Nachricht nicht senden. Bitte versuche es erneut.",
       MESSAGE_NOT_FOUND: "Wir konnten diese Nachricht nicht finden.",
-      MESSAGE_DELETE_NOT_AUTHORIZED:
-        "Diese Nachricht gehört dir nicht, du kannst sie nicht löschen.",
       MESSAGE_DELETE_FAILED: "Wir konnten diese Nachricht nicht löschen. Bitte versuche es erneut.",
       BLUESKY_POST_FAILED:
         "Wir konnten deine Antwort nicht auf Bluesky posten. Bitte versuche es erneut.",
