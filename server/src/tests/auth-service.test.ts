@@ -6,30 +6,15 @@ import { OAuthResolverError } from "@atproto/oauth-client-node";
 
 import { deleteE2EAgent, setE2EAgent } from "../auth/e2e-agent-store";
 
-// `mock.module` must be registered before the module under test is imported so
-// that auth-service's transitive import of session-agent picks up the mock.
-// AuthService is therefore loaded lazily in `before()` and held in this `let`.
-//
-// checkSession and revokeSession both check hasE2EAgent() themselves before
-// ever calling initializeAgentForDid, so the mock only needs to reproduce the
-// null-on-restore-miss / fake-agent branching; the `new Agent(session)` leaf
-// is replaced with `mockAgent`, whose `getProfile` tests reassign to exercise
-// the previously untestable getProfile block in checkSession.
+// mock.module must precede the import, so AuthService is loaded lazily in beforeAll.
 let AuthService: typeof import("../services/auth-service").AuthService;
+let OAUTH_TOKEN_TTL_MS: number;
 let mockAgent: { getProfile: Mock<(...args: any[]) => Promise<any>> };
 
 beforeAll(async () => {
   mockAgent = { getProfile: mock(async () => ({ data: undefined })) };
-  // Spread the real module so every export it has keeps working and only
-  // initializeAgentForDid is swapped. Bun's `mock.module` is process-global and
-  // not restorable (`clearAllMocks` clears mock call history but does not unmock
-  // modules), so `--isolate` (passed in the package script) gives each test
-  // file a fresh module registry. Do not let `--isolate` be the only thing
-  // keeping this mock contained: spreading the real binding means a partial
-  // mock can't take out files that import the real initializeAgentForDid
-  // (e.g. session-agent.test.ts) with a missing-export SyntaxError. Re-exporting
-  // the real binding costs no coverage — it is the same function session-agent
-  // .test.ts already exercises.
+  // Spread the real module so only initializeAgentForDid is swapped; a partial mock would break session-agent.test.ts with a missing-export SyntaxError.
+  // mock.module is process-global and unrestorable; --isolate is what keeps it out of other files.
   const realSessionAgent = await import("../auth/session-agent");
   mock.module("../auth/session-agent", () => ({
     ...realSessionAgent,
@@ -41,13 +26,10 @@ beforeAll(async () => {
   }));
   const mod = await import("../services/auth-service");
   AuthService = mod.AuthService;
+  OAUTH_TOKEN_TTL_MS = mod.OAUTH_TOKEN_TTL_MS;
 });
 
-// Drop the mock() call history. Bun's `clearAllMocks` does not unmock modules
-// (the session-agent mock above stays registered for the process), but
-// `--isolate` gives each test file its own module registry so the mock never
-// leaks into other files regardless. This is call-history cleanup, not the
-// thing keeping the session-agent mock contained.
+// Call-history cleanup only; the mock stays registered (--isolate contains it).
 afterAll(() => {
   mock.clearAllMocks();
 });
@@ -89,12 +71,13 @@ describe("AuthService", () => {
   });
 
   test("getOAuthRedirectUrl throws for invalid handle", async () => {
-    await assert.rejects(() => service.getOAuthRedirectUrl(""), /invalid handle/);
+    await assert.rejects(() => service.getOAuthRedirectUrl("", "state-1"), /invalid handle/);
   });
 
   test("getOAuthRedirectUrl returns URL for valid handle", async () => {
-    const url = await service.getOAuthRedirectUrl("test.bsky.social");
+    const url = await service.getOAuthRedirectUrl("test.bsky.social", "state-1");
     assert.strictEqual(url, "https://example.com/redirect");
+    assert.strictEqual(ctx.oauthClient.authorize.mock.calls[0][1].state, "state-1");
   });
 
   test("getOAuthRedirectUrl re-throws OAuthResolverError message", async () => {
@@ -102,7 +85,7 @@ describe("AuthService", () => {
       throw new OAuthResolverError("handle not found");
     });
     await assert.rejects(
-      () => service.getOAuthRedirectUrl("unknown.bsky.social"),
+      () => service.getOAuthRedirectUrl("unknown.bsky.social", "state-1"),
       /handle not found/
     );
   });
@@ -112,7 +95,7 @@ describe("AuthService", () => {
       throw new Error("unexpected");
     });
     await assert.rejects(
-      () => service.getOAuthRedirectUrl("test.bsky.social"),
+      () => service.getOAuthRedirectUrl("test.bsky.social", "state-1"),
       /couldn't initiate login/
     );
   });
@@ -142,6 +125,18 @@ describe("AuthService", () => {
       assert.strictEqual(ctx.db.deleteFrom.mock.calls.length, 1);
       assert.strictEqual(ctx.db.deleteFrom.mock.calls[0][0], "auth_session");
     });
+  });
+
+  test("accepts an oauth token inside its lifetime", () => {
+    const issuedAt = Date.now();
+    const token = decodeURIComponent(service.encryptDid("did:foo", issuedAt));
+    assert.strictEqual(service.decryptDid(token, issuedAt + OAUTH_TOKEN_TTL_MS), "did:foo");
+  });
+
+  test("rejects an oauth token past its lifetime", () => {
+    const issuedAt = Date.now();
+    const token = decodeURIComponent(service.encryptDid("did:foo", issuedAt));
+    assert.strictEqual(service.decryptDid(token, issuedAt + OAUTH_TOKEN_TTL_MS + 1), null);
   });
 
   test("encryptDid and decryptDid roundtrip", () => {
@@ -417,7 +412,7 @@ describe("AuthService", () => {
         throw null;
       });
       await assert.rejects(
-        () => service.getOAuthRedirectUrl("test.bsky.social"),
+        () => service.getOAuthRedirectUrl("test.bsky.social", "state-1"),
         /couldn't initiate login/
       );
       assert.strictEqual(ctx.logger.error.mock.calls.length, 1);
@@ -428,7 +423,7 @@ describe("AuthService", () => {
         throw "authorize failed";
       });
       await assert.rejects(
-        () => service.getOAuthRedirectUrl("test.bsky.social"),
+        () => service.getOAuthRedirectUrl("test.bsky.social", "state-1"),
         /couldn't initiate login/
       );
     });

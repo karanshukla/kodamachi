@@ -1,17 +1,5 @@
-# E2E test overlay — compose on top of docker-compose.yml:
-#
-#   docker compose -f docker/docker-compose.yml -f docker/docker-compose.e2e.yml up --build
-#
-# What this changes:
-#   • Bakes VITE_E2E_TESTING=true into the client build (shows the app-password form)
-#   • Enables the /auth/e2e-login route on the server
-#   • Disables the per-IP rate limit so a large Playwright suite doesn't trip 429s
-#   • Exposes Caddy directly on port 8090 so Playwright bypasses Anubis bot-protection
-#
-# Credentials (E2E_HANDLE, E2E_APP_PASSWORD) are NOT in this file.
-# Pass them as env vars from your shell or a gitignored .env.e2e file:
-#   export E2E_HANDLE=yourhandle.pds.karanshukla.ca
-#   export E2E_APP_PASSWORD=xxxx-xxxx-xxxx-xxxx
+# Overlay: docker compose -f docker/docker-compose.yml -f docker/docker-compose.e2e.yml up --build
+# E2E_HANDLE and E2E_APP_PASSWORD come from the environment or docker/.env, not this file.
 
 services:
   client:
@@ -24,7 +12,6 @@ services:
       NODE_ENV: "test"
       E2E_TESTING: "true"
       E2E_PDS_URL: "${E2E_PDS_URL:-https://bsky.social}"
-      # Disable rate limiting so the Playwright suite can fan out freely.
       RATE_LIMIT_MAX: "0"
 
   caddy:

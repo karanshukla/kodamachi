@@ -1,3 +1,5 @@
+import { randomBytes } from "node:crypto";
+
 import { z } from "zod";
 import { Hono, type Context } from "hono";
 import { setCookie } from "hono/cookie";
@@ -22,7 +24,6 @@ import { validateJson } from "./route-helpers";
 import type { AppContext } from "#/index";
 import type { AppSessionData } from "#/auth/session";
 
-/** Derived so it stays in step with what `AuthService.checkSession` returns. */
 type BlueskyProfile = NonNullable<Awaited<ReturnType<AuthService["checkSession"]>>>;
 
 export interface AuthDeps {
@@ -47,7 +48,9 @@ export function createAuthHono(ctx: AppContext, deps: AuthDeps = {}): Hono {
     }
     try {
       ctx.logger.info({ handle }, "Starting OAuth authorize");
-      const redirectUrl = await service.getOAuthRedirectUrl(handle);
+      const oauthState = randomBytes(16).toString("base64url");
+      const redirectUrl = await service.getOAuthRedirectUrl(handle, oauthState);
+      await setSession(c, { ...getSession(c), oauthState });
       ctx.logger.info({ redirectUrl }, "OAuth authorize succeeded");
       return c.json({ redirectUrl });
     } catch (err: unknown) {
@@ -58,7 +61,6 @@ export function createAuthHono(ctx: AppContext, deps: AuthDeps = {}): Hono {
 
   const LOGGED_OUT = { isLoggedIn: false, profile: null, did: null } as const;
 
-  /** Writes the session back with `did`'s account entry refreshed from `profile`. */
   async function rememberAccount(
     c: Context,
     session: AppSessionData,
@@ -70,7 +72,6 @@ export function createAuthHono(ctx: AppContext, deps: AuthDeps = {}): Hono {
     );
   }
 
-  /** Writes the session back with `did` dropped, for an account Bluesky rejected. */
   async function forgetAccount(
     c: Context,
     session: AppSessionData,
@@ -82,9 +83,8 @@ export function createAuthHono(ctx: AppContext, deps: AuthDeps = {}): Hono {
   }
 
   /**
-   * The account `/session` should answer for: the active one while Bluesky still
-   * honours its OAuth grant, otherwise the first of the remaining signed-in
-   * accounts. Null once neither has a live grant, which is a logged-out answer.
+   * The account `/session` answers for: the active one while its OAuth grant is
+   * live, else the first live remaining account, else null (logged out).
    *
    * @see [auth-controller.test.ts](../tests/auth-controller.test.ts) — pins the
    * fallback to a second account and the drop when that one is dead too.
@@ -163,8 +163,7 @@ export function createAuthHono(ctx: AppContext, deps: AuthDeps = {}): Hono {
       return c.json({ message: "Logged out, switched account", switched: true });
     }
     clearSession(c);
-    // Appended, not set: clearSession already wrote nf-session's expiry and a
-    // non-appending c.header would clobber that Set-Cookie header.
+    // Append: clearSession already set nf-session's expiry Set-Cookie.
     c.header("Set-Cookie", expireNfRegionCookie(), { append: true });
     return c.json({ message: "Logged out successfully" });
   });
@@ -205,7 +204,6 @@ export function createAuthHono(ctx: AppContext, deps: AuthDeps = {}): Hono {
         mutateSession(updated, (draft) => upsertAccount(draft, toAccountEntry(profile)))
       );
       ctx.logger.info({ did }, "Switched active account");
-      // Fire-and-forget — the switch response must not wait on this.
       notificationService
         .syncSubscriptionsAcrossAccounts(getAccounts(updated).map((a) => a.did))
         .catch((err) =>
@@ -220,19 +218,32 @@ export function createAuthHono(ctx: AppContext, deps: AuthDeps = {}): Hono {
 
   app.get("/client-metadata.json", (c) => c.json(ctx.oauthClient.clientMetadata));
 
+  /**
+   * Completes only a login this browser started: `/login` stores the OAuth
+   * state in the session cookie, and `/oauth/consume` only confirms the DID
+   * this callback set.
+   *
+   * @see [auth-controller.test.ts](../tests/auth-controller.test.ts): "rejects
+   * a callback whose state this browser did not start" and "rejects a token
+   * for an account this browser did not sign in as".
+   */
   app.get("/oauth/callback", async (c) => {
     const params = new URLSearchParams(c.req.url.split("?")[1] ?? "");
     try {
       const callbackResult = await ctx.oauthClient.callback(params);
       const did = callbackResult.session.did;
+      const existing = getSession(c) ?? ({} as AppSessionData);
+      if (!callbackResult.state || callbackResult.state !== existing.oauthState) {
+        ctx.logger.warn({ did }, "OAuth callback state does not match this browser");
+        return c.redirect(`${env.CLIENT_URL}/login?error=oauth_failed`);
+      }
       try {
         await service.createOrConfirmUserProfile(did);
         ctx.logger.info({ did }, "User profile entry created or confirmed.");
       } catch (dbErr) {
         ctx.logger.error({ err: dbErr, did }, "Failed to create or confirm user profile entry.");
       }
-      const existing = getSession(c) ?? ({} as AppSessionData);
-      await setSession(c, { ...existing, did });
+      await setSession(c, { ...existing, did, oauthState: undefined });
       ctx.logger.info({ did }, "OAuth callback successful, session created");
       let token: string;
       try {
@@ -260,21 +271,22 @@ export function createAuthHono(ctx: AppContext, deps: AuthDeps = {}): Hono {
     if (!oauthToken) {
       return c.json(errorBody("MISSING_OAUTH_TOKEN", "Missing oauth_token"), 400);
     }
-    let did: string;
+    let did: string | null;
     try {
       did = service.decryptDid(oauthToken);
     } catch {
       ctx.logger.error("OAUTH_TOKEN_SECRET is not set");
       return c.json(errorBody("SERVER_MISCONFIGURED", "Server misconfiguration"), 500);
     }
+    if (!did || did !== getSession(c)?.did) {
+      return c.json(errorBody("INVALID_OAUTH_TOKEN", "Invalid or expired token"), 400);
+    }
     try {
       const user = await service.findUserByDid(did);
       if (!user) {
         return c.json(errorBody("USER_NOT_FOUND", "User not found"), 404);
       }
-      const existing = getSession(c) ?? ({} as AppSessionData);
-      await setSession(c, { ...existing, did });
-      ctx.logger.info({ did }, "Session set from oauth_token");
+      ctx.logger.info({ did }, "Session confirmed from oauth_token");
 
       // Non-fatal: without the hint Caddy falls back to the EU backend.
       try {
@@ -304,7 +316,6 @@ export function createAuthHono(ctx: AppContext, deps: AuthDeps = {}): Hono {
     env.E2E_TESTING && env.NODE_ENV !== "production" ? createE2EAuthHono(ctx, service) : null;
   if (e2eSubApp) app.route("/", e2eSubApp);
 
-  /** Applies `mutate` to a shallow copy, so a rejected write leaves the original intact. */
   function mutateSession(
     session: AppSessionData,
     mutate: (draft: AppSessionData) => void

@@ -7,16 +7,7 @@ import (
 	"testing"
 )
 
-// The OG template's theme is enforced here rather than reviewed by eye. This is
-// the Go counterpart of client/src/tests/theme/contrast.test.ts: the palette,
-// the font-stack ordering, and the vertical layout budget are all rules that
-// fail silently in a generated PNG — nobody sees the image until a crawler has
-// already cached it — so each one gets a test on both sides of its boundary.
-
-// wcagAA is the WCAG 2.1 AA contrast minimum for body text. Every text colour
-// in the template clears it against every surface it can land on. Large text
-// would be allowed 3.0, but the template has small text too (the @handle row),
-// so the whole palette is held to the stricter number.
+// wcagAA is the AA minimum for body text; large text would allow 3.0, but the @handle row is small.
 const wcagAA = 4.5
 
 func TestOGPalette_EveryTextColourClearsAAOnEverySurface(t *testing.T) {
@@ -30,9 +21,6 @@ func TestOGPalette_EveryTextColourClearsAAOnEverySurface(t *testing.T) {
 	}
 }
 
-// The paired failing case: the contrast helper must actually reject something.
-// Without this, a bug that returned a huge ratio for every input would leave the
-// test above passing forever.
 func TestContrastRatio_RejectsALowContrastPair(t *testing.T) {
 	if got := contrastRatio(t, ogTextMuted, "#B9B2DD"); got >= wcagAA {
 		t.Fatalf("muted text on a light lilac should fail AA, got %.2f:1", got)
@@ -43,27 +31,20 @@ func TestContrastRatio_RejectsALowContrastPair(t *testing.T) {
 	}
 }
 
-// The muted colour is the one most likely to be nudged darker for taste, and it
-// is the one carrying the @handle. Pin the surface it actually sits on.
 func TestOGPalette_MutedHandleTextOnSurface(t *testing.T) {
-	if got := contrastRatio(t, ogTextMuted, ogSurfaceTop); got < wcagAA {
-		t.Fatalf("@handle (%s on %s) = %.2f:1, below AA", ogTextMuted, ogSurfaceTop, got)
+	if got := contrastRatio(t, ogTextMuted, ogSurface); got < wcagAA {
+		t.Fatalf("@handle (%s on %s) = %.2f:1, below AA", ogTextMuted, ogSurface, got)
 	}
 }
 
-// The chip is the one place where accent text sits on something other than the
-// page surface, so its own pair is asserted rather than assumed.
 func TestOGPalette_ChipTextOnChipBackground(t *testing.T) {
-	if got := contrastRatio(t, ogTextAccent, ogChipBG); got < wcagAA {
-		t.Fatalf("chip label (%s on %s) = %.2f:1, below AA", ogTextAccent, ogChipBG, got)
+	if got := contrastRatio(t, ogFillNavy, ogChipBG); got < wcagAA {
+		t.Fatalf("chip label (%s on %s) = %.2f:1, below AA", ogFillNavy, ogChipBG, got)
 	}
 }
 
-// TestOGTemplate_NoTextSitsOnTheBanner is the reachability argument behind the
-// palette test: the contrast numbers above are only meaningful if every text
-// node lands on one of ogSurfaces. A banner is an arbitrary user photo, so any
-// text placed over it has unbounded contrast and nothing here could assert it.
-// The banner element must therefore stay empty of content.
+// A banner is an arbitrary user photo, so text over it has unbounded contrast the palette test cannot
+// assert: the banner element must stay empty.
 func TestOGTemplate_NoTextSitsOnTheBanner(t *testing.T) {
 	html := BuildOGTemplate(OGInput{
 		DisplayName: "Alice",
@@ -76,20 +57,13 @@ func TestOGTemplate_NoTextSitsOnTheBanner(t *testing.T) {
 	if strings.Contains(banner, "Alice") || strings.Contains(banner, "Ask me anything") {
 		t.Fatalf("text inside the banner strip, where contrast cannot be guaranteed: %q", banner)
 	}
-	// Whatever the banner does contain must be the image and nothing else.
 	if got := strings.TrimSpace(banner); got != `<img src="https://cdn.bsky.app/banner.jpg" alt="">` {
 		t.Fatalf("banner strip should hold only the image, got %q", got)
 	}
 }
 
-// ── Font stack ───────────────────────────────────────────────────────────────
-
-// 'Noto Color Emoji' gives U+0020 a 1.25em advance. Anywhere but last in the
-// stack it becomes the winning font for the space character whenever the
-// webfonts ahead of it have not loaded, and every word gap in the rendered image
-// blows out to ~4.5x. That is not hypothetical: it is what the previous template
-// did, and it needs only a slow Google Fonts response to reproduce, because
-// document.fonts.ready resolves on a *failed* font load too.
+// 'Noto Color Emoji' gives U+0020 a 1.25em advance; ahead of the text webfonts it blows word gaps out ~4.5x
+// when they fail to load (document.fonts.ready resolves on failure too).
 func TestOGFontStack_EmojiFamilyIsLast(t *testing.T) {
 	families := splitFontStack(ogFontStack)
 	last := families[len(families)-1]
@@ -98,9 +72,6 @@ func TestOGFontStack_EmojiFamilyIsLast(t *testing.T) {
 	}
 }
 
-// The other side of that boundary: a real text family — not just the emoji font
-// — has to sit ahead of the generic, or a container without the webfonts has
-// nothing to fall back to but the emoji font.
 func TestOGFontStack_HasALocalTextFallbackBeforeTheGeneric(t *testing.T) {
 	families := splitFontStack(ogFontStack)
 	genericAt := -1
@@ -128,12 +99,7 @@ func TestOGFontStack_HasALocalTextFallbackBeforeTheGeneric(t *testing.T) {
 	}
 }
 
-// The app dropped its brand webfont for the platform system stack, so the OG
-// image has no brand face to match. What it still needs is a deterministic
-// render: system-ui inside the Chromium container is whatever fontconfig holds,
-// so the stack leads with the Noto webfonts instead of following the app
-// literally. Re-adding a brand webfont here reintroduces both the extra fetch
-// and the drift from the app's typography.
+// system-ui in the Chromium container is whatever fontconfig holds, so the stack leads with Noto for a deterministic render.
 func TestOGFontStack_LeadsWithNotoNotABrandWebfont(t *testing.T) {
 	html := BuildOGTemplate(OGInput{Handle: "a.bsky.social"})
 	if !strings.HasPrefix(ogFontStack, "'Noto Sans',") {
@@ -149,11 +115,6 @@ func TestOGFontStack_LeadsWithNotoNotABrandWebfont(t *testing.T) {
 	}
 }
 
-// ── Geometry ─────────────────────────────────────────────────────────────────
-
-// The canvas is a fixed 1200x630 with no scrollbar to reveal a mistake: if the
-// bands do not add up, the prompt grows silently over the footer and the image
-// still renders. This adds them up.
 func TestOGGeometry_VerticalBandsFitTheCanvas(t *testing.T) {
 	total := 0
 	for _, b := range ogVerticalBands {
@@ -165,9 +126,6 @@ func TestOGGeometry_VerticalBandsFitTheCanvas(t *testing.T) {
 	}
 }
 
-// The paired case on the other side of the boundary. A budget that always
-// passed would be worthless, so confirm the sum is genuinely near the ceiling
-// rather than trivially under it — the layout is meant to use the canvas.
 func TestOGGeometry_BandsUseMostOfTheCanvas(t *testing.T) {
 	total := 0
 	for _, b := range ogVerticalBands {
@@ -179,23 +137,17 @@ func TestOGGeometry_BandsUseMostOfTheCanvas(t *testing.T) {
 	}
 }
 
-// ProfileCard.styles.ts positions the avatar at `top: -AVATAR_SIZE / 2`, so it
-// hangs exactly half over the banner. Matching that is what makes the OG card
-// read as the same component.
 func TestOGGeometry_AvatarHangsHalfOverTheBanner(t *testing.T) {
 	if avatarOverlap != avatarSize/2 {
 		t.Fatalf("avatar overhang is %dpx of a %dpx avatar; ProfileCard hangs it by exactly half",
 			avatarOverlap, avatarSize)
 	}
-	// Half an avatar has to fit inside the banner, or it hangs off the top edge.
 	if avatarOverlap > bannerHeight {
 		t.Fatalf("avatar overhang %dpx exceeds the %dpx banner", avatarOverlap, bannerHeight)
 	}
 }
 
-// The app's avatar is a rounded square, not a circle: Mantine's theme sets
-// radius xl to 22px and ProfileCard renders an 84px Avatar with radius="xl".
-// A 50% radius here would be the single most visible mismatch with the app.
+// ProfileCard renders an 84px Avatar with radius xl (22px); a 50% radius would mismatch.
 func TestOGGeometry_AvatarIsARoundedSquareNotACircle(t *testing.T) {
 	if avatarRadius >= avatarSize/2 {
 		t.Fatalf("avatar radius %d on a %dpx avatar is a circle; the app uses a rounded square",
@@ -204,8 +156,6 @@ func TestOGGeometry_AvatarIsARoundedSquareNotACircle(t *testing.T) {
 	if avatarRadius <= 0 {
 		t.Fatalf("avatar radius %d has no rounding at all", avatarRadius)
 	}
-	// Same proportion as the app's 22px radius on an 84px avatar, within a pixel
-	// of rounding.
 	want := avatarSize * 22 / 84
 	if avatarRadius != want {
 		t.Fatalf("avatar radius %d does not keep the app's 22/84 proportion (want %d)", avatarRadius, want)
@@ -216,9 +166,6 @@ func TestOGGeometry_AvatarIsARoundedSquareNotACircle(t *testing.T) {
 	}
 }
 
-// "no blur or anything": the banner ends in a hard cut, and its scrim is the
-// app's flat darken rather than a fade into the surface. A gradient here reads
-// as a blur over the user's photo.
 func TestOGTemplate_BannerHasNoFadeOrBlur(t *testing.T) {
 	css := between(BuildOGTemplate(OGInput{
 		Handle: "a.bsky.social",
@@ -231,9 +178,7 @@ func TestOGTemplate_BannerHasNoFadeOrBlur(t *testing.T) {
 	if !strings.Contains(scrim, ogBannerScrim) {
 		t.Errorf(".banner::after should carry ProfileCard's flat scrim %q\n%s", ogBannerScrim, scrim)
 	}
-	// Scanned across every .banner rule — the element, its image, and the scrim.
-	// An earlier version of this test only looked at .banner and .banner::after,
-	// and a `filter: blur()` on `.banner img` sailed straight past it.
+	// Scan every .banner rule: a `filter: blur()` on `.banner img` once slipped past a narrower scan.
 	for _, selector := range bannerSelectors(css) {
 		rule := between(css, selector+" {", "}")
 		for _, banned := range []string{"blur", "filter", "backdrop"} {
@@ -244,8 +189,6 @@ func TestOGTemplate_BannerHasNoFadeOrBlur(t *testing.T) {
 	}
 }
 
-// bannerSelectors returns every rule head in css that styles the banner, so a
-// blur added to a new sub-element is caught rather than missed.
 func bannerSelectors(css string) []string {
 	var out []string
 	for _, line := range strings.Split(css, "\n") {
@@ -271,11 +214,7 @@ func TestOGTemplate_PromptIsClampedNotAllowedToGrow(t *testing.T) {
 	}
 }
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
-
-// contrastRatio implements the WCAG 2.1 relative-luminance formula for two
-// #rrggbb colours. Mirrors the client contrast test's maths so the two suites
-// cannot disagree about what AA means.
+// contrastRatio mirrors the client contrast test's maths.
 func contrastRatio(t *testing.T, fg, bg string) float64 {
 	t.Helper()
 	l1, l2 := relativeLuminance(t, fg), relativeLuminance(t, bg)
@@ -310,8 +249,6 @@ func splitFontStack(stack string) []string {
 	return out
 }
 
-// between returns the text between the first open and the following close, or
-// "" if either is absent.
 func between(s, open, close string) string {
 	i := strings.Index(s, open)
 	if i < 0 {

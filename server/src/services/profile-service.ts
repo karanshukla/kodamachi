@@ -16,7 +16,6 @@ export interface ProfileResolver {
 const INBOX_OPEN_BY_DEFAULT = true;
 const ATMOSPHERE_LINKS_ON_BY_DEFAULT = true;
 
-/** What an account shows when it has asked not to advertise its other apps. */
 const NO_ATMOSPHERE_APPS: AtmosphereAppLink[] = [];
 const MAX_SOCIAL_GRAPH_PAGES = 5;
 
@@ -88,10 +87,8 @@ export class ProfileService {
   /* v8 ignore stop */
 
   /**
-   * The settings a visitor is allowed to see. `uiLocale`, `defaultClient` and
-   * `openProfilesInApp` are the viewer's own business, not the profile owner's,
-   * so none of them is selected here. `atmosphereLinksEnabled` is the mirror
-   * case: it governs what this account shows every visitor, so it belongs here.
+   * Only settings a visitor may see: the viewer-side ones (`uiLocale`,
+   * `defaultClient`, `openProfilesInApp`) are never selected.
    *
    * @see [profile-service.test.ts](../tests/profile-service.test.ts): "never
    * selects a setting that is private to its owner".
@@ -125,10 +122,7 @@ export class ProfileService {
     let atmosphereApps: string[];
 
     try {
-      // The repo scan runs alongside the settings read rather than after it, so
-      // an opted-in account (the default, and so nearly all of them) does not
-      // pay a database round trip before its PDS is even dialled. An opted-out
-      // account discards the answer below.
+      // Concurrent with the settings read; an opted-out account discards the scan.
       [profileResponse, exists, publicSettings, atmosphereApps] = await Promise.all([
         withRetry(() => this.agent.getProfile({ actor: did }), this.logger, {
           did,
@@ -187,11 +181,8 @@ export class ProfileService {
   }
 
   /**
-   * Follows and followers both go through the public appview agent so the two
-   * datasets come from one consistent indexing state — reading one through the
-   * authenticated caller agent could observe the same relationship differently
-   * and mislabel a moot as an oomf. Follows can't move to the authenticated
-   * agent either: its OAuth scope grants getFollows but not getFollowers.
+   * Both go through the public appview agent for one consistent indexing state
+   * (else a moot can read as an oomf); the OAuth scope lacks getFollowers.
    */
   async getFriendsOnApp(userDid: string): Promise<FriendGroups> {
     const agent = this.agent;

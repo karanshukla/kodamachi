@@ -13,12 +13,10 @@ import { useQuestionRender } from "./useQuestionRender";
 import type { ThreadRoot } from "./useThreadRoot";
 import type { ReactNode } from "react";
 
-/** /messages/respond's answer when the render it was handed is not ready yet. */
 const RENDER_NOT_READY = 409;
 
 const POSTED_NOTICE_AUTOCLOSE_MS = 8000;
 
-/** A reply the user has committed to, waiting on its question image. */
 interface QueuedSend {
   message: Message;
   response: string;
@@ -27,11 +25,9 @@ interface QueuedSend {
 export interface ReplyComposerArgs {
   messages: Message[] | undefined;
   thread: ThreadRoot;
-  /** The owner's stored image theme — a different theme is a different render. */
   imageTheme?: string;
   includeQuestionAsImage: boolean;
   appendProfileLink: boolean;
-  /** The owner's inbox link, appended to the post when they've asked for it. */
   shortUrl: string;
   handle: string;
   /**
@@ -44,16 +40,13 @@ export interface ReplyComposerArgs {
 }
 
 export interface ReplyComposer {
-  /** The question whose composer is open, or null when none is. */
   respondingTid: string | null;
   responseText: string;
   setResponseText: (text: string) => void;
   open: (tid: string) => void;
   close: () => void;
   send: (message: Message, response: string) => void;
-  /** A reply is in flight, or waiting on the image it will carry. */
   sending: boolean;
-  /** Specifically waiting on a render, which the composer says out loud. */
   awaitingRender: boolean;
 }
 

@@ -4,8 +4,6 @@ import { seedUiLocale } from "./helpers/locale";
 
 const authFile = "e2e/.auth/user.json";
 
-// Logs in once via the E2E app-password bypass; every spec that depends on
-// ["setup"] reuses the stored session.
 setup("authenticate via e2e bypass", async ({ page }) => {
   const handle = process.env.E2E_HANDLE;
   const appPassword = process.env.E2E_APP_PASSWORD;
@@ -17,9 +15,7 @@ setup("authenticate via e2e bypass", async ({ page }) => {
     );
   }
 
-  // Seeded before the first (logged-out) navigation, and captured into
-  // `authFile` below, so every spec that reuses this storage state inherits a
-  // pinned `uiLocale` instead of falling back to `navigator.languages`.
+  // Captured into `authFile`, so every dependent spec inherits the pinned `uiLocale`.
   await seedUiLocale(page);
 
   await page.goto("/login");

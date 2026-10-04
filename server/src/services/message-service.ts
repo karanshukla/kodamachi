@@ -28,11 +28,8 @@ interface SyncOutcome {
 }
 
 /**
- * The `sendMessage`/`deleteMessage` rejections a route maps to a specific
- * status and error code. Named constants rather than prose compared with
- * `String.includes`, mirroring `render-service.ts`'s `QUESTION_NOT_IN_INBOX`:
- * an equality check against one of these is what lets the route answer with a
- * machine code instead of echoing the exception's text to the caller.
+ * The `sendMessage`/`deleteMessage` rejections a route maps to a status and
+ * error code, so the route never echoes exception text to the caller.
  *
  * @see [message-controller.test.ts](../tests/message-controller.test.ts) —
  * one test per sentinel, pinning the status and code it maps to.
@@ -81,9 +78,8 @@ export class MessageService {
   }
 
   /**
-   * Seeded once, in the requesting user's `uiLocale` at that moment. These are
-   * content, not chrome: never retranslated on a later read, never re-seeded
-   * on a later locale change.
+   * Seeded once in the user's `uiLocale` at that moment; content, never
+   * retranslated or re-seeded.
    * @see [message-service.test.ts](../tests/message-service.test.ts) — "keeps
    * a message seeded under one locale after the owner switches uiLocale".
    */
@@ -274,12 +270,7 @@ export class MessageService {
     includeQuestionAsImage: boolean,
     agent: Agent,
     replyTo?: { uri: string; cid?: string },
-    /**
-     * A render the async pipeline already produced and the caller has claimed.
-     * When present the image service is never called: the bytes are uploaded
-     * and posted inside this authenticated request, which is the only place
-     * `agent.post` ever runs.
-     */
+    /** A claimed render; when present the image service is not called. */
     preRendered?: RenderedQuestionImage
   ): Promise<{ success: boolean; uri: string; cid: string; link?: string }> {
     try {
@@ -352,16 +343,14 @@ export class MessageService {
   }
 
   /**
-   * The inbox is cleared before the profile goes, so a failure part-way leaves
-   * an account that can retry deletion rather than questions with no owner.
+   * The inbox is cleared before the profile so a partial failure stays retryable.
    * @see [message-service.test.ts](../tests/message-service.test.ts) — "deleteUserData
    * clears the inbox before the profile" and "deleteUserData keeps the profile
    * when clearing the inbox fails".
    */
   async deleteUserData(userDid: string, agent: Agent): Promise<{ success: boolean }> {
     try {
-      // PDS deletion runs before (and outside) the transaction so network calls
-      // never hold a DB connection open.
+      // Outside the transaction so network calls never hold a DB connection.
       await this.deleteAllPdsMessages(userDid, agent);
       await this.inbox.clear(userDid);
       await this.deleteProfileAndSettingsAtomically(userDid);
@@ -408,8 +397,7 @@ export class MessageService {
   }
 
   /**
-   * Anyone can write any record into their own repo, so an imported record is
-   * filed under the user syncing it, never under the recipient it names.
+   * Records are filed under the syncing user, never the recipient they name.
    * @see [message-service.test.ts](../tests/message-service.test.ts) — "syncMessages
    * files a record naming another recipient under the syncing user".
    */

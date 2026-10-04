@@ -21,7 +21,6 @@ function appsFor(count: number) {
 
 describe("AtmosphereLinks", () => {
   it("renders nothing at all for an account on no other apps", () => {
-    // The URL bar it sits in must look exactly as it did before, no reserved gap.
     renderWithProviders(<AtmosphereLinks apps={[]} />);
 
     expect(screen.queryByLabelText(en.profileUrlBar.atmosphereLinksLabel)).not.toBeInTheDocument();
@@ -46,8 +45,7 @@ describe("AtmosphereLinks", () => {
   });
 
   it("shows an app the catalog has no mark for", () => {
-    // Rocksky comes from the server's supplementary table and has no brand mark,
-    // so it falls back to a neutral one rather than rendering an empty box.
+    // Rocksky has no brand mark; it gets the neutral fallback, not an empty box.
     renderWithProviders(<AtmosphereLinks apps={withMarks([link("rocksky", "Rocksky")])} />);
 
     expect(
@@ -62,8 +60,7 @@ describe("AtmosphereLinks", () => {
   });
 
   it("carries the mark alongside the name, for the width that cannot", () => {
-    // Both ship every time and CSS picks one, so the swap costs no JavaScript
-    // and cannot flash on a page this public.
+    // Both ship every time and CSS picks one, so there is no JS swap and no flash.
     const { container } = renderWithProviders(
       <AtmosphereLinks apps={withMarks([link("tangled", "Tangled")])} />
     );

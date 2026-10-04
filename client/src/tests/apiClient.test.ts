@@ -157,10 +157,7 @@ describe("apiClient", () => {
     });
   });
 
-  // API_URL is resolved once at module load, so each case re-imports the module
-  // under a stubbed env rather than relying on whatever the ambient one is. A
-  // local client/.env setting VITE_API_URL would otherwise decide which of the
-  // two branches ran, and the other would read as dead code.
+  // API_URL is resolved at module load; re-import under a stubbed env so a local client/.env cannot pick the branch.
   describe("API base URL", () => {
     afterEach(() => {
       vi.unstubAllEnvs();

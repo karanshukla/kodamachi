@@ -1,5 +1,7 @@
 import type { CSSProperties } from "react";
 
+import { eyebrow as eyebrowLabel } from "../../styles/tokens";
+
 const SECTION_GAP = 34;
 
 export const section = (last?: boolean): CSSProperties => ({
@@ -7,5 +9,6 @@ export const section = (last?: boolean): CSSProperties => ({
 });
 
 export const eyebrow: CSSProperties = {
-  letterSpacing: "0.05em",
+  ...eyebrowLabel,
+  marginBottom: "var(--mantine-spacing-md)",
 };

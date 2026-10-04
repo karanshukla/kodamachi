@@ -1,8 +1,4 @@
-/**
- * WCAG contrast helpers for `contrast.test.ts`. Lives under `src/tests/` rather
- * than `src/lib/` because nothing ships it — it exists to check the palette, not
- * to render with it.
- */
+/** WCAG contrast helpers for `contrast.test.ts`. */
 
 export type Rgb = [number, number, number];
 
@@ -61,11 +57,7 @@ export function contrast(a: Rgb, b: Rgb): number {
   return (hi + 0.05) / (lo + 0.05);
 }
 
-/**
- * Every colour a `linear-gradient(...)` passes through, sampled densely enough
- * that a mid-ramp dip cannot hide between two stops. Checking only the declared
- * stops is what let the old cyan/emerald presets look compliant.
- */
+/** Every colour a `linear-gradient(...)` passes through, sampled so a mid-ramp dip cannot hide between stops. */
 export function gradientSamples(gradient: string, step = 0.02): Rgb[] {
   const stops = [...gradient.matchAll(/(#[0-9a-f]{3,6})\s+([\d.]+)%/gi)].map((m) => ({
     color: parseColor(m[1]),

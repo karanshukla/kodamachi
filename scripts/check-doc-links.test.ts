@@ -22,8 +22,7 @@ function write(name: string, source: string) {
   writeFileSync(join(root, name), source);
 }
 
-// Assembled rather than written literally: this file is itself scanned by the
-// checker, and a literal block-comment fixture would read as a real comment.
+// Assembled so this file's own scan doesn't read the fixture as a real comment.
 const SLASH = "/";
 const STAR = "*";
 

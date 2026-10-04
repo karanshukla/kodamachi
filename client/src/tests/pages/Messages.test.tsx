@@ -1,5 +1,4 @@
-// The harness registers this suite's module mocks, so it has to be imported
-// before anything that pulls in the modules it mocks.
+// Import the harness first: it registers this suite's module mocks.
 /* eslint-disable import/order */
 import {
   MESSAGES,
@@ -25,6 +24,10 @@ import { imageThemeLabels } from "../../lib/themes";
 import Messages from "../../pages/Messages";
 import { renderWithProviders } from "../testUtils";
 /* eslint-enable import/order */
+
+/** The image-theme chip in the preferences bar, which opens the swatch picker. */
+const openThemePicker = () =>
+  screen.findByRole("button", { name: new RegExp(en.imageThemePicker.title) });
 
 describe("Messages page", () => {
   beforeEach(() => {
@@ -76,11 +79,13 @@ describe("Messages page", () => {
     expect(screen.getByText(en.messagesPage.notLoggedInTitle)).toBeInTheDocument();
   });
 
-  it("renders Posting preferences and Image theme panel headers when messages exist", () => {
+  it("renders the preferences bar when messages exist", () => {
     setupMocks();
     renderWithProviders(<Messages />);
-    expect(screen.getByText(en.postingPreferences.title)).toBeInTheDocument();
-    expect(screen.getByText(en.imageThemePicker.title)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: en.preferencesBar.open })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: en.postingPreferences.includeQuestionAsImage.shortLabel })
+    ).toBeInTheDocument();
   });
 
   it("renders message card content", () => {
@@ -97,30 +102,27 @@ describe("Messages page", () => {
     expect(yearMatches.length).toBeGreaterThan(0);
   });
 
-  it("clicking 'Posting preferences' header does not throw", () => {
+  it("keeps each preference's description behind the Preferences button", async () => {
     setupMocks();
     renderWithProviders(<Messages />);
-    expect(() => fireEvent.click(screen.getByText(en.postingPreferences.title))).not.toThrow();
+    expect(screen.queryByText(en.postingPreferences.autoScrollToMessages.description)).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: en.preferencesBar.open }));
+
+    expect(
+      await screen.findByText(en.postingPreferences.autoScrollToMessages.description)
+    ).toBeInTheDocument();
   });
 
-  it("clicking 'Image theme' header does not throw", () => {
+  it("presses only the chips whose preference is on", () => {
     setupMocks();
     renderWithProviders(<Messages />);
-    expect(() => fireEvent.click(screen.getByText(en.imageThemePicker.title))).not.toThrow();
-  });
-
-  it("renders Auto-scroll to messages switch in the preferences panel", () => {
-    setupMocks();
-    renderWithProviders(<Messages />);
-    expect(screen.getByText(en.postingPreferences.autoScrollToMessages.label)).toBeInTheDocument();
-  });
-
-  it("preferences counter reflects 5 total toggles", () => {
-    setupMocks();
-    renderWithProviders(<Messages />);
-    // Cleared localStorage falls back to the preference defaults: useGradients,
-    // includeQuestionAsImage, and autoScrollToMessages start enabled (3 of 5).
-    expect(screen.getByText(en.postingPreferences.summary(3, 5))).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: en.postingPreferences.includeQuestionAsImage.shortLabel })
+    ).toHaveAttribute("aria-pressed", "true");
+    expect(
+      screen.getByRole("button", { name: en.postingPreferences.appendProfileLink.shortLabel })
+    ).toHaveAttribute("aria-pressed", "false");
   });
 
   it("calls scrollIntoView with block:nearest when messages first load", async () => {
@@ -140,18 +142,14 @@ describe("Messages page", () => {
     localStorage.setItem("autoScrollToMessages", JSON.stringify(false));
     const scrollSpy = vi.spyOn(Element.prototype, "scrollIntoView").mockImplementation(() => {});
 
-    // Start with no messages so the initial mount cannot trigger the scroll
     setupMocks([]);
     const { rerender } = renderWithProviders(<Messages />);
 
-    // Wait for localStorage hydration (getInitialValueInEffect: true means it fires
-    // after mount). The panel renders when messages exist, so we confirm the empty
-    // state is stable first.
+    // localStorage hydration fires after mount (getInitialValueInEffect); let it settle first.
     await waitFor(() => {
       expect(screen.queryByText("Hello?")).toBeNull();
     });
 
-    // Now simulate new messages arriving — count goes 0 → 2, but autoScroll is false
     mockUseMessages.mockReturnValue({
       data: { messages: MESSAGES },
       isLoading: false,
@@ -170,11 +168,10 @@ describe("Messages page", () => {
     scrollSpy.mockRestore();
   });
 
-  it("does not render panel headers when there are no messages", () => {
+  it("does not render the preferences bar when there are no messages", () => {
     setupMocks([]);
     renderWithProviders(<Messages />);
-    expect(screen.queryByText(en.postingPreferences.title)).toBeNull();
-    expect(screen.queryByText(en.imageThemePicker.title)).toBeNull();
+    expect(screen.queryByRole("button", { name: en.preferencesBar.open })).toBeNull();
   });
 
   it("shows a welcome-back toast notification after a new login", async () => {
@@ -262,9 +259,7 @@ describe("Messages page", () => {
     setupMocks();
     renderWithProviders(<Messages />);
 
-    // First Alt+R: focusedCardIndex is -1 → sets to 0
     fireEvent.keyDown(document, { key: "R", altKey: true });
-    // Second Alt+R: cycles to next card
     fireEvent.keyDown(document, { key: "R", altKey: true });
 
     expect(document.body).toBeInTheDocument();
@@ -274,11 +269,8 @@ describe("Messages page", () => {
     setupMocks();
     renderWithProviders(<Messages />);
 
-    // Focus a card via Alt+R first (sets focusedCardIndex=0)
     fireEvent.keyDown(document, { key: "R", altKey: true });
-    // ArrowDown → next card
     fireEvent.keyDown(document, { key: "ArrowDown" });
-    // ArrowUp → previous card
     fireEvent.keyDown(document, { key: "ArrowUp" });
 
     expect(document.body).toBeInTheDocument();
@@ -336,13 +328,13 @@ describe("Messages page", () => {
     expect(() => fireEvent.click(copyBtn)).not.toThrow();
   });
 
-  it("clicking a ThemeCard saves only imageTheme when not loading", () => {
+  it("clicking a ThemeCard saves only imageTheme when not loading", async () => {
     setupMocks();
     const save = mockSettingsMutation();
     renderWithProviders(<Messages />);
 
-    const defaultThemeBtn = screen.getByRole("button", { name: en.themes.image.default });
-    fireEvent.click(defaultThemeBtn);
+    fireEvent.click(await openThemePicker());
+    fireEvent.click(await screen.findByRole("button", { name: en.themes.image.default }));
 
     expect(save).toHaveBeenCalledWith({ imageTheme: "default" });
   });
@@ -351,7 +343,6 @@ describe("Messages page", () => {
     setupMocks();
     renderWithProviders(<Messages />);
 
-    // Switch inputs are rendered as checkboxes; fire Alt+R from one of them
     const switchInput = document.querySelector('input[type="checkbox"]') as HTMLElement;
     if (switchInput) {
       fireEvent.keyDown(switchInput, { key: "R", altKey: true });
@@ -464,22 +455,28 @@ describe("Messages page", () => {
     expect(screen.getAllByText(imageThemeLabels(en).default).length).toBeGreaterThan(0);
   });
 
-  it("clicking a ThemeCard while settings are loading does not call updateSettings.mutate", () => {
+  it("cannot pick a theme while settings are loading", async () => {
     setupMocks();
     mockUseUserSettings.mockReturnValue({ data: undefined, isLoading: true } as any);
     const save = mockSettingsMutation();
     renderWithProviders(<Messages />);
 
-    fireEvent.click(screen.getByRole("button", { name: en.themes.image.default }));
+    expect(await openThemePicker()).toBeDisabled();
+
+    fireEvent.click(screen.getByRole("button", { name: en.preferencesBar.open }));
+    fireEvent.click(await screen.findByRole("button", { name: en.themes.image.default }));
+
     expect(save).not.toHaveBeenCalled();
   });
 
-  it("clicking a ThemeCard while its own save is in flight does not save again", () => {
+  it("cannot pick a theme while its own save is in flight", async () => {
     setupMocks();
     const save = mockSettingsMutation("imageTheme");
     renderWithProviders(<Messages />);
 
-    fireEvent.click(screen.getByRole("button", { name: en.themes.image.default }));
+    fireEvent.click(screen.getByRole("button", { name: en.preferencesBar.open }));
+    fireEvent.click(await screen.findByRole("button", { name: en.themes.image.default }));
+
     expect(save).not.toHaveBeenCalled();
   });
 
@@ -493,20 +490,29 @@ describe("Messages page", () => {
   });
 
   it("useGradients=false hydrates from localStorage and drives the card's background-color source", async () => {
-    // Note: we can't assert the rendered `style.background` string directly here — happy-dom has
-    // a quirk where once a `background` shorthand containing `var(...)` is set via the CSSOM
-    // property setter, later property-based updates to that same node stop being reflected in
-    // `.style`/`getAttribute("style")`, even though the underlying JS ternary re-evaluates
-    // correctly on every render. The Switch's `checked` DOM property isn't subject to that
-    // shorthand-specific bug, and it reflects the exact same `useGradients` value read in the
-    // same render pass as the card's `background: useGradients ? ... : surfaceBg(isDark)` line.
+    // happy-dom stops reflecting later `style` updates once a `background` shorthand with `var(...)` is set, so assert the Switch's `checked` instead.
     localStorage.setItem("useGradients", JSON.stringify(false));
+    setupMocks();
+    renderWithProviders(<Messages />);
+    fireEvent.click(screen.getByRole("button", { name: en.preferencesBar.open }));
+
+    await waitFor(() => {
+      const gradientSwitch = screen.getByLabelText(
+        new RegExp(en.postingPreferences.useGradients.label, "i")
+      ) as HTMLInputElement;
+      expect(gradientSwitch.checked).toBe(false);
+    });
+  });
+
+  it("useGradients=true paints ink cards, whose reply button becomes the on-fill outline", async () => {
+    localStorage.setItem("useGradients", JSON.stringify(true));
     setupMocks();
     renderWithProviders(<Messages />);
 
     await waitFor(() => {
-      const gradientSwitch = screen.getByLabelText(/gradient backgrounds/i) as HTMLInputElement;
-      expect(gradientSwitch.checked).toBe(false);
+      const replies = screen.getAllByRole("button", { name: en.questionCard.reply });
+      expect(replies.length).toBeGreaterThan(0);
+      for (const button of replies) expect(button.getAttribute("data-variant")).toBe("default");
     });
   });
 
@@ -520,7 +526,6 @@ describe("Messages page", () => {
     setupMocks();
     const { rerender } = renderWithProviders(<Messages />);
 
-    // Focus a card via Alt+R so focusedCardIndex !== -1
     fireEvent.keyDown(document, { key: "R", altKey: true });
 
     mockUseMessages.mockReturnValue({
@@ -536,16 +541,9 @@ describe("Messages page", () => {
     expect(() => fireEvent.keyDown(document, { key: "ArrowDown" })).not.toThrow();
   });
 
-  // Historically flaky: the responding-Tid effect in Messages.tsx schedules a
-  // 150ms setTimeout to scroll the card into view. Before that effect gained a
-  // clearTimeout cleanup, the timer could outlive the test that scheduled it
-  // and fire here — tripping this test's scrollIntoView spy. The component now
-  // clears its timer on re-render/unmount, so the spy below should stay clean;
-  // if it fires again, suspect a new un-cleaned async scroll path in Messages.tsx.
+  // If this flakes, suspect an un-cleaned async scroll timer in Messages.tsx (the responding-Tid effect's 150ms setTimeout once leaked into this spy).
   it("does not scroll into view when the newest message target is already visible in the viewport", async () => {
-    // window.innerHeight varies by test environment/CI runner, so pin it explicitly rather
-    // than relying on the ambient default — the "visible" rect below (top:100, bottom:200)
-    // is only actually in-view relative to a known viewport height.
+    // The "visible" rect below (top:100, bottom:200) needs a known viewport height.
     const originalInnerHeight = window.innerHeight;
     Object.defineProperty(window, "innerHeight", {
       writable: true,
@@ -580,8 +578,6 @@ describe("Messages page", () => {
 
       expect(scrollSpy).not.toHaveBeenCalled();
     } finally {
-      // Restore even on assertion failure, so a broken test here can't leak a mocked
-      // scrollIntoView/getBoundingClientRect/innerHeight into later tests.
       scrollSpy.mockRestore();
       rectSpy.mockRestore();
       Object.defineProperty(window, "innerHeight", {
@@ -599,8 +595,7 @@ describe("Messages page", () => {
 
     const scrollSpy = vi.spyOn(Element.prototype, "scrollIntoView").mockImplementation(() => {});
     try {
-      // A background refetch (refetchInterval) resolves with a new array reference containing
-      // the same messages — count === prev, so the effect's guard should short-circuit to false.
+      // New array reference, same messages: what a refetchInterval tick returns.
       mockUseMessages.mockReturnValue({
         data: { messages: [...MESSAGES] },
         isLoading: false,
@@ -616,9 +611,7 @@ describe("Messages page", () => {
   });
 
   it("localizes the owner's share payload to their touchpoint locale (#266)", async () => {
-    // The share text leaves the DOM into the OS share sheet, so it can't be
-    // reached by browser translate — it must be pre-localized from the owner's
-    // setting. Spy on navigator.share to capture what's actually handed off.
+    // The OS share sheet is out of reach of browser translate, so the payload must be pre-localized.
     const shareSpy = vi.fn().mockResolvedValue(undefined);
     const originalShare = navigator.share;
     Object.defineProperty(navigator, "share", {
@@ -648,13 +641,11 @@ describe("Messages page", () => {
 
     try {
       renderWithProviders(<Messages />);
-      // The "Share" button in the profile header hands sharePayload to the OS.
       const shareButtons = screen.getAllByRole("button", { name: en.shareButton.button });
       fireEvent.click(shareButtons[0]);
       await waitFor(() => expect(shareSpy).toHaveBeenCalled());
 
       const payload = shareSpy.mock.calls[0][0];
-      // Spanish acquisition copy, parameterized with the owner's display name.
       expect(payload.title).toBe(`¡Envíame mensajes anónimos en ${APP_NAME}!`);
       expect(payload.text).toBe("¡Envía a Karan mensajes anónimos!");
     } finally {

@@ -68,8 +68,6 @@ describe("Customise page", () => {
       data: { isLoggedIn: true, profile: { handle: "karan.bsky.social" } },
       isLoading: false,
     } as any);
-    // Default the settings hook so the component doesn't throw on render even
-    // in the logged-out test (useUserSettings is called before the auth gate).
     mockUseUserSettings.mockReturnValue(mockSettings());
     mockMutation();
   });
@@ -89,18 +87,15 @@ describe("Customise page", () => {
     renderWithProviders(<Customise />);
 
     expect(screen.getByRole("heading", { name: en.customisePage.heading })).toBeInTheDocument();
-    // Section eyebrows
     expect(screen.getByText(en.customisePage.yourPublicProfile)).toBeInTheDocument();
     expect(screen.getByText(en.customisePage.languages)).toBeInTheDocument();
     expect(screen.getByText(en.customisePage.messageIntake)).toBeInTheDocument();
-    // Wired cards
     expect(screen.getByText(en.customisePage.profilePrompt)).toBeInTheDocument();
     expect(screen.getByText(en.customisePage.appLanguage)).toBeInTheDocument();
     expect(screen.getByText(en.customisePage.messageLanguage)).toBeInTheDocument();
     expect(screen.getByText(en.customisePage.profileCardColour)).toBeInTheDocument();
     expect(screen.getByText(en.customisePage.inbox)).toBeInTheDocument();
     expect(screen.getByText(en.customisePage.profanityFilter)).toBeInTheDocument();
-    // Notifications section was removed.
     expect(screen.queryByText(/^notifications$/i)).toBeNull();
     expect(screen.queryByText(/what sends a push/i)).toBeNull();
   });
@@ -130,8 +125,7 @@ describe("Customise page", () => {
   });
 
   it("shows the Atmosphere links switch on for an account with no settings row", () => {
-    // Migration 014 backfills 1, so an account that never opened /customise is
-    // opted in and the switch has to say so.
+    // Migration 014 backfills 1: an account that never opened /customise is opted in.
     mockUseUserSettings.mockReturnValue({ data: undefined, isLoading: false } as any);
     mockMutation();
     renderWithProviders(<Customise />);
@@ -172,8 +166,6 @@ describe("Customise page", () => {
       const save = mockMutation();
       renderWithProviders(<Customise />);
 
-      // Mantine Select renders a combobox. Query by role to avoid matching
-      // the card title text, then open it and pick the target language.
       const combobox = screen.getByRole("combobox", { name: en.customisePage.messageLanguage });
       fireEvent.click(combobox);
       const option = screen.getByRole("option", { name: label });
@@ -307,7 +299,7 @@ describe("Customise page", () => {
     renderWithProviders(<Customise />);
 
     const input = screen.getByLabelText(en.customisePage.profilePrompt) as HTMLInputElement;
-    fireEvent.blur(input); // no change
+    fireEvent.blur(input);
 
     expect(save).not.toHaveBeenCalled();
   });
@@ -353,7 +345,6 @@ describe("Customise page", () => {
     mockMutation("inboxEnabled");
     const { container } = renderWithProviders(<Customise />);
 
-    // One thumb spinner on the page — the inbox switch, not the filter switch.
     expect(container.querySelectorAll(".mantine-Loader-root")).toHaveLength(1);
   });
 
@@ -375,8 +366,7 @@ describe("Customise page", () => {
     mockMutation();
     renderWithProviders(<Customise />);
 
-    // The settings-error fallback renders inside each card, so there's a
-    // retry button per card. Clicking any of them calls refetchSettings.
+    // Each card renders its own retry button.
     const retry = screen.getAllByRole("button", { name: en.common.retry })[0];
     fireEvent.click(retry);
     expect(refetch).toHaveBeenCalledTimes(1);

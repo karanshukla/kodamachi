@@ -1,10 +1,8 @@
 import {
-  Avatar,
   Button,
   CopyButton,
   Divider,
-  Group,
-  List,
+  Flex,
   Paper,
   SimpleGrid,
   Skeleton,
@@ -20,12 +18,12 @@ import { Link } from "react-router";
 
 import { useSession } from "../api/authService";
 import { useSyncMessages } from "../api/messageService";
+import { Mascot } from "../components/Mascot";
 import { ShortcutList, type Shortcut } from "../components/ShortcutList";
-import { WinkMark } from "../components/WinkMark";
 import { APP_DOMAIN, APP_NAME } from "../lib/brand";
 import { useTranslations } from "../lib/i18n";
+import { usePageTitle } from "../lib/usePageTitle";
 import type { Messages } from "../lib/i18n/types";
-import { BRAND_GRADIENT } from "../styles/tokens";
 
 import * as styles from "./Home.styles";
 
@@ -58,6 +56,7 @@ function sellingPoints(messages: Messages) {
 
 export default function Home() {
   const messages = useTranslations();
+  usePageTitle();
   const { data: sessionData, isLoading } = useSession();
   const syncMessagesMutation = useSyncMessages();
   const isLoggedIn = !!sessionData?.isLoggedIn;
@@ -71,11 +70,10 @@ export default function Home() {
 
   return (
     <>
-      <Title order={1} mb={6} style={{ letterSpacing: "-0.03em" }}>
-        {APP_NAME}
-        {messages.home.titleSuffix}
+      <Title order={1} mb={8} style={styles.title}>
+        {messages.home.title}
       </Title>
-      <Text mb="xl" fz={15} c="dimmed">
+      <Text mb="xl" fz={15} c="dimmed" style={styles.subtitle}>
         {messages.home.subtitle}
       </Text>
 
@@ -88,14 +86,14 @@ export default function Home() {
       )}
 
       <SimpleGrid cols={{ base: 1, sm: 2 }} mt="md">
-        <Paper p="lg" radius="md" withBorder style={styles.infoCard}>
+        <Paper p={22} withBorder>
           <ShortcutList
             title={messages.common.shortcuts.title}
             shortcuts={isLoggedIn ? signedInShortcuts(messages) : signedOutShortcuts(messages)}
           />
         </Paper>
 
-        <Paper p="lg" radius="md" withBorder style={styles.infoCard}>
+        <Paper p={22} withBorder>
           <Title order={2} style={styles.infoHeading}>
             {messages.home.questionsFeedback}
           </Title>
@@ -116,7 +114,12 @@ export default function Home() {
               {APP_NAME}
             </ContactLink>
             <Divider />
-            <Text fz={13}>{messages.home.disclaimer}</Text>
+            <Text fz={12} c="dimmed" style={styles.disclaimer}>
+              {messages.home.disclaimer}
+            </Text>
+            <Text fz={12} c="dimmed">
+              {messages.home.mascotCredit}
+            </Text>
           </Stack>
         </Paper>
       </SimpleGrid>
@@ -126,7 +129,7 @@ export default function Home() {
 
 function HeroSkeleton() {
   return (
-    <Paper p="xl" radius="lg" withBorder>
+    <Paper p="xl" withBorder>
       <Stack gap="lg">
         <Skeleton height={30} width="60%" />
         <Skeleton height={20} />
@@ -140,7 +143,6 @@ function HeroSkeleton() {
 }
 
 interface SessionProfile {
-  avatar?: string | null;
   displayName?: string | null;
   handle?: string;
 }
@@ -163,70 +165,51 @@ function WelcomeBack({ profile }: { profile: SessionProfile }) {
   };
 
   return (
-    <Paper radius="lg" withBorder style={styles.hero}>
-      <Stack gap="md">
-        <Center>
-          <Avatar
-            src={profile.avatar ?? undefined}
-            alt={name}
-            size={84}
-            radius="xl"
-            style={styles.heroAvatar}
-          >
-            <WinkMark size={60} sparkle={false} aria-hidden />
-          </Avatar>
-        </Center>
-        <Center>
-          <Text fw={800} fz={26} style={styles.greeting}>
-            {messages.home.welcomeBackGreetingPrefix}{" "}
-            <Text component="span" fw={800} inherit style={styles.greetingName}>
-              {name}
-            </Text>
-            !
+    <Paper p={{ base: 20, sm: 32 }} withBorder>
+      <Flex direction={{ base: "column-reverse", sm: "row" }} align="center" gap={32}>
+        <div style={styles.heroCopy}>
+          <Text fw={600} fz={24} ta={{ base: "center", sm: "left" }} style={styles.greeting}>
+            {messages.home.welcomeBackGreetingPrefix} {name}
           </Text>
-        </Center>
-      </Stack>
-      <Center mt="xl">
-        <Group gap="xs" align="center" wrap="wrap" justify="center">
-          <Button
-            component={Link}
-            to="/messages"
-            size="lg"
-            radius="md"
-            variant="gradient"
-            gradient={BRAND_GRADIENT}
-          >
-            {messages.home.viewYourMessages}
-          </Button>
-          <CopyButton value={url}>
-            {({ copied, copy }) => (
-              <Tooltip
-                label={copied ? messages.common.copied : messages.home.copyProfileLink}
-                withArrow
+          <Flex direction={{ base: "column", sm: "row" }} gap={10} mt={26}>
+            <Button component={Link} to="/messages" size="md" radius="md" variant="filled">
+              {messages.home.viewYourMessages}
+            </Button>
+            <SimpleGrid cols={2} spacing={10}>
+              <CopyButton value={url}>
+                {({ copied, copy }) => (
+                  <Tooltip
+                    label={copied ? messages.common.copied : messages.home.copyProfileLink}
+                    withArrow
+                  >
+                    <Button
+                      onClick={copy}
+                      size="md"
+                      radius="md"
+                      variant="default"
+                      fullWidth
+                      leftSection={<IconClipboard size={16} />}
+                    >
+                      {copied ? messages.common.copied : messages.home.copyLinkButton}
+                    </Button>
+                  </Tooltip>
+                )}
+              </CopyButton>
+              <Button
+                size="md"
+                radius="md"
+                variant="default"
+                fullWidth
+                leftSection={<IconShare size={16} />}
+                onClick={share}
               >
-                <Button
-                  onClick={copy}
-                  size="sm"
-                  radius="xl"
-                  variant="default"
-                  leftSection={<IconClipboard size={14} />}
-                >
-                  {copied ? messages.common.copied : messages.home.copyLinkButton}
-                </Button>
-              </Tooltip>
-            )}
-          </CopyButton>
-          <Button
-            size="sm"
-            radius="xl"
-            variant="default"
-            leftSection={<IconShare size={14} />}
-            onClick={share}
-          >
-            {messages.common.share}
-          </Button>
-        </Group>
-      </Center>
+                {messages.common.share}
+              </Button>
+            </SimpleGrid>
+          </Flex>
+        </div>
+        <Mascot pose="greeting" size={280} style={styles.heroMascot} />
+      </Flex>
     </Paper>
   );
 }
@@ -234,27 +217,30 @@ function WelcomeBack({ profile }: { profile: SessionProfile }) {
 function SignedOutHero() {
   const messages = useTranslations();
   return (
-    <Paper p="xl" radius="lg" withBorder style={styles.infoCard}>
-      <List spacing="md" size="md">
-        {sellingPoints(messages).map(({ title, body }) => (
-          <List.Item key={title}>
-            <Text fw={500}>{title}</Text>
-            <Text c="dimmed">{body}</Text>
-          </List.Item>
-        ))}
-      </List>
-      <Center mt="xl">
-        <Button
-          component={Link}
-          to="/login"
-          size="lg"
-          radius="md"
-          variant="gradient"
-          gradient={BRAND_GRADIENT}
-        >
-          {messages.home.getStarted}
-        </Button>
-      </Center>
+    <Paper p={{ base: 20, sm: 32 }} withBorder>
+      <Flex direction={{ base: "column-reverse", sm: "row" }} align="center" gap={32}>
+        <div style={styles.heroCopy}>
+          <Stack gap={22}>
+            {sellingPoints(messages).map(({ title, body }) => (
+              <div key={title} style={styles.sellingPoint}>
+                <span style={styles.bullet} aria-hidden />
+                <div>
+                  <Text fw={600} fz={16}>
+                    {title}
+                  </Text>
+                  <Text c="dimmed" fz={14} style={styles.sellingPointBody}>
+                    {body}
+                  </Text>
+                </div>
+              </div>
+            ))}
+          </Stack>
+          <Button component={Link} to="/login" size="md" radius="md" variant="filled" mt={32}>
+            {messages.home.getStarted}
+          </Button>
+        </div>
+        <Mascot pose="idle" size={280} style={styles.heroMascot} />
+      </Flex>
     </Paper>
   );
 }
@@ -272,7 +258,7 @@ function ContactLink({
 }) {
   return (
     <div>
-      <Text fz={15} mb={4}>
+      <Text fz={13} c="dimmed" mb={3}>
         {caption}
       </Text>
       <a href={href} target="_blank" rel="noopener noreferrer" style={styles.contactLink}>

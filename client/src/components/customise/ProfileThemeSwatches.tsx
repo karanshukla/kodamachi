@@ -1,22 +1,18 @@
 import { useTranslations } from "../../lib/i18n";
-import { profileCardThemes } from "../../lib/themes";
+import { DEFAULT_PROFILE_CARD_THEME, profileCardThemes } from "../../lib/themes";
+import { BrandMark } from "../BrandMark";
 import { SwatchButton } from "../SwatchButton";
 
 import * as styles from "./ProfileThemeSwatches.styles";
 
-const DEFAULT_THEME = "royal";
-const COLOUR_BAND_ASPECT = "16/9";
-
-interface ProfileThemeSwatchesProps {
-  value: string | null;
-  disabled: boolean;
-  onPick: (value: string) => void;
-}
+const SWATCH_ASPECT = "4/3";
+const PAPER_MARK = 20;
 
 /**
  * Ask-card colour picker. Same swatch chrome as the image-theme picker; the
- * preview is a gradient band rather than a card mockup, because the choice only
- * affects the card's background.
+ * preview is a solid band rather than a card mockup, because the choice only
+ * affects the card's fill. The paper preset shows the mark on it so a white
+ * swatch on a white card is not read as "nothing".
  *
  * @see [ProfileThemeSwatches.test.tsx](../../tests/components/ProfileThemeSwatches.test.tsx)
  * — pins the band.
@@ -29,14 +25,22 @@ export function ProfileThemeSwatches({ value, disabled, onPick }: ProfileThemeSw
         <SwatchButton
           key={themeValue}
           label={theme.label}
-          selected={(value ?? DEFAULT_THEME) === themeValue}
+          selected={(value ?? DEFAULT_PROFILE_CARD_THEME) === themeValue}
           disabled={disabled}
           onClick={() => onPick(themeValue)}
-          previewAspect={COLOUR_BAND_ASPECT}
+          previewAspect={SWATCH_ASPECT}
         >
-          <div style={styles.fill(theme.gradient)} />
+          <div style={styles.fill(theme)}>
+            {theme.paper && <BrandMark size={PAPER_MARK} aria-hidden />}
+          </div>
         </SwatchButton>
       ))}
     </div>
   );
+}
+
+interface ProfileThemeSwatchesProps {
+  value: string | null;
+  disabled: boolean;
+  onPick: (value: string) => void;
 }

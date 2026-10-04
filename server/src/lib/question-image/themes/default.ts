@@ -1,4 +1,5 @@
 import { themeLayout } from "../layout";
+import { brandMark } from "../mark";
 import { BASE_CSS, NOTO_LINK, NOTO_STACK, PRECONNECT } from "../shared-css";
 import type { RenderedTemplate } from "../templates";
 
@@ -23,7 +24,7 @@ export function renderDefaultCard(
       font-family: ${NOTO_STACK};
     }
     body {
-      background: linear-gradient(135deg, #1E1B4B 0%, #3B2E78 50%, #6B3FD4 100%);
+      background: #10224A;
       padding: 16px;
       display: flex;
       flex-direction: column;
@@ -32,22 +33,25 @@ export function renderDefaultCard(
       justify-content: space-between;
     }
     .header {
-      color: rgba(255, 255, 255, 0.90);
-      font-size: 14px;
-      font-weight: 700;
-      letter-spacing: 1px;
-      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      color: rgba(255, 255, 255, 0.78);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
       text-transform: uppercase;
       line-height: 1.4;
     }
+    .mark { flex-shrink: 0; }
     .bubble {
       background: #ffffff;
-      border-radius: 16px;
+      border-radius: 12px;
       padding: 12px 18px;
-      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.30);
     }
     .message {
-      color: #111111;
+      color: #111C36;
       font-size: ${fontSize}px;
       font-weight: 600;
       line-height: 1.45;
@@ -68,7 +72,7 @@ export function renderDefaultCard(
   </style>
 </head>
 <body>
-  <p class="header">send me anonymous messages</p>
+  <p class="header">${brandMark(16)}<span>anonymous question</span></p>
   <div class="bubble">
     <p class="message">${escapedMessage}</p>
   </div>

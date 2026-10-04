@@ -1,14 +1,12 @@
-// Bun version floor + the unpatched-fetch-node diagnostic. Kept first by
-// convention; see the module for why import order does not actually decide
-// which error wins under Bun.
+// Kept first by convention; see the module for why order does not decide which error wins.
 import "#/lib/assert-fetch-node-patch";
 
 import dns from "node:dns";
 
+import { bodyLimit } from "hono/body-limit";
 import { cors } from "hono/cors";
 import { Hono } from "hono";
 import type { MiddlewareHandler } from "hono";
-import { rateLimiter } from "hono-rate-limiter";
 import pino from "pino";
 
 import { createDb, migrateToLatest } from "./database/db";
@@ -19,7 +17,8 @@ import { createMessageHono } from "./hono/message-routes";
 import { createNotificationHono } from "./hono/notification-routes";
 import { createProfileHono } from "./hono/profile-routes";
 import { createSettingsHono } from "./hono/settings-routes";
-import { sessionMiddleware, type SessionVars } from "./hono/session-middleware";
+import { perIpRateLimiter, sendRateLimiter } from "./hono/rate-limits";
+import { liveDidMiddleware, sessionMiddleware, type SessionVars } from "./hono/session-middleware";
 
 import type { Database } from "./database/db";
 import type { IdResolver } from "@atproto/identity";
@@ -27,10 +26,10 @@ import type { OAuthClient } from "@atproto/oauth-client-node";
 import type { BidirectionalResolver } from "./lib/id-resolver";
 
 import { createClient } from "#/auth/client";
+import { APP_NAME } from "#/lib/brand";
 import { env } from "#/lib/env";
 
-// Windows hangs on DNS TXT lookups via the system resolver, so name resolution
-// there goes to public servers instead. No other platform needs it.
+// Windows hangs on DNS TXT lookups via the system resolver.
 function redirectWindowsDnsToPublicResolvers(): void {
   if (process.platform !== "win32") return;
   dns.setServers(["8.8.8.8", "1.1.1.1", "8.8.4.4"]);
@@ -38,8 +37,7 @@ function redirectWindowsDnsToPublicResolvers(): void {
 
 redirectWindowsDnsToPublicResolvers();
 
-// Defense-in-depth against a future logger call that logs a whole object:
-// these paths carry user-authored content and must never reach Axiom.
+// These paths carry user-authored content and must never reach Axiom, even if a logger call dumps a whole object.
 const USER_CONTENT_REDACT_PATHS = [
   "message",
   "updates.message",
@@ -52,7 +50,7 @@ function createLogger(): pino.Logger {
   const { AXIOM_TOKEN, AXIOM_DATASET } = env;
   const redact = USER_CONTENT_REDACT_PATHS;
   if (!AXIOM_TOKEN || !AXIOM_DATASET) {
-    return pino({ name: "navyfragen", redact });
+    return pino({ name: APP_NAME, redact });
   }
   const transport = pino.transport({
     targets: [
@@ -64,7 +62,7 @@ function createLogger(): pino.Logger {
       { target: "pino/file", options: { destination: 1 }, level: "info" },
     ],
   });
-  return pino({ name: "navyfragen", redact }, transport);
+  return pino({ name: APP_NAME, redact }, transport);
 }
 
 export type AppContext = {
@@ -85,20 +83,8 @@ function corsForClient(clientUrl: string) {
   });
 }
 
-function perIpRateLimiter(limit: number) {
-  return rateLimiter({
-    windowMs: 60 * 1000,
-    limit,
-    standardHeaders: "draft-6",
-    message: "Too many requests, please try again later.",
-    // Caddy/Railway set x-forwarded-for. Local dev has no proxy hop, so every
-    // request shares the one "local" bucket — fine for a single-user machine.
-    keyGenerator: (c) => {
-      const xff = c.req.header("x-forwarded-for");
-      return xff ? xff.split(",")[0].trim() : "local";
-    },
-  });
-}
+/** Every route takes a small JSON body; the largest, `/messages/respond`, is a few KB. */
+const MAX_REQUEST_BODY_BYTES = 64 * 1024;
 
 const noStore: MiddlewareHandler = async (c, next) => {
   await next();
@@ -120,10 +106,13 @@ function buildApp(
   const app = new Hono<{ Variables: SessionVars }>();
 
   app.use("*", corsForClient(clientUrl));
+  app.use("*", bodyLimit({ maxSize: MAX_REQUEST_BODY_BYTES }));
   if (rateLimitMax > 0) {
     app.use("*", perIpRateLimiter(rateLimitMax));
+    app.post("/messages/send", sendRateLimiter());
   }
   app.use("*", sessionMiddleware);
+  app.use("*", liveDidMiddleware(ctx.db));
   app.use("*", noStore);
 
   mountDomainRoutes(app, ctx);
@@ -191,10 +180,8 @@ class Server {
 }
 
 /**
- * Binds a wildcard HOST as "::" so one dual-stack listener serves both families,
- * because Railway's private network — the only route Caddy has to this service —
- * is IPv6-only. Falls back to "0.0.0.0" on networks with no IPv6 at all (every
- * Docker bridge network in CI and local compose).
+ * Binds a wildcard HOST as "::" (dual-stack): Railway's private network, Caddy's
+ * only route here, is IPv6-only. Falls back to "0.0.0.0" without IPv6 (Docker bridges).
  */
 async function serveDualStack(
   port: number,

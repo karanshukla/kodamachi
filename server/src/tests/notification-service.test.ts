@@ -7,14 +7,12 @@ import os from "node:os";
 import path from "node:path";
 import { test, describe, beforeAll, afterAll, beforeEach, afterEach, mock } from "bun:test";
 
-// web-push is CJS whose named exports aren't statically detectable by Node's
-// ESM loader (cjs-module-lexer), so import the default and destructure.
+// web-push is CJS: import the default and destructure (ESM can't detect its named exports).
 import webPush from "web-push";
 const { generateVAPIDKeys } = webPush;
 
 import { NotificationService, createConcurrencyLimiter } from "../services/notification-service";
 
-// Chainable DB builder mocks — match the pattern used across the server tests.
 function makeSelectBuilder(existing: any, rows: any[]) {
   return {
     select: mock(function (this: any) {
@@ -32,15 +30,7 @@ function makeSelectBuilder(existing: any, rows: any[]) {
 }
 
 function makeInsertBuilder() {
-  // saveSubscription is now a single upsert:
-  //   insertInto(...).values({...})
-  //     .onConflict((oc) => oc.columns(["did","endpoint"]).doUpdateSet({...}))
-  //     .execute()
-  // Kysely calls columns/doUpdateSet on the OnConflictBuilder passed INTO the
-  // onConflict callback — not on the insert builder. The mock invokes that
-  // callback with a capturable `oc` so tests can assert the conflict target
-  // and update payload; doUpdateSet returns the insert builder so .execute()
-  // chains.
+  // Kysely calls columns/doUpdateSet on the OnConflictBuilder passed into the onConflict callback; the mock captures it.
   const builder: any = {
     values: mock(function (this: any) {
       return this;
@@ -84,9 +74,7 @@ function makeUpdateBuilder() {
   };
 }
 
-// A valid-shaped (but throwaway) push subscription keypair, so web-push's
-// client-side payload encryption succeeds and the test actually reaches the
-// network call instead of failing validation before it.
+// Valid-shaped throwaway keypair so web-push encryption succeeds and the request reaches the network.
 function makeSubscriptionKeys() {
   const ecdh = crypto.createECDH("prime256v1");
   ecdh.generateKeys();
@@ -128,22 +116,16 @@ describe("NotificationService", () => {
 
       await service.saveSubscription("did:foo", "https://push.example/sub", "p256", "auth");
 
-      // One statement, not a read-then-write. updateTable is still wired on
-      // mockDb (the beforeEach sets it up), but the upsert path never calls it.
       assert.strictEqual(mockDb.insertInto.mock.calls.length, 1);
       assert.strictEqual(mockDb.updateTable.mock.calls.length, 0);
       assert.strictEqual(mockDb.selectFrom.mock.calls.length, 0);
 
-      // The insert carries the full row...
       const valuesArg = insertBuilder.values.mock.calls[0][0];
       assert.strictEqual(valuesArg.did, "did:foo");
       assert.strictEqual(valuesArg.endpoint, "https://push.example/sub");
       assert.strictEqual(valuesArg.p256dh, "p256");
       assert.strictEqual(valuesArg.auth, "auth");
 
-      // ...and the conflict target + key refresh are wired as expected.
-      // columns/doUpdateSet are called on the OnConflictBuilder passed into the
-      // onConflict callback, captured by the mock as _lastOnConflict.
       const oc = (insertBuilder as any)._lastOnConflict;
       assert.ok(oc, "onConflict callback was not invoked");
       const conflictColumnsArg = oc.columns.mock.calls[0][0];
@@ -206,7 +188,6 @@ describe("NotificationService", () => {
       await service.deleteSubscription("did:foo", "https://push.example/sub");
 
       assert.strictEqual(mockDb.deleteFrom.mock.calls.length, 1);
-      // two .where() calls: did then endpoint
       assert.strictEqual(deleteBuilder.where.mock.calls.length, 2);
     });
   });
@@ -247,8 +228,7 @@ describe("NotificationService", () => {
 
   describe("sendNewMessageNotification", () => {
     test("no-ops (debug log) when VAPID is not configured", async () => {
-      // VAPID vars are empty by default in the test env (test-bootstrap.js
-      // doesn't set them), so this exercises the "not configured" branch.
+      // VAPID vars are unset in the test env.
       await service.sendNewMessageNotification("did:recipient");
       assert.strictEqual(mockLogger.debug.mock.calls.length, 1);
       assert.strictEqual(mockDb.selectFrom.mock.calls.length, 0);
@@ -266,7 +246,6 @@ describe("NotificationService", () => {
       process.env.VAPID_SUBJECT = "mailto:test@example.com";
 
       try {
-        // Default mockDb.selectFrom resolves to an empty subscriptions array.
         await service.sendNewMessageNotification("did:recipient");
 
         assert.strictEqual(mockDb.selectFrom.mock.calls.length, 1);
@@ -293,7 +272,6 @@ describe("NotificationService", () => {
         await service.sendNewMessageNotification("did:recipient");
 
         assert.strictEqual(mockLogger.error.mock.calls.length, 1);
-        // Bails out before ever querying for subscriptions.
         assert.strictEqual(mockDb.selectFrom.mock.calls.length, 0);
       } finally {
         process.env.VAPID_PUBLIC_KEY = prev.pub;
@@ -302,11 +280,7 @@ describe("NotificationService", () => {
       }
     });
 
-    // These tests exercise the real `web-push` `sendNotification` call against a
-    // local HTTPS server (self-signed cert) rather than mocking the module, so
-    // they cover web-push's actual HTTP/encryption behavior end-to-end.
-    // (`mock.module()` is available under bun:test — these could be converted
-    // to mocks later if the local-server setup becomes a maintenance burden.)
+    // Real web-push against a local self-signed HTTPS server, not a mocked module.
     describe("against a local HTTPS push endpoint", () => {
       let server: https.Server;
       let port: number;
@@ -332,8 +306,7 @@ describe("NotificationService", () => {
           "-nodes",
           "-subj",
           "/CN=127.0.0.1",
-          // A SAN entry is required — modern Node/OpenSSL clients reject
-          // certs that only match via the legacy CN fallback.
+          // A SAN entry is required; modern OpenSSL rejects CN-only certs.
           "-addext",
           "subjectAltName=IP:127.0.0.1",
         ]);
@@ -351,9 +324,7 @@ describe("NotificationService", () => {
           }
         );
 
-        // Trust this run's throwaway CA specifically (scoped to the global
-        // agent web-push falls back to), rather than disabling certificate
-        // validation process-wide.
+        // Trust this run's CA on the global agent web-push uses, instead of disabling validation process-wide.
         prevGlobalAgent = https.globalAgent;
         https.globalAgent = new https.Agent({ ca: certPem });
 
@@ -419,9 +390,6 @@ describe("NotificationService", () => {
         assert.strictEqual(mockLogger.error.mock.calls.length, 0);
       });
 
-      /**
-       * A notification in the wrong language beats no notification (#405).
-       */
       test("still delivers the notification when the uiLocale read fails, falling back to en", async () => {
         const subKeys = makeSubscriptionKeys();
         mockDb.selectFrom = mock((table: string) => {
@@ -486,9 +454,7 @@ describe("NotificationService", () => {
       });
 
       test("logs an error (statusCode undefined) when the failure has no HTTP response at all", async () => {
-        // A malformed subscription key fails web-push's own client-side validation
-        // synchronously, before any network call — the resulting error has no
-        // `statusCode` field, exercising the `undefined` fallback.
+        // A malformed key fails web-push validation before any network call, so the error has no statusCode.
         mockDb.selectFrom = mock(() =>
           makeSelectBuilder(undefined, [
             {
@@ -546,7 +512,6 @@ describe("createConcurrencyLimiter", () => {
 
     const firstRun = limiter.run(() => blocked);
     const secondRun = limiter.run(() => Promise.resolve());
-    // First task is active immediately; second is queued behind the limit of 1.
     assert.strictEqual(limiter.active, 1);
     assert.strictEqual(limiter.pending, 1);
 
@@ -569,7 +534,6 @@ describe("createConcurrencyLimiter", () => {
       limiter.run(makeTask(2)),
       limiter.run(makeTask(3)),
     ]);
-    // With limit 1 they must run strictly in insertion order.
     assert.deepStrictEqual(order, [1, 2, 3]);
   });
 });

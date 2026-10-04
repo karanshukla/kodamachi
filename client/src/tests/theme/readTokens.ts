@@ -2,13 +2,7 @@ import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-/**
- * Reads the design tokens back out of `src/index.css`.
- *
- * The stylesheet is the source of truth, so the contrast suite parses it rather
- * than re-listing the hexes in TypeScript — a duplicated palette would drift and
- * the tests would keep passing against values the app no longer uses.
- */
+/** Reads the design tokens out of `src/index.css`, the single source of truth. */
 
 const CSS_PATH = resolve(dirname(fileURLToPath(import.meta.url)), "../../index.css");
 
@@ -22,11 +16,7 @@ const SELECTORS: Record<Scheme, string[]> = {
   dark: [':root[data-mantine-color-scheme="dark"]'],
 };
 
-/**
- * Merges every rule block whose selector is exactly the scheme's, in source
- * order. Selector and body are captured together so back-to-back blocks both
- * match — anchoring on the preceding `}` swallows it and drops the next one.
- */
+/** Merges every rule block whose selector is exactly the scheme's, in source order. */
 function declarationsFor(css: string, scheme: Scheme): Map<string, string> {
   const source = css.replace(/\/\*[\s\S]*?\*\//g, "");
   const out = new Map<string, string>();
@@ -45,11 +35,7 @@ const declarations: Record<Scheme, Map<string, string>> = {
   dark: declarationsFor(css, "dark"),
 };
 
-/**
- * Resolves a token to a literal colour, following `var()` indirection. Dark
- * lookups fall back to the light block, mirroring the cascade: the dark selector
- * only overrides what actually differs.
- */
+/** Resolves a token to a literal colour, following `var()`; dark falls back to light like the cascade. */
 export function token(name: string, scheme: Scheme = "light"): string {
   const seen = new Set<string>();
   let value = name;
@@ -74,11 +60,7 @@ export function declaredTokens(): string[] {
   );
 }
 
-/**
- * The brand palette (layer 1a) — the tokens a repaint replaces. Sliced out of
- * the stylesheet by its layer markers rather than re-listed here, so a hue added
- * to that block is covered without anyone remembering to update this file.
- */
+/** The brand palette (layer 1a), sliced out of the stylesheet by its layer markers. */
 export function paletteTokens(): string[] {
   const start = css.indexOf(PALETTE_START);
   const end = css.indexOf(PALETTE_END);

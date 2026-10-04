@@ -13,6 +13,7 @@ export const textarea = {
     background: "transparent",
     color: "var(--ds-compose-fg)",
     border: "none",
+    outline: "none",
     padding: 0,
   },
 } as const;

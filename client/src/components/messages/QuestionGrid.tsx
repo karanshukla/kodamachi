@@ -14,8 +14,7 @@ const EXPAND_SCROLL_DELAY_MS = 150;
 interface QuestionGridProps {
   messages: Message[];
   thread: ThreadRoot;
-  gradient: boolean;
-  /** Which card has its composer open. Owned by the page, which also closes it. */
+  ink: boolean;
   respondingTid: string | null;
   onExpand: (tid: string) => void;
   onCollapse: () => void;
@@ -32,21 +31,14 @@ interface QuestionGridProps {
   deletingTid: string | null;
   onDelete: (tid: string) => void;
   onTogglePin: (tid: string) => void;
-  /** The answering account, so a destination reads as a handle and not a DID. */
   handle?: string;
-  /** The client picked on /customise, which each answered card's link points at. */
   defaultClientId: string | null;
 }
 
-/**
- * The question grid, and the roving focus that walks it. Card contents are
- * QuestionCard's problem; this owns only which card is focused and the effects
- * that follow from expanding one.
- */
 export function QuestionGrid({
   messages,
   thread,
-  gradient,
+  ink,
   respondingTid,
   onExpand,
   onCollapse,
@@ -118,7 +110,7 @@ export function QuestionGrid({
           <QuestionCard
             key={message.tid}
             message={message}
-            gradient={gradient}
+            ink={ink}
             pinned={pinned}
             focused={focusedIndex === index}
             expanded={expanded}

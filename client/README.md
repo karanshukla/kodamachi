@@ -1,4 +1,4 @@
-## Navyfragen Client
+## kodamachi Client
 
 The frontend portion of the app is intentionally kept as simple as possible for speed, since its entirely client-side rendered.
 

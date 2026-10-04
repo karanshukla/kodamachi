@@ -1,5 +1,5 @@
 /**
- * Deliberately not a full i18n rollout (#266). Only two kinds of string live
+ * Deliberately not a full i18n rollout. Only two kinds of string live
  * here: copy that leaves the DOM into the OS share sheet, where browser-level
  * Google Translate structurally cannot reach it, and the ask-card a stranger
  * reads — which the profile OWNER pins to their audience's language, since a
@@ -13,7 +13,6 @@ import { APP_NAME } from "./brand";
 
 export type TouchpointLocale = "en" | "es" | "pt" | "de" | "fr";
 
-/** Ordered list for the /customise language <Select>. `en` first = default. */
 export const touchpointLocales: { value: TouchpointLocale; label: string }[] = [
   { value: "en", label: "English" },
   { value: "es", label: "Español" },
@@ -23,21 +22,13 @@ export const touchpointLocales: { value: TouchpointLocale; label: string }[] = [
 ];
 
 export interface TouchpointTranslations {
-  /** Ask-card headline (#1): "Send {name} an anonymous message" */
   headline: (displayName: string) => string;
-  /** Textarea placeholder (#2): "Ask something…" */
   placeholder: string;
-  /** Send button label (#3): "Send" */
   sendLabel: string;
-  /** Anonymity disclaimer paragraph (#4) */
   disclaimer: string;
-  /** Closed-inbox message shown in place of the send form (#177) */
   inboxClosed: string;
-  /** Profile-page navigator.share() title (#5) — leaves the DOM */
   shareTitle: (displayName: string) => string;
-  /** Owner's own "share my inbox" title (#6) — leaves the DOM into a tweet/DM */
   inboxShareTitle: string;
-  /** Owner's own "share my inbox" text (#6) — leaves the DOM into a tweet/DM */
   inboxShareText: (displayName: string) => string;
 }
 

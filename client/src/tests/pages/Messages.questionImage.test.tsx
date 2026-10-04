@@ -1,5 +1,4 @@
-// The harness registers this suite's module mocks, so it has to be imported
-// before anything that pulls in the modules it mocks.
+// Import the harness first: it registers this suite's module mocks.
 /* eslint-disable import/order */
 import * as harness from "./messagesHarness";
 import {
@@ -11,6 +10,7 @@ import {
   resetMessagesPage,
   setupMocks,
   startRenderMutate,
+  togglePreference,
   typeAndSend,
 } from "./messagesHarness";
 
@@ -45,8 +45,7 @@ describe("Messages page — the question-image render pipeline", () => {
     const mockRespondMutate = vi.fn();
     const textarea = await queueSendOnAStuckRender(mockRespondMutate);
 
-    // The click the guard refuses. Without it the render retargets to msg-2 and
-    // the key below would carry msg-2's image into msg-1's reply.
+    // Without the refused click the render retargets to msg-2 and msg-1's reply would carry msg-2's image.
     fireEvent.click(screen.getByText("What is your favorite color?"));
 
     harness.render.poll = () => ({ status: "ready" });
@@ -64,9 +63,8 @@ describe("Messages page — the question-image render pipeline", () => {
     const mockRespondMutate = vi.fn();
     await queueSendOnAStuckRender(mockRespondMutate);
 
-    // Nothing will ever settle this render now, so a status the queue does not
-    // release leaves the send stuck with no error and no way to retry.
-    fireEvent.click(screen.getByLabelText(/question as image/i));
+    // This render never settles, so an unreleased status would leave the send stuck with no retry.
+    await togglePreference(en.postingPreferences.includeQuestionAsImage.label);
 
     await waitFor(() => expect(mockRespondMutate).toHaveBeenCalledTimes(1));
     expect(mockRespondMutate.mock.calls[0][0]).toMatchObject({
@@ -91,7 +89,7 @@ describe("Messages page — the question-image render pipeline", () => {
     setupMocks();
     renderWithProviders(<Messages />);
 
-    fireEvent.click(screen.getByLabelText(/question as image/i));
+    await togglePreference(en.postingPreferences.includeQuestionAsImage.label);
 
     const replyButtons = screen.getAllByRole("button", { name: isReplyTriggerName });
     fireEvent.click(replyButtons.find((b) => b.textContent?.includes("↩"))!);
@@ -110,8 +108,7 @@ describe("Messages page — the question-image render pipeline", () => {
 
     expect(screen.getByText("0/277")).toBeInTheDocument();
 
-    const imageSwitch = screen.getByLabelText(/question as image/i);
-    fireEvent.click(imageSwitch);
+    await togglePreference(en.postingPreferences.includeQuestionAsImage.label);
 
     await waitFor(() => {
       expect(screen.queryByText("0/277")).toBeNull();
@@ -143,7 +140,7 @@ describe("Messages page — the question-image render pipeline", () => {
     } as any);
     renderWithProviders(<Messages />);
 
-    fireEvent.click(screen.getByLabelText(/question as image/i));
+    await togglePreference(en.postingPreferences.includeQuestionAsImage.label);
     await openComposerFor();
     await typeAndSend();
 
@@ -175,8 +172,7 @@ describe("Messages page — the question-image render pipeline", () => {
   });
 
   it("pressing Enter twice while the question image is still rendering posts once", async () => {
-    // The async split widens the #360 window: the composer is now silent for the
-    // whole render, not just the post, and nothing downstream is idempotent.
+    // #360: the composer is silent for the whole render, and nothing downstream is idempotent.
     const mockRespondMutate = vi.fn();
     setupMocks();
     mockUseRespondToMessage.mockReturnValue({
@@ -216,8 +212,7 @@ describe("Messages page — the question-image render pipeline", () => {
       expect(screen.getByText(/image service unreachable/i)).toBeInTheDocument();
     });
     expect(mockRespondMutate).not.toHaveBeenCalled();
-    // The failure was read, which clears it server-side, so the send asked for a
-    // fresh render on top of the one the open composer started.
+    // Reading the failure clears it server-side, so the send requests a fresh render.
     expect(startRenderMutate.mock.calls.length).toBeGreaterThan(1);
   });
 
@@ -273,7 +268,7 @@ describe("Messages page — the question-image render pipeline", () => {
     await openComposerFor();
     expect(startRenderMutate).not.toHaveBeenCalled();
 
-    fireEvent.click(screen.getByLabelText(/question as image/i));
+    await togglePreference(en.postingPreferences.includeQuestionAsImage.label);
 
     await waitFor(() => expect(startRenderMutate).toHaveBeenCalledTimes(1));
   });

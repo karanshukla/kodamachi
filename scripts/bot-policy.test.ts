@@ -1,5 +1,5 @@
 import assert from "node:assert";
-import { readdirSync, readFileSync } from "node:fs";
+import { readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, test } from "bun:test";
@@ -10,13 +10,7 @@ const policy = JSON.parse(readFileSync(join(repoRoot, "anubis", "botPolicy.json"
 const BROWSER_UA =
   "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Mobile Safari/537.36";
 
-/**
- * Anubis walks `bots` in order and takes the first rule that matches, so a test
- * that only checked "is there an ALLOW regex for this" would pass even when an
- * earlier CHALLENGE shadowed it. The `import` entry pulls in upstream's default
- * config, which only classifies non-Mozilla agents, so skipping it does not
- * change the verdict for a browser.
- */
+/** First matching rule wins, as in Anubis; `import` entries only classify non-Mozilla agents, so skipping them is safe. */
 function verdict(path: string, userAgent = BROWSER_UA): string {
   for (const rule of policy.bots) {
     if (rule.import) continue;
@@ -29,10 +23,7 @@ function verdict(path: string, userAgent = BROWSER_UA): string {
 }
 
 describe("anubis bot policy", () => {
-  // The incident: a service worker precaching the build manifest had every
-  // asset fetch challenged in turn. Each challenge issued its own Set-Cookie,
-  // clobbering the previous one, and the challenge was then solved twice and
-  // rejected the second time with double_spend.
+  // Challenged precache fetches clobber each other's Set-Cookie and fail with double_spend.
   describe("static assets versus documents", () => {
     test("allows a content-hashed bundle", () => {
       assert.equal(verdict("/assets/index-DeIhOTij.js"), "ALLOW");
@@ -48,14 +39,19 @@ describe("anubis bot policy", () => {
       assert.equal(verdict("/index.html"), "ALLOW");
     });
 
+    test("allows a mascot sprite", () => {
+      assert.equal(verdict("/mascot/idle.webp"), "ALLOW");
+    });
+
+    test("challenges a webp outside the mascot directory", () => {
+      assert.equal(verdict("/other/idle.webp"), "CHALLENGE");
+    });
+
     test("challenges a profile path, which is what the OG shim answers", () => {
       assert.equal(verdict("/profile/someone.bsky.social"), "CHALLENGE");
     });
   });
 
-  // The rot that caused this: the policy allowed /site.webmanifest, but
-  // vite-plugin-pwa emits /manifest.webmanifest, so the real file was
-  // challenged for as long as the stale rule sat there looking correct.
   describe("generated filenames", () => {
     test("allows the manifest vite-plugin-pwa actually emits", () => {
       assert.equal(verdict("/manifest.webmanifest"), "ALLOW");
@@ -68,7 +64,10 @@ describe("anubis bot policy", () => {
 
   test("allows every file shipped in client/public", () => {
     const publicDir = join(repoRoot, "client", "public");
-    const challenged = readdirSync(publicDir).filter(
+    const files = readdirSync(publicDir, { recursive: true, encoding: "utf8" }).filter((name) =>
+      statSync(join(publicDir, name)).isFile()
+    );
+    const challenged = files.filter(
       (name) => verdict(`/${name}`) !== "ALLOW" && !name.endsWith(".html")
     );
 
@@ -84,13 +83,7 @@ describe("anubis bot policy", () => {
   });
 });
 
-// On 2026-08-30 a single host sprayed 254 distinct credential paths across 194
-// spoofed user agents in 88 seconds. Roughly half were denied only because the
-// spoofed agent happened to match an ai-* rule; the rest — .aws/credentials,
-// gcloud/credentials.db, id_dsa, server.key — were handed a solvable
-// proof-of-work challenge instead. Whether a credential probe is blocked must
-// not depend on which user agent the scanner picked, so these rules match on
-// path alone and sit ahead of every ALLOW.
+// Probe rules match on path alone and precede every ALLOW, so the verdict never depends on the scanner's user agent.
 describe("credential and CMS probes", () => {
   const SCANNER_UA =
     "Mozilla/5.0 (compatible; Claude-User/1.0; +https://www.anthropic.com/claude-user)";
@@ -183,15 +176,12 @@ describe("credential and CMS probes", () => {
     });
   });
 
-  // The scanner's whole point was rotating identities, so the verdict has to be
-  // identical for a probe wearing a spoofed AI agent and one wearing a browser.
   test("denies a probe regardless of the user agent it wears", () => {
     assert.equal(verdict("/@fs/.env", SCANNER_UA), "DENY");
     assert.equal(verdict("/@fs/.env", "Bluesky Cardyb/1.1"), "DENY");
     assert.equal(verdict("/.aws/credentials", SCANNER_UA), "DENY");
   });
 
-  // /.well-known/ is the one dotted prefix a future ATProto route would serve.
   test("does not deny .well-known, which is not a probe prefix", () => {
     assert.notEqual(verdict("/.well-known/atproto-did"), "DENY");
   });

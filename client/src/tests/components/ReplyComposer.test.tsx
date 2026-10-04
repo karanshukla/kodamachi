@@ -43,8 +43,7 @@ describe("ReplyComposer status line", () => {
   });
 
   it("refuses edits to the draft while the reply is in flight", () => {
-    // The send captured this text when it was committed, so an edit landing
-    // now would post the old draft while showing the new one.
+    // The send already captured the text; a late edit would post the old draft while showing the new one.
     renderComposer({ sending: true });
     expect(
       screen.getByRole("textbox", { name: en.replyComposer.responseAriaLabel })

@@ -15,26 +15,23 @@ import { useLocale, useTranslations } from "../../lib/i18n";
 import type { ThreadLink } from "../../lib/useThreadRoot";
 import { postedAnswerLink } from "../../lib/waypointClients";
 import { postWaypointTargetFor } from "../../lib/waypointTarget";
-import { highlightButton } from "../../styles/tokens";
 
 import { OpenInModal } from "./OpenInModal";
 import * as styles from "./QuestionCard.styles";
 
 interface QuestionCardProps {
   message: Message;
-  gradient: boolean;
+  ink: boolean;
   pinned: boolean;
   focused: boolean;
   expanded: boolean;
   justPinned: boolean;
   deleting: boolean;
-  /** True while this card's own reply is in flight. */
   locked: boolean;
   /** True while an unanswered thread root is holding this reply back. */
   blocked: boolean;
   /** A reply here would chain onto a pinned root rather than post standalone. */
   inThread: boolean;
-  /** The Bluesky post this card's answer started, once it has one. */
   threadLink?: ThreadLink;
   /** The answering account, so a destination reads as a handle and not a DID. */
   handle?: string;
@@ -45,13 +42,12 @@ interface QuestionCardProps {
   onTogglePin: () => void;
   onDelete: () => void;
   cardRef: (el: HTMLDivElement | null) => void;
-  /** The composer, rendered by the grid so it can own the draft text. */
   composer: React.ReactNode;
 }
 
 export function QuestionCard({
   message,
-  gradient,
+  ink,
   pinned,
   focused,
   expanded,
@@ -93,18 +89,18 @@ export function QuestionCard({
       id={`message-card-${message.tid}`}
       ref={cardRef}
       tabIndex={0}
-      role="button"
-      aria-expanded={expanded}
-      radius="lg"
+      role="article"
+      aria-labelledby={`message-text-${message.tid}`}
       onFocus={onFocus}
       onKeyDown={(e) => {
+        if (e.target !== e.currentTarget) return;
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
           onToggleExpanded();
         }
       }}
       className={justPinned ? "ds-pinned-card-enter" : undefined}
-      style={styles.card({ gradient, pinned, focused })}
+      style={styles.card({ ink, pinned, focused })}
       onClick={() => {
         triggerHaptic();
         onToggleExpanded();
@@ -173,7 +169,7 @@ export function QuestionCard({
         </Group>
 
         <Box style={styles.bodyWrap}>
-          <Text fw={600} style={styles.body}>
+          <Text id={`message-text-${message.tid}`} fw={600} style={styles.body}>
             {message.message}
           </Text>
         </Box>
@@ -233,10 +229,9 @@ export function QuestionCard({
                 }}
                 fullWidth
                 radius="md"
-                color="highlight"
-                variant="filled"
-                fw={700}
-                style={{ ...highlightButton, ...styles.replyButton(blocked) }}
+                variant={styles.replyButtonVariant(ink, inThread)}
+                fw={600}
+                style={styles.replyButton(blocked, ink)}
               >
                 {inThread ? messages.questionCard.replyToThread : messages.questionCard.reply}
               </Button>

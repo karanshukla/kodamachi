@@ -10,7 +10,6 @@ interface CardKeyboardNav {
   count: number;
   focusedIndex: number;
   setFocusedIndex: (index: number) => void;
-  /** Index of the card whose composer is open, or -1 when none is. */
   expandedIndex: number;
   onCollapse: () => void;
   cardRefs: RefObject<(HTMLDivElement | null)[]>;

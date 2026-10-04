@@ -9,11 +9,7 @@ import { RenderService, RENDER_TTL_MS } from "#/services/render-service";
 const PNG = Buffer.from("fake-png");
 const OTHER_DID = "did:plc:someone-else";
 
-/**
- * `enqueue` dispatches the render on the next turn, and the render itself
- * awaits the image service, so a test has to let several turns drain before the
- * store settles.
- */
+/** Lets several turns drain: enqueue dispatches on the next turn and the render awaits the image service. */
 async function settle(): Promise<void> {
   for (let i = 0; i < 5; i++) await new Promise((resolve) => setImmediate(resolve));
 }
@@ -25,12 +21,7 @@ function stubLogger(): any {
 /** The question every enqueue in this file is for, and so the one the inbox holds. */
 const QUESTION = "why is the sky blue?";
 
-/**
- * Two tables answer here: `user_settings` for the theme, and `message` for the
- * inbox check that gates the enqueue. `question: null` is an inbox that holds
- * nothing under the tid, which is what a render of someone else's question, or
- * of text that was never a question at all, looks like from the DB.
- */
+/** `question: null` is an inbox holding nothing under the tid (someone else's question, or non-question text). */
 function stubDb(opts: { imageTheme?: string | null; question?: string | null } = {}): any {
   const { imageTheme = null, question = QUESTION } = opts;
   return {
@@ -182,8 +173,7 @@ describe("RenderService", () => {
       });
       await settle();
 
-      // Concatenated without a separator both are "…abx", so this is what the
-      // separator buys: one user's theme cannot borrow another's question text.
+      // Without a separator both concatenate to "…abx"; one user's theme must not borrow another's question.
       assert.notStrictEqual(first.renderId, second.renderId);
     });
 
@@ -471,12 +461,7 @@ describe("RenderService", () => {
     });
   });
 
-  /**
-   * The product requirement, and the thing a future refactor is most likely to
-   * quietly break: posting happens in an authenticated request with a live
-   * session, never from the render worker. A user who signed out or closed the
-   * tab must never have something posted on their behalf.
-   */
+  /** Never post from the render worker: a signed-out user must not have something posted on their behalf. */
   describe("user presence", () => {
     test("a render completes without an agent ever being supplied", async () => {
       stubImageGenerator();

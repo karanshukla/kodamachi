@@ -1,6 +1,4 @@
-// Package bench holds in-process latency benchmarks that isolate the
-// reverse-proxy overhead from network noise. These are not unit tests; they
-// measure the per-request cost added by the shim's fast path.
+// Package bench holds in-process benchmarks of the shim fast path's reverse-proxy overhead.
 package bench
 
 import (
@@ -13,12 +11,8 @@ import (
 	"testing"
 )
 
-// stubPayload is what the upstream returns — a small static body, like the
-// client's index.html on the hot path.
 const stubPayload = `<!DOCTYPE html><html><head><title>stub</title></head><body>ok</body></html>`
 
-// BenchmarkDirectHandler measures the floor: a raw handler with no proxy in
-// the way. This is the "no shim" baseline.
 func BenchmarkDirectHandler(b *testing.B) {
 	upstream := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		_, _ = io.WriteString(w, stubPayload)
@@ -37,9 +31,6 @@ func BenchmarkDirectHandler(b *testing.B) {
 	}
 }
 
-// BenchmarkViaReverseProxy measures the cost of an httputil.ReverseProxy in
-// front of the same upstream. The difference vs BenchmarkDirectHandler is the
-// shim's hot-path overhead.
 func BenchmarkViaReverseProxy(b *testing.B) {
 	upstream := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		_, _ = io.WriteString(w, stubPayload)
@@ -58,7 +49,6 @@ func BenchmarkViaReverseProxy(b *testing.B) {
 	defer shim.Close()
 
 	client := shim.Client()
-	// Sanity: the shim actually proxies before we time it.
 	resp, err := client.Get(shim.URL)
 	if err != nil {
 		b.Fatal(err)

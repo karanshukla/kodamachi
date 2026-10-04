@@ -3,11 +3,7 @@ interface CacheEntry<V> {
   expiresAt: number;
 }
 
-/**
- * `Map` iterates in insertion order, so deleting and re-inserting on read bumps
- * a key to the most-recently-used position and evicting the first key yields
- * LRU. Local rather than an `lru-cache` dependency for a structure this small.
- */
+/** `Map` iterates in insertion order: re-insert on read, evict the first key. */
 class LruMap<V> {
   #entries = new Map<string, V>();
 
@@ -44,19 +40,13 @@ class LruMap<V> {
 export interface TtlCache<V> {
   get(key: string): V | undefined;
   set(key: string, value: V, ttlMs: number): void;
-  /**
-   * Reads and removes in one synchronous step, so concurrent callers cannot
-   * both observe the same entry. The render store relies on that to make a
-   * ready render single-use.
-   */
+  /** Synchronous read-and-remove: concurrent callers cannot both see the entry. */
   take(key: string): V | undefined;
   readonly size: number;
 }
 
 /**
- * Bounded so a long-running process cannot accumulate one entry per distinct
- * key it has ever seen. Expired entries are left in place for the LRU bound to
- * evict; a fresh `set` overwrites them.
+ * Bounded; expired entries are left for the LRU bound to evict.
  *
  * @see [ttl-cache.test.ts](../tests/ttl-cache.test.ts) — pins expiry, the
  * eviction order, and the bound.

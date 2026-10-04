@@ -4,12 +4,12 @@ import { useHaptic } from "use-haptic";
 
 import { useTranslations } from "../../lib/i18n";
 import { warmOgCard } from "../../lib/ogWarm";
-import ShareButton, { onGradientButton } from "../ShareButton";
+import { heroOutlineButton } from "../../styles/tokens";
+import ShareButton from "../ShareButton";
 
 import * as styles from "./InboxLinkCard.styles";
 
 interface InboxLinkCardProps {
-  /** Display form, e.g. "fragen.navy/karan.bsky.social". */
   shortUrl: string;
   fullUrl: string;
   /** Whose OG card to warm — copying or sharing means a crawler is coming. */
@@ -23,13 +23,13 @@ export function InboxLinkCard({ shortUrl, fullUrl, handle, shareData }: InboxLin
   const warmShareTarget = () => warmOgCard(handle);
 
   return (
-    <Paper mb="md" p="lg" style={styles.card}>
+    <Paper mb="md" style={styles.card}>
       <Group align="center" gap="md" wrap="wrap">
         <Box style={{ flex: 1, minWidth: 200 }}>
-          <Text size="xs" fw={500} mb={6} style={styles.eyebrow}>
+          <Text mb={7} style={styles.eyebrow}>
             {messages.inboxLinkCard.eyebrow}
           </Text>
-          <Text fw={700} fz={17} style={styles.url}>
+          <Text fw={600} fz={18} style={styles.url}>
             {shortUrl}
           </Text>
         </Box>
@@ -44,10 +44,10 @@ export function InboxLinkCard({ shortUrl, fullUrl, handle, shareData }: InboxLin
                     warmShareTarget();
                   }}
                   size="sm"
-                  radius="xl"
-                  variant="transparent"
-                  leftSection={<IconClipboard size={14} />}
-                  style={onGradientButton}
+                  radius="md"
+                  variant="default"
+                  leftSection={<IconClipboard size={16} />}
+                  style={heroOutlineButton}
                 >
                   {copied ? messages.common.copied : messages.common.copy}
                 </Button>

@@ -22,7 +22,6 @@ describe("MessageService", () => {
   let mockInsertBuilder: any;
   let mockDeleteBuilder: any;
 
-  // Helper to create a mock logger with all methods as mock()
   function makeLoggerMock(): Logger {
     return {
       info: mock(() => {}),
@@ -97,17 +96,13 @@ describe("MessageService", () => {
     mockDb = {
       selectFrom: mock((table: string) => {
         if (table === "user_settings") {
-          // Shared row so both .selectAll() (respondToMessage) and
-          // .select(["inboxEnabled"]) (sendMessage inbox check) see the same
-          // owner settings, including the new columns. `chain` is fully
-          // chainable: .select/.selectAll return it, .where returns it, and
-          // .executeTakeFirst resolves to the row.
+          // One shared row serves both selectAll and select([...]) callers.
           const settingsRow = {
             did: "did:example:user",
             pdsSyncEnabled: 1,
-            imageTheme: "ocean-breeze", // Mock a specific theme
-            inboxEnabled: 1, // Inbox open by default
-            profanityFilterEnabled: 0, // Profanity screening off by default
+            imageTheme: "ocean-breeze",
+            inboxEnabled: 1,
+            profanityFilterEnabled: 0,
             customPrompt: null,
             profileCardTheme: null,
             touchpointLocale: null,
@@ -128,9 +123,7 @@ describe("MessageService", () => {
       }),
       insertInto: mock(() => mockInsertBuilder),
       deleteFrom: mock(() => mockDeleteBuilder),
-      // deleteUserData wraps its profile and settings deletes in
-      // db.transaction().execute(cb). Run the callback synchronously against
-      // mockDb so those deleteFrom calls register alongside the inbox clear.
+      // Runs the transaction callback against mockDb so its deleteFrom calls register.
       transaction: mock(() => ({ execute: (cb: any) => cb(mockDb) })),
     };
     Object.values(mockDb).forEach((fn: any) => fn.mockClear?.());
@@ -163,7 +156,6 @@ describe("MessageService", () => {
       },
       assertDid: "did:example:user",
     };
-    // Reset all agent mocks
     mockAgent.post.mockClear();
     mockAgent.uploadBlob.mockClear();
     mockAgent.com.atproto.repo.deleteRecord.mockClear();
@@ -202,10 +194,7 @@ describe("MessageService", () => {
     mockSelectBuilder.execute.mockImplementationOnce(async () => msgs);
     const result = await messageService.addExampleMessages("did:foo");
     assert.deepStrictEqual(result, msgs);
-    // The 8 example rows are inserted in a single batched statement now, not
-    // one insert per row.
     assert.strictEqual(mockDb.insertInto.mock.calls.length, 1);
-    // ...and that one statement carries all 8 rows.
     assert.strictEqual(Array.isArray(lastInsertValues), true);
     assert.strictEqual((lastInsertValues as any[]).length, 8);
   });
@@ -236,12 +225,7 @@ describe("MessageService", () => {
     assert.deepStrictEqual(insertedText, [...getServerMessages("en").exampleQuestions]);
   });
 
-  /**
-   * Example questions are content, not chrome: whatever language they were
-   * seeded in is what the owner keeps. `getMessages` (the read path) never
-   * touches the i18n catalog, so a later `uiLocale` change cannot retranslate
-   * or replace rows already in the DB.
-   */
+  /** Seeded example rows keep their language: reading never touches the i18n catalog. */
   test("keeps a seeded example message in its original locale after the owner changes uiLocale (#405)", async () => {
     mockInsertBuilder.execute.mockImplementation(async () => ({}));
     mockSelectBuilder.executeTakeFirst.mockImplementation(async () => ({
@@ -258,8 +242,6 @@ describe("MessageService", () => {
     const seededResult = await messageService.addExampleMessages("did:foo", "en");
     assert.deepStrictEqual(seededResult, seeded);
 
-    // The owner changes their App language after seeding. Re-reading the
-    // inbox must return the exact rows already stored, unchanged.
     mockSelectBuilder.execute.mockImplementationOnce(async () => seeded);
     const reread = await messageService.getMessages("did:foo");
     assert.deepStrictEqual(reread, seeded);
@@ -281,12 +263,10 @@ describe("MessageService", () => {
   });
 
   test("sendMessage is rejected when the recipient's inbox is closed (#177)", async () => {
-    // Arrange — recipient exists in user_profile but has inboxEnabled = 0.
     mockSelectBuilder.executeTakeFirst.mockImplementationOnce(async () => ({
       did: "did:foo",
     }));
-    // Override the user_settings leg to report a closed inbox. The default
-    // mock returns inboxEnabled: 1, so we swap the row to 0 for this test.
+    // The default row has inboxEnabled: 1; swap it to 0 here.
     mockDb.selectFrom = mock((table: string) => {
       if (table === "user_settings") {
         const chain: any = {
@@ -313,8 +293,6 @@ describe("MessageService", () => {
       return mockSelectBuilder;
     });
 
-    // Act & Assert — the send is rejected with the inbox-closed message, and
-    // crucially no message row is inserted (account/history stay intact).
     await assert.rejects(
       () => messageService.sendMessage("did:foo", "hi"),
       /not accepting new messages/
@@ -323,7 +301,6 @@ describe("MessageService", () => {
   });
 
   test("sendMessage silently drops a flagged message when profanity filter is on (#58)", async () => {
-    // Arrange — recipient exists, inbox open, profanity filter ON.
     mockSelectBuilder.executeTakeFirst.mockImplementationOnce(async () => ({
       did: "did:foo",
     }));
@@ -353,15 +330,12 @@ describe("MessageService", () => {
       return mockSelectBuilder;
     });
 
-    // Act — "fuck" is a canonical English blocklist entry. The send must still
-    // return success (sender sees no rejection), but no row is inserted.
     const result = await messageService.sendMessage("did:foo", "you are a fuck");
     assert.deepStrictEqual(result, { success: true });
     assert.strictEqual(mockDb.insertInto.mock.calls.length, 0);
   });
 
   test("sendMessage accepts a clean message even when profanity filter is on (#58)", async () => {
-    // Arrange — recipient exists, inbox open, profanity filter ON.
     mockSelectBuilder.executeTakeFirst.mockImplementationOnce(async () => ({
       did: "did:foo",
     }));
@@ -392,15 +366,12 @@ describe("MessageService", () => {
     });
     mockInsertBuilder.execute.mockImplementationOnce(async () => ({}));
 
-    // Act — a clean message is accepted and inserted normally.
     const result = await messageService.sendMessage("did:foo", "what's your favorite movie?");
     assert.deepStrictEqual(result, { success: true });
     assert.strictEqual(mockDb.insertInto.mock.calls.length, 1);
   });
 
   test("sendMessage does not screen for profanity when the filter is off", async () => {
-    // Arrange — recipient exists, inbox open, profanity filter OFF (default).
-    // Even a flagged word should pass through and be inserted.
     mockSelectBuilder.executeTakeFirst.mockImplementationOnce(async () => ({
       did: "did:foo",
     }));
@@ -408,7 +379,6 @@ describe("MessageService", () => {
 
     const result = await messageService.sendMessage("did:foo", "you are a fuck");
     assert.deepStrictEqual(result, { success: true });
-    // The default mock row has profanityFilterEnabled: 0, so the message lands.
     assert.strictEqual(mockDb.insertInto.mock.calls.length, 1);
   });
 
@@ -424,7 +394,6 @@ describe("MessageService", () => {
     const result = await messageService.deleteMessage(tid, did, mockAgent);
     assert.deepStrictEqual(result, { success: true });
     assert.strictEqual(mockDb.deleteFrom.mock.calls.length, 1);
-    // PDS delete is fire-and-forget — synchronously invoked, resolves in background
     assert.strictEqual(mockAgent.com.atproto.repo.deleteRecord.mock.calls.length, 1);
   });
 
@@ -441,7 +410,7 @@ describe("MessageService", () => {
     });
     const result = await messageService.deleteMessage(tid, did, mockAgent);
     assert.deepStrictEqual(result, { success: true });
-    // flush microtasks so the background .catch() fires
+    // flush the background .catch()
     await new Promise((resolve) => setImmediate(resolve));
     assert.strictEqual((mockLogger.error as any).mock.calls.length, 1);
   });
@@ -458,7 +427,7 @@ describe("MessageService", () => {
     (mockResolver.resolveDidToHandle as any).mockImplementationOnce(async () => "handle");
     const result = await messageService.respondToMessage(
       "tid",
-      "did:example:user", // Use the DID that matches the mocked user_settings
+      "did:example:user",
       "rec",
       "orig",
       "resp",
@@ -553,7 +522,6 @@ describe("MessageService", () => {
   });
 
   test("syncMessages: pushes DB-only records to PDS when PDS is empty", async () => {
-    // listRecords default returns empty — PDS has nothing
     mockSelectBuilder.execute.mockImplementationOnce(async () => [
       { tid: "t1", message: "m", createdAt: "now", recipient: "did:foo" },
     ]);

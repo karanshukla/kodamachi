@@ -21,6 +21,7 @@ import { SettingsToggle } from "../components/SettingsToggle";
 import { APP_DOMAIN, APP_NAME } from "../lib/brand";
 import { FEED_RKEY } from "../lib/contracts";
 import { useLocale, useTranslations } from "../lib/i18n";
+import { usePageTitle } from "../lib/usePageTitle";
 import { resolveApiErrorMessage } from "../lib/i18n/apiErrors";
 import { useNumberFormat } from "../lib/useNumberFormat";
 import { FALLBACK_CLIENT_ID, postClientOptions } from "../lib/waypointClients";
@@ -31,6 +32,7 @@ const CARD_SPAN = { base: 12, md: 6, lg: 4 };
 export default function Settings() {
   const [deleteModalOpened, setDeleteModalOpened] = useState(false);
   const messages = useTranslations();
+  usePageTitle(messages.settingsPage.heading);
   const locale = useLocale();
   const formatNumber = useNumberFormat();
 
@@ -114,7 +116,7 @@ export default function Settings() {
 
   return (
     <>
-      <Title order={1} mb="xl" style={{ letterSpacing: "-0.03em" }}>
+      <Title order={1} mb="xl">
         {messages.settingsPage.heading}
       </Title>
 

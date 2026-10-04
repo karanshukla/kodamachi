@@ -18,28 +18,23 @@ import (
 	"github.com/bluesky-social/indigo/xrpc"
 )
 
-// Profile is the slice of an AT Protocol actor profile, plus the owner's NF
-// touchpoint settings, the shim needs to render an OG image. It is resolved by
-// handle and keyed in the cache by DID.
+// Profile is the actor profile and NF settings needed to render an OG image.
 type Profile struct {
 	DID         string
 	Handle      string
 	DisplayName string
-	Banner      string // empty → brand gradient fallback
-	Avatar      string // empty → glyph fallback
-	Prompt      string // owner's customPrompt; empty → resolved default (see resolvePrompt)
-	Locale      string // owner's touchpointLocale; empty → English default
+	Banner      string
+	Avatar      string
+	Prompt      string // customPrompt; empty means resolvePrompt's default
+	Locale      string // touchpointLocale; empty means English
 }
 
-// NormalizedHandle returns the handle without a leading "@" — the template
-// prepends its own "@".
+// NormalizedHandle returns the handle without a leading "@".
 func (p Profile) NormalizedHandle() string {
 	return strings.TrimPrefix(p.Handle, "@")
 }
 
-// ToOGInput converts the profile to the template's input struct. Prompt/Locale
-// pass through as-is — resolvePrompt (template.go) is what turns an unset
-// Prompt into the right default, not this conversion.
+// ToOGInput converts the profile to the template's input.
 func (p Profile) ToOGInput() OGInput {
 	return OGInput{
 		DisplayName: p.DisplayName,
@@ -51,33 +46,23 @@ func (p Profile) ToOGInput() OGInput {
 	}
 }
 
-// ProfileFetcher resolves a Bluesky handle to a full profile over the AT
-// Protocol. The interface exists so the generator can be unit-tested with a
-// fake. It is split in two so the cache lookup can happen between the cheap
-// handle→DID resolve and the full profile read.
+// ProfileFetcher is split in two so the cache lookup can sit between the cheap
+// handle resolve and the full profile read.
 type ProfileFetcher interface {
-	// ResolveDID maps a handle to its stable DID. This is the cache key.
+	// ResolveDID maps a handle to its DID, the cache key.
 	ResolveDID(ctx context.Context, handle string) (string, error)
-	// FetchProfile reads the full profile (banner/avatar/displayName) by DID.
+	// FetchProfile reads the full profile by DID.
 	FetchProfile(ctx context.Context, did string) (Profile, error)
 }
 
-// IndigoFetcher resolves handles and fetches profiles via
-// bluesky-social/indigo against the AppView (https://api.bsky.app by default),
-// matching the TS ProfileService's service URL exactly so the Go path sees the
-// same view of the data.
+// IndigoFetcher resolves handles and fetches profiles via indigo.
 type IndigoFetcher struct {
 	Client *xrpc.Client
-	// Settings reads the owner's customPrompt/touchpointLocale from the NF
-	// server. Nil is a valid, supported state (composite-render and
-	// indigo-fetch construct an IndigoFetcher without it) — FetchProfile then
-	// leaves Prompt/Locale unset, which resolvePrompt turns into DefaultPrompt.
+	// Settings reads the owner's prompt and locale; nil leaves them unset.
 	Settings *NFSettingsClient
 }
 
-// NewIndigoFetcher constructs a fetcher pointing at host (the AppView). It has
-// no NF settings client attached — set Settings separately (main.go does this)
-// to enable customPrompt/touchpointLocale reads.
+// NewIndigoFetcher returns a fetcher for host, without a Settings client.
 func NewIndigoFetcher(host string) *IndigoFetcher {
 	if host == "" {
 		host = DefaultAppViewHost
@@ -85,13 +70,10 @@ func NewIndigoFetcher(host string) *IndigoFetcher {
 	return &IndigoFetcher{Client: &xrpc.Client{Host: host}}
 }
 
-// DefaultAppViewHost matches server/src/services/profile-service.ts's
-// AtpAgent service URL. Both implementations must target the same AppView.
+// DefaultAppViewHost must match server/src/services/profile-service.ts.
 const DefaultAppViewHost = "https://api.bsky.app"
 
-// ResolveDID maps a handle to its DID via atproto.IdentityResolveHandle. An
-// unresolvable handle surfaces as ErrProfileNotFound so the generator maps it
-// to a 404.
+// ResolveDID maps a handle to its DID; unresolvable handles are ErrProfileNotFound.
 func (f *IndigoFetcher) ResolveDID(ctx context.Context, handle string) (string, error) {
 	handle = strings.TrimPrefix(handle, "@")
 	resolved, err := atproto.IdentityResolveHandle(ctx, f.Client, handle)
@@ -104,13 +86,10 @@ func (f *IndigoFetcher) ResolveDID(ctx context.Context, handle string) (string, 
 	return resolved.Did, nil
 }
 
-// FetchProfile reads the full profile by DID via bsky.ActorGetProfile, then —
-// if a Settings client is attached — the owner's customPrompt/touchpointLocale
-// from the NF server. The settings read can never fail this call: a Settings
-// error or timeout leaves Prompt/Locale unset, and resolvePrompt (template.go)
-// turns that into DefaultPrompt. [TestIndigoFetcher_FetchProfile_SettingsFailure_StillReturnsProfile]
-// and [TestIndigoFetcher_FetchProfile_SettingsTimeout_StillReturnsProfile] pin
-// both failure shapes.
+// FetchProfile reads the profile by DID, plus settings when attached. A
+// settings failure never fails the call and leaves Prompt/Locale unset:
+// [TestIndigoFetcher_FetchProfile_SettingsFailure_StillReturnsProfile] and
+// [TestIndigoFetcher_FetchProfile_SettingsTimeout_StillReturnsProfile].
 func (f *IndigoFetcher) FetchProfile(ctx context.Context, did string) (Profile, error) {
 	prof, err := bsky.ActorGetProfile(ctx, f.Client, did)
 	if err != nil {
@@ -135,9 +114,7 @@ func (f *IndigoFetcher) FetchProfile(ctx context.Context, did string) (Profile, 
 	return p, nil
 }
 
-// ErrProfileNotFound signals that a handle did not resolve (the AppView's
-// XRPC ERROR 400 "Handle not found", or a 404 on the profile read). The
-// generator maps this to an HTTP 404.
+// ErrProfileNotFound signals that a handle or profile did not resolve.
 var ErrProfileNotFound = errors.New("profile not found")
 
 func derefStr(p *string) string {
@@ -147,9 +124,8 @@ func derefStr(p *string) string {
 	return *p
 }
 
-// isNotFound reports whether err is an indigo/xrpc "not found" response.
-// Resolving a nonexistent handle yields a 400 ("Unable to resolve handle") and
-// a missing profile yields 400/404; both become ErrProfileNotFound.
+// isNotFound reports whether err is an xrpc not-found: the AppView answers an
+// unknown handle or profile with 400 as well as 404.
 func isNotFound(err error) bool {
 	if err == nil {
 		return false
@@ -158,48 +134,32 @@ func isNotFound(err error) bool {
 	if errors.As(err, &xe) {
 		return xe.StatusCode == 400 || xe.StatusCode == 404
 	}
-	// Non-xrpc errors (e.g. wrapped by a transport layer) still carry indigo's
-	// "not found" / "Unable to resolve handle" text.
+	// Errors wrapped by a transport layer still carry indigo's text.
 	msg := strings.ToLower(err.Error())
 	return strings.Contains(msg, "not found") || strings.Contains(msg, "unable to resolve handle")
 }
 
-// DefaultNFServerHost is the docker-compose-local address of the NF server.
-// It is NOT production-correct — Railway has no "server" DNS name on its
-// private network — so it must be overridden via NF_SERVER_URL in every
-// deployed environment, the same way FRONTEND_URL and EXPORT_HTML_URL are
-// (see opengraph-service/RAILWAY.md). Left unset in production, this name
-// does not resolve; FetchSettings treats an unresolved-host error as
-// terminal rather than retryable (see the DNS check in its retry loop), so
-// the failure surfaces after a single attempt, not after the retry budget —
-// FetchProfile's caller-side fallback keeps the card rendering in English
-// with no added latency, never a broken or a slow card.
+// DefaultNFServerHost is the docker-compose address of the NF server. Railway
+// has no "server" DNS name, so deployed environments MUST set NF_SERVER_URL
+// (see opengraph-service/RAILWAY.md); unset, the card falls back to English.
 const DefaultNFServerHost = "http://server:3000"
 
-// NFSettings is the subset of an owner's NF user_settings row the OG card
-// needs: their prompt override and the locale their audience reads it in.
+// NFSettings is the part of an owner's settings the OG card needs.
 type NFSettings struct {
 	CustomPrompt     string
 	TouchpointLocale string
 }
 
-// nfPublicProfileResponse mirrors the JSON shape of the NF server's
-// GET /public-profile/:did (server/src/hono/message-routes.ts, backed by
-// ProfileService.getPublicProfile) — the same endpoint PublicProfile.tsx
-// calls, so a prompt edit is visible to the card the moment it is visible to
-// a visitor. Reused rather than a new route, per #400's note that the
-// TypeScript route files are shared with #403's concurrent work.
+// nfPublicProfileResponse is the shape of the NF server's
+// GET /public-profile/:did (server/src/hono/message-routes.ts).
 type nfPublicProfileResponse struct {
 	CustomPrompt     *string `json:"customPrompt"`
 	TouchpointLocale *string `json:"touchpointLocale"`
 }
 
-// settingsWakeRetryableStatuses mirrors wakeRetryableStatuses (renderer.go):
-// retry a not-awake-yet response, never a 4xx or 429. It is its own map rather
-// than an alias of that one, so the two callers' retry policies can diverge
-// later without a change to either silently moving the other. They agree
-// today on purpose, and [TestSettingsWakeRetryableStatuses_MatchRenderer] is
-// what fails the day one moves without the other.
+// settingsWakeRetryableStatuses is deliberately separate from
+// wakeRetryableStatuses so the policies can diverge;
+// [TestSettingsWakeRetryableStatuses_MatchRenderer] fails when only one moves.
 var settingsWakeRetryableStatuses = map[int]bool{
 	http.StatusRequestTimeout:     true,
 	http.StatusBadGateway:         true,
@@ -207,20 +167,16 @@ var settingsWakeRetryableStatuses = map[int]bool{
 	http.StatusGatewayTimeout:     true,
 }
 
-// defaultSettingsTimeout/defaultSettingsAttemptTimeout are shorter than the
-// renderer's: this is a same-service JSON GET, not a cross-process headless
-// render, so a generous budget here only delays the fallback a real outage
-// would hit anyway.
+// Shorter than the renderer's: this is a JSON GET, and a generous budget only
+// delays the fallback.
 const (
 	defaultSettingsTimeout        = 6 * time.Second
 	defaultSettingsAttemptTimeout = 3 * time.Second
 	maxSettingsBackoff            = 1 * time.Second
 )
 
-// NFSettingsClient reads NFSettings from the NF server over HTTP. Shaped after
-// HTMLToImageRenderer (renderer.go): retries are per-attempt-timeout bounded,
-// not per-loop, so one hung connection cannot eat the whole deadline, and only
-// 408/502/503/504 are retried — never 4xx or 429.
+// NFSettingsClient reads NFSettings from the NF server, with the retry policy
+// of HTMLToImageRenderer.
 type NFSettingsClient struct {
 	Host   string
 	Client *http.Client
@@ -229,8 +185,8 @@ type NFSettingsClient struct {
 	AttemptTimeout time.Duration
 }
 
-// NewNFSettingsClient constructs a client pointing at host (the NF server).
-// timeout <= 0 falls back to defaultSettingsTimeout.
+// NewNFSettingsClient returns a client for host; timeout <= 0 uses
+// defaultSettingsTimeout.
 func NewNFSettingsClient(host string, timeout time.Duration) *NFSettingsClient {
 	if host == "" {
 		host = DefaultNFServerHost
@@ -244,23 +200,17 @@ func NewNFSettingsClient(host string, timeout time.Duration) *NFSettingsClient {
 	}
 	return &NFSettingsClient{
 		Host: strings.TrimSuffix(host, "/"),
-		// No Client.Timeout — like HTMLToImageRenderer, it would bound the whole
-		// loop rather than one attempt.
+		// No Client.Timeout: it would bound the whole loop.
 		Client:         &http.Client{},
 		Timeout:        timeout,
 		AttemptTimeout: attempt,
 	}
 }
 
-// FetchSettings reads did's public settings. Network errors and
-// not-awake-yet statuses are retried with capped exponential backoff until
-// the deadline; any other failure (a 4xx, a malformed body) is returned
-// immediately. Every error is the caller's cue to fall back to DefaultPrompt —
-// FetchSettings itself never panics or blocks past its Timeout.
+// FetchSettings reads did's public settings. Network errors and wake statuses
+// retry with capped backoff until the deadline; other failures return at once.
 func (s *NFSettingsClient) FetchSettings(ctx context.Context, did string) (NFSettings, error) {
-	// PathEscape, not raw interpolation: did reaches here from a handle the
-	// caller chose, so a value carrying "/" or ".." would otherwise rewrite the
-	// path and point this GET at a different endpoint on the NF server.
+	// Escaped so a crafted did cannot retarget the GET at another NF endpoint.
 	// [TestNFSettingsClient_EscapesDIDInPath] pins it.
 	endpoint := fmt.Sprintf("%s/public-profile/%s", s.Host, neturl.PathEscape(did))
 
@@ -280,15 +230,9 @@ func (s *NFSettingsClient) FetchSettings(ctx context.Context, did string) (NFSet
 		respBytes, status, err := s.attempt(ctx, endpoint, minDuration(s.attemptTimeout(), remaining))
 		switch {
 		case err != nil:
-			// A DNS name that does not resolve is a permanent misconfiguration,
-			// not a wake-shaped failure — no amount of retrying fixes it, and
-			// every retry is dead latency stacked ahead of a cold render (the
-			// same render that may also be waiting on html-to-image waking
-			// Chromium). Everything else transport-level (connection refused,
-			// connection reset, a timeout) still means "the service is
-			// booting" and stays retryable below.
-			// [TestNFSettingsClient_DNSResolutionFailure_IsNotRetried] pins this
-			// alongside the wake-shaped-status and no-retry-on-4xx/429 cases.
+			// An unresolvable name is a permanent misconfiguration and retries
+			// only add latency; other transport errors mean the service is booting.
+			// [TestNFSettingsClient_DNSResolutionFailure_IsNotRetried] pins this.
 			var dnsErr *net.DNSError
 			if errors.As(err, &dnsErr) && dnsErr.IsNotFound {
 				return NFSettings{}, fmt.Errorf("nf-settings: %w", err)
@@ -325,9 +269,8 @@ func (s *NFSettingsClient) FetchSettings(ctx context.Context, did string) (NFSet
 	return NFSettings{}, fmt.Errorf("nf-settings: after retries: %v", lastErr)
 }
 
-// attempt performs one GET under its own deadline and returns the body and
-// status. A transport error yields a zero status, which the caller treats as
-// retryable — the same contract as HTMLToImageRenderer.attempt.
+// attempt performs one GET under its own deadline. A transport error returns
+// status 0.
 func (s *NFSettingsClient) attempt(ctx context.Context, endpoint string, timeout time.Duration) ([]byte, int, error) {
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()

@@ -16,7 +16,9 @@ function pluralize(count: number, singular: string, plural: string): string {
 
 export const fr = {
   common: {
+    skipToContent: "Aller au contenu",
     cancel: "Annuler",
+    close: "Fermer",
     confirm: "Confirmer",
     delete: "Supprimer",
     retry: "Réessayer",
@@ -56,12 +58,8 @@ export const fr = {
     notLoggedInTitle: "Non connecté",
     notLoggedInMessage: "Connecte-toi pour voir tes messages.",
     heading: "Messages",
-    noMessagesCount: "aucun message",
-    newMessagesCount: (count: number) =>
-      `${numberFormat.format(count)} ${pluralize(count, "nouveau", "nouveaux")}`,
-    noMessagesTitle: "Aucun message",
-    noMessagesBody:
-      "Tu n'as pas encore de messages. Partage le lien de ta boîte de réception pour recevoir des questions anonymes.",
+    noMessagesTitle: "Pas encore de questions",
+    noMessagesBody: "Partage ton lien et la première question anonyme arrivera ici.",
     addExampleMessages: "Ajouter des messages d'exemple",
     deleteConfirmTitle: "Confirmer la suppression",
     deleteConfirmMessage:
@@ -72,21 +70,23 @@ export const fr = {
     welcomeBackMessage: "Tu t'es connecté avec succès.",
   },
   inboxLinkCard: {
-    eyebrow: "Lien de ta boîte de réception · accès public",
+    eyebrow: "Lien de ta boîte de réception · public",
   },
   postingPreferences: {
     title: "Préférences de publication",
     appendProfileLink: {
       label: "Ajouter automatiquement le lien de la boîte de réception",
+      shortLabel: "Lien de la boîte",
       description:
         "Ajoute ton lien à chaque publication. Réduit le nombre de caractères disponibles.",
     },
     useGradients: {
-      label: "Arrière-plans en dégradé",
-      description: "Joli pour les captures d'écran. Désactive pour plus de contraste.",
+      label: "Fonds encre",
+      description: "Cartes bleu marine au texte blanc. Désactive pour des cartes papier.",
     },
     includeQuestionAsImage: {
       label: "Question sous forme d'image",
+      shortLabel: "Question en image",
       description: "Génère une image partageable avec un texte alternatif automatique.",
     },
     confirmBeforeDelete: {
@@ -97,8 +97,6 @@ export const fr = {
       label: "Défilement automatique vers les messages",
       description: "Fait défiler les nouveaux messages à l'écran quand ils se chargent.",
     },
-    summary: (enabled: number, total: number) =>
-      `${numberFormat.format(enabled)} sur ${numberFormat.format(total)} actives`,
   },
   questionCard: {
     cannotDeleteThreadRootTooltip: "Détache d'abord le fil",
@@ -141,20 +139,23 @@ export const fr = {
     replyToThread: "Répondre au fil",
     reply: "Répondre",
   },
+  preferencesBar: {
+    open: "Plus de réglages",
+  },
   imageThemePicker: {
     title: "Thème de l'image",
   },
   themes: {
     image: {
-      default: "Par défaut",
-      compressed: "Compressé",
-      twitter: "Style Twitter",
+      default: "Citation",
+      compressed: "Compact",
+      twitter: "Publication",
     },
     profileCard: {
-      royal: "Royal",
-      aurora: "Aurore",
-      ember: "Braise",
-      verdant: "Verdoyant",
+      royal: "Encre",
+      aurora: "Acier",
+      ember: "Minuit",
+      verdant: "Papier",
     },
   },
   nav: {
@@ -181,12 +182,11 @@ export const fr = {
     disableAnimations: "Désactiver les animations",
     enableAnimations: "Activer les animations",
     toggleColorScheme: "Changer le thème de couleur",
+    toggleNavigation: "Afficher ou masquer la navigation",
   },
   customisePage: {
     heading: "Personnaliser",
-    beta: "Bêta",
     yourPublicProfile: "Ton profil public",
-    yourPublicProfileHelp: "Ce que les visiteurs voient avant de t'envoyer un message anonyme.",
     profilePrompt: "Phrase de profil",
     profilePromptDescription:
       "Le titre affiché au-dessus de ta zone de message. Laisse vide pour utiliser « Envoyer un message anonyme à [toi] ».",
@@ -195,8 +195,6 @@ export const fr = {
     profileCardColourDescription:
       "Le traitement colorimétrique de ta carte de question. Les préréglages gardent le texte et les boutons lisibles quelle que soit l'option.",
     languages: "Langues",
-    languagesHelp:
-      "Deux publics, deux langues : celle dans laquelle tu lis l'appli, et celle que lisent tes visiteurs.",
     appLanguage: "Langue de l'appli",
     appLanguageDescription:
       "La langue dans laquelle tu lis l'appli : navigation, boutons et notifications. Toi seul la vois.",
@@ -204,7 +202,6 @@ export const fr = {
     messageLanguageDescription:
       "Langue de la phrase, du texte de partage et de l'avertissement d'anonymat vus par les visiteurs et ton public. Ta phrase de profil personnalisée prime sur ce réglage.",
     messageIntake: "Réception des messages",
-    messageIntakeHelp: "Qui peut atteindre ta boîte de réception, et ce qui passe.",
     inbox: "Boîte de réception",
     inboxDescription:
       "Désactive pour arrêter de recevoir de nouveaux messages tout en gardant ton compte, ton historique et tes réglages intacts. Les visiteurs verront un statut « n'accepte pas de messages ».",
@@ -212,7 +209,6 @@ export const fr = {
     profanityFilterDescription:
       "Une fois activé, les messages entrants sont filtrés à l'aide de listes de mots en anglais, espagnol, portugais, allemand et français - chaque message est vérifié dans les cinq langues, quelle que soit la langue que tu as choisie dans l'appli. Les messages signalés sont discrètement écartés - l'expéditeur voit une réponse de succès, mais le message n'atteint jamais ta boîte de réception.",
     atmosphereLinks: "Liens Atmosphere",
-    atmosphereLinksHelp: "Vers où mènent les liens vers les publications et les profils.",
     openProfilesInApp: (appName) => `Ouvrir les profils dans ${appName}`,
     openProfilesInAppDescription: (appName) =>
       `Quand c'est activé, une @mention dans une bio ouvre le profil ${appName} de cette personne. Sinon, elle s'ouvre dans ton client préféré.`,
@@ -226,6 +222,7 @@ export const fr = {
     recipientNotFoundMessage: "Impossible d'envoyer le message : DID de l'utilisateur introuvable.",
     messageSentTitle: "Message envoyé !",
     messageSentBody: "Ton message anonyme est en route.",
+    sendAnother: "En envoyer un autre",
     sendFailedTitle: "Échec de l'envoi",
     noBlueskyAccountTitle: "Aucun compte Bluesky trouvé",
     noBlueskyAccountBody: "n'existe pas sur Bluesky. Vérifie le nom d'utilisateur et réessaie.",
@@ -323,7 +320,6 @@ export const fr = {
     ariaLabel: "Mise à jour disponible — recharge pour l'appliquer",
     buttonLabel: "Mettre à jour",
     applyingAriaLabel: "Application de la mise à jour — la page va être rechargée",
-    applyingLabel: "Mise à jour…",
   },
   userMenu: {
     switchAccountErrorTitle: "Impossible de changer de compte",
@@ -334,20 +330,21 @@ export const fr = {
     logOut: (handle: string | undefined) => `Se déconnecter @${handle}`,
   },
   home: {
-    titleSuffix: " - Questions et réponses anonymes sur Bluesky",
-    subtitle: "Reçois des questions depuis le web et publie les réponses directement sur Bluesky.",
+    title: "Des questions anonymes, des réponses sur Bluesky.",
+    subtitle:
+      "Partage un lien, reçois des questions de n'importe qui et publie tes réponses directement sur ton fil.",
     sellingPoints: {
       fastAndFree: {
         title: "Rapide et gratuit",
-        body: "Aucun téléchargement requis, connecte-toi simplement avec tes identifiants Bluesky et partage le lien de ta boîte de réception",
+        body: "Aucun téléchargement. Connecte-toi avec Bluesky et partage le lien de ta boîte de réception.",
       },
       spamProtection: {
         title: "Protection anti-spam, sans captchas",
-        body: "Protégé par Anubis, un puissant service de détection de bots",
+        body: "Protégé par la détection de bots Anubis, sans casse-tête pour les visiteurs.",
       },
       openSource: {
         title: "Open source",
-        body: "Contribue directement au projet, ou héberge ta propre version si tu veux !",
+        body: "Contribue au projet ou héberge ta propre instance.",
       },
     },
     questionsFeedback: "Des questions ? Des retours ?",
@@ -356,6 +353,7 @@ export const fr = {
     githubContactLabel: "GitHub - ",
     disclaimer:
       "Avertissement : merci de respecter les conditions d'utilisation de Bluesky. Des cookies sont utilisés pour te garder connecté. Cette appli n'inclut aucune modération.",
+    mascotCredit: "Illustration de la mascotte par Angela Clifford",
     welcomeBackGreetingPrefix: "Ravi de te revoir,",
     viewYourMessages: "Voir tes messages",
     copyProfileLink: "Copier le lien du profil",
@@ -446,7 +444,9 @@ export const fr = {
     generic: "Une erreur s'est produite. Réessaie.",
   },
   notFoundPage: {
-    title: "404 - Introuvable",
-    message: "La ressource demandée est introuvable.",
+    title: "404 — introuvable",
+    message: "Cette page n'existe pas. Le lien est peut-être ancien, ou l'identifiant a changé.",
+    goHome: "Retour à l'accueil",
+    yourMessages: "Tes messages",
   },
 } satisfies Messages;

@@ -32,14 +32,12 @@ describe("Home page", () => {
   it("shows skeleton while session is loading", () => {
     mockUseSession.mockReturnValue({ data: undefined, isLoading: true } as any);
     renderWithProviders(<Home />);
-    expect(
-      screen.getByRole("heading", { level: 1, name: `${APP_NAME}${en.home.titleSuffix}` })
-    ).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1, name: en.home.title })).toBeInTheDocument();
     expect(screen.queryByText(en.home.getStarted)).toBeNull();
     expect(screen.queryByText(en.home.viewYourMessages)).toBeNull();
   });
 
-  it("shows feature list and Get Started button when logged out", () => {
+  it("shows feature list and Get started button when logged out", () => {
     mockUseSession.mockReturnValue({
       data: { isLoggedIn: false, profile: null },
       isLoading: false,
@@ -60,8 +58,7 @@ describe("Home page", () => {
       isLoading: false,
     } as any);
     renderWithProviders(<Home />);
-    // Name appears inside a styled div (not a heading element)
-    expect(screen.getByText("Karan")).toBeInTheDocument();
+    expect(screen.getByText(/Karan$/)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: en.home.viewYourMessages })).toBeInTheDocument();
   });
 
@@ -79,6 +76,16 @@ describe("Home page", () => {
     expect(githubLink).toHaveAttribute("href", "https://github.com/karanshukla/navyfragen-app");
   });
 
+  it("credits the mascot's artist to signed-out visitors", () => {
+    mockUseSession.mockReturnValue({
+      data: { isLoggedIn: false, profile: null },
+      isLoading: false,
+    } as any);
+    renderWithProviders(<Home />);
+    expect(screen.getByText(en.home.mascotCredit)).toBeInTheDocument();
+    expect(en.home.mascotCredit).toContain("Angela Clifford");
+  });
+
   it("falls back to handle when displayName is absent", () => {
     mockUseSession.mockReturnValue({
       data: {
@@ -89,10 +96,10 @@ describe("Home page", () => {
       isLoading: false,
     } as any);
     renderWithProviders(<Home />);
-    expect(screen.getByText("karan.bsky.social")).toBeInTheDocument();
+    expect(screen.getByText(/karan\.bsky\.social$/)).toBeInTheDocument();
   });
 
-  it("renders avatar image when profile has an avatar URL", () => {
+  it("greets a returning user by name, without their avatar", () => {
     mockUseSession.mockReturnValue({
       data: {
         isLoggedIn: true,
@@ -106,11 +113,11 @@ describe("Home page", () => {
       isLoading: false,
     } as any);
     renderWithProviders(<Home />);
-    const img = screen.getByRole("img", { name: /karan/i });
-    expect(img).toHaveAttribute("src", "https://cdn.bsky.app/avatar.jpg");
+    expect(screen.getByText(/Karan$/)).toBeInTheDocument();
+    expect(screen.queryByRole("img", { name: /karan/i })).toBeNull();
   });
 
-  it("shows Copy Link and Share buttons when logged in", () => {
+  it("shows Copy link and Share buttons when logged in", () => {
     mockUseSession.mockReturnValue({
       data: {
         isLoggedIn: true,
@@ -180,10 +187,10 @@ describe("Home page", () => {
       isLoading: false,
     } as any);
     renderWithProviders(<Home />, { colorScheme: "dark" });
-    expect(screen.getByText("Karan")).toBeInTheDocument();
+    expect(screen.getByText(/Karan$/)).toBeInTheDocument();
   });
 
-  it("clicking Copy Link changes button text to Copied!", async () => {
+  it("clicking Copy link changes button text to Copied!", async () => {
     Object.defineProperty(navigator, "clipboard", {
       value: { writeText: vi.fn().mockResolvedValue(undefined) },
       configurable: true,
@@ -225,11 +232,10 @@ describe("Home page", () => {
     } as any);
     renderWithProviders(<Home />);
     fireEvent.click(screen.getByRole("button", { name: en.common.share }));
-    // Neither API available — no crash, nothing happens
     expect(document.body).toBeInTheDocument();
   });
 
-  it("Copy Link and Share buttons are not shown when logged out", () => {
+  it("Copy link and Share buttons are not shown when logged out", () => {
     mockUseSession.mockReturnValue({
       data: { isLoggedIn: false, profile: null },
       isLoading: false,

@@ -54,6 +54,9 @@
 		-Server
 	}
 
+	@legacy_domain host navyfragen.app
+	redir @legacy_domain https://kodamachi.app{uri} 308
+
 	@assets path /assets/*
 	header @assets Cache-Control "public, max-age=31536000, immutable"
 

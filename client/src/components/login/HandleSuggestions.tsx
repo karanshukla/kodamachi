@@ -9,7 +9,7 @@ import * as styles from "./HandleSuggestions.styles";
 function ActorIdentity({ actor, bold }: { actor: BlueskyActor; bold: boolean }) {
   return (
     <Group gap="sm" wrap="nowrap" px="sm" w="100%">
-      <Avatar src={actor.avatar ?? null} size={40} radius="xl" />
+      <Avatar src={actor.avatar ?? null} size={40} />
       <Box style={{ minWidth: 0 }}>
         <Text size="sm" fw={bold ? 600 : 500} truncate>
           {actor.displayName || actor.handle}
@@ -87,11 +87,6 @@ interface HandleSuggestionsProps {
   onEscape: () => void;
 }
 
-/**
- * The single-row typeahead under the handle input. It always occupies one row's
- * worth of space — suggestion, skeleton or hint — so the Continue button never
- * jumps while the user types.
- */
 export function HandleSuggestions({ search, suggestionRef, onEscape }: HandleSuggestionsProps) {
   const messages = useTranslations();
   const { selectedActor, isSearching, suggestions, noResults, isHandleReady, cleanHandle } = search;
@@ -107,7 +102,7 @@ export function HandleSuggestions({ search, suggestionRef, onEscape }: HandleSug
       style={styles.box}
     >
       {selectedActor ? (
-        <Box style={styles.staticRow} px="sm">
+        <Box style={styles.staticRow}>
           <ActorIdentity actor={selectedActor} bold />
         </Box>
       ) : isSearching ? (

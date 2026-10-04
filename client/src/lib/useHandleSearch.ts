@@ -30,21 +30,15 @@ export function rankActor(actor: BlueskyActor, localPart: string, fullHandle: st
 }
 
 export interface HandleSearch {
-  /** Raw input, including any leading "@" the user typed. */
   input: string;
   setInput: (value: string) => void;
-  /** Input with "@" and surrounding whitespace removed. */
   cleanHandle: string;
-  /** Long enough and dotted enough to be worth submitting. */
   isHandleReady: boolean;
   suggestions: BlueskyActor[];
-  /** Set once the user (or an exact match) has settled on one actor. */
   selectedActor: BlueskyActor | null;
   select: (actor: BlueskyActor) => void;
   clearSelection: () => void;
-  /** A newer query is in flight or still debouncing. */
   isSearching: boolean;
-  /** Search settled with nothing to offer. */
   noResults: boolean;
 }
 

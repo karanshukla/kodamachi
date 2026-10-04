@@ -61,7 +61,6 @@ describe("AppHeader", () => {
   };
 
   beforeEach(() => {
-    // Reset body styles that may linger from the "calls logout" test
     document.body.style.pointerEvents = "";
     document.body.style.opacity = "";
     window.localStorage.removeItem("nf-bounce-logos-enabled");
@@ -73,7 +72,6 @@ describe("AppHeader", () => {
   it("shows Loader when isLoading is true", () => {
     mockUseSession.mockReturnValue({ data: undefined, isLoading: true } as any);
     renderWithProviders(<AppHeader {...defaultProps} />);
-    // Loader renders as a specific element; check no login button
     expect(screen.queryByText(en.common.shortcuts.login)).not.toBeInTheDocument();
   });
 
@@ -110,7 +108,6 @@ describe("AppHeader", () => {
       isLoading: false,
     } as any);
     renderWithProviders(<AppHeader {...defaultProps} />);
-    // Sun icon has aria-label or is findable; just check render doesn't crash
     const toggleBtn = screen.getByLabelText(en.appHeader.toggleColorScheme);
     expect(toggleBtn).toBeInTheDocument();
   });
@@ -133,9 +130,7 @@ describe("AppHeader", () => {
       isLoading: false,
     } as any);
     renderWithProviders(<AppHeader {...defaultProps} onBurgerToggle={onBurgerToggle} />);
-    // Burger button from Mantine has aria-label with "open navigation"
     const burgers = document.querySelectorAll("button");
-    // Find the burger by clicking the first non-color-scheme button
     const burgerBtn = Array.from(burgers).find(
       (b) => b.getAttribute("aria-label") !== "Toggle color scheme"
     );
@@ -160,7 +155,6 @@ describe("AppHeader", () => {
       isLoading: false,
     } as any);
     renderWithProviders(<AppHeader {...defaultProps} />);
-    // Open the menu by clicking the user button
     const userBtn = screen.getByText("Foo").closest("button");
     if (userBtn) {
       await userEvent.click(userBtn);
@@ -197,7 +191,7 @@ describe("AppHeader", () => {
     expect(onNavClose).toHaveBeenCalled();
   });
 
-  it("calls onNavigate when 'View Profile' menu item is clicked", async () => {
+  it("calls onNavigate when 'View profile' menu item is clicked", async () => {
     const onNavClose = vi.fn();
     mockUseLogout.mockReturnValue({ mutate: vi.fn() } as any);
     mockUseSession.mockReturnValue({
@@ -221,7 +215,7 @@ describe("AppHeader", () => {
     }
   });
 
-  it("uses fallback 'User Avatar' alt text when displayName is null", () => {
+  it("uses fallback 'User avatar' alt text when displayName is null", () => {
     mockUseLogout.mockReturnValue({ mutate: vi.fn() } as any);
     mockUseSession.mockReturnValue({
       data: {
@@ -231,9 +225,7 @@ describe("AppHeader", () => {
       isLoading: false,
     } as any);
     renderWithProviders(<AppHeader {...defaultProps} />);
-    // Avatar renders with alt="User Avatar" when displayName is null
     const avatar = document.querySelector("img, [role='img']") as HTMLElement;
-    // Component renders without crash; coverage of line 168 (displayName || "User Avatar")
     expect(document.body).toBeInTheDocument();
   });
 
@@ -259,7 +251,6 @@ describe("AppHeader", () => {
       await userEvent.click(userBtn);
       const logoutItem = screen.getByText(en.userMenu.logOut("foo.bsky.social"));
       fireEvent.click(logoutItem);
-      // The catch block resets body styles
       expect(document.body.style.pointerEvents).toBe("");
     }
   });
@@ -403,14 +394,10 @@ describe("AppHeader", () => {
       } as any);
       renderWithProviders(<AppHeader {...defaultProps} />);
       await openMenu();
-      // The active profile row renders unconditionally above "Add account"...
       expect(screen.getByText("@active.bsky.social")).toBeInTheDocument();
-      // ...marked active (disabled + checked)...
       const activeItem = screen.getByText("@active.bsky.social").closest('[role="menuitem"]');
       expect(activeItem).toHaveAttribute("data-disabled", "true");
-      // ...with no "Accounts" label (only shown when there are others)...
       expect(screen.queryByText(en.userMenu.accountsLabel)).not.toBeInTheDocument();
-      // ...and no other switchable accounts listed beneath it.
       expect(screen.queryByText("Other User")).not.toBeInTheDocument();
       expect(screen.queryByText("@other.bsky.social")).not.toBeInTheDocument();
     });
@@ -442,7 +429,6 @@ describe("AppHeader", () => {
       } as any);
       renderWithProviders(<AppHeader {...defaultProps} />);
       await openMenu();
-      // Falls back to the did for both the label and the avatar initial.
       const bareItem = screen.getByText("did:example:bare").closest("button")!;
       expect(bareItem).toHaveTextContent("?");
 

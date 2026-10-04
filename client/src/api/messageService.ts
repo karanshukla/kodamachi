@@ -53,7 +53,6 @@ export interface StartRenderResponse {
 
 export interface RenderStatusResponse {
   status: RenderStatus;
-  /** The specific failure, present only on `failed`. */
   error?: string;
 }
 
@@ -74,7 +73,6 @@ export const messageKeys = {
 /** Tight enough to catch a warm render, before easing off for a cold one. */
 export const RENDER_POLL_FAST_MS = 1000;
 export const RENDER_POLL_SLOW_MS = 3000;
-/** Polls served at the fast cadence before backing off to the slow one. */
 export const RENDER_POLL_FAST_POLLS = 5;
 
 const RENDER_IN_PROGRESS: readonly RenderStatus[] = ["pending", "rendering"];

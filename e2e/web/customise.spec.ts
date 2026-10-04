@@ -19,7 +19,6 @@ const handle = () => {
   return h;
 };
 
-// Tests capture, mutate, then restore, so the shared account is left untouched.
 async function getSettings(page: Page) {
   const res = await page.request.get("/api/settings");
   expect(res.ok(), "GET /api/settings succeeded").toBeTruthy();
@@ -52,8 +51,7 @@ test("customise page renders the wired cards", async ({ page }) => {
   await expect(page.getByText(en.customisePage.profileCardColour, { exact: true })).toBeVisible();
   await expect(page.getByText(en.customisePage.inbox, { exact: true }).first()).toBeVisible();
   await expect(page.getByText(en.customisePage.profanityFilter, { exact: true })).toBeVisible();
-  // The Notifications section was intentionally removed; "What sends a push"
-  // is not — and was never — catalog copy, so there is no `en.*` key for it.
+  // "What sends a push" is not catalog copy, so there is no `en.*` key for it.
   await expect(page.getByText("What sends a push", { exact: true })).toHaveCount(0);
 });
 
@@ -112,9 +110,7 @@ test("two switches flipped back to back both land", async ({ page }) => {
   const filterWas = await filter.isChecked();
 
   try {
-    // Nothing between the two flips: the second switch has to stay live while
-    // the first save is still open, and the two partial writes have to land on
-    // separate columns rather than one overwriting the other.
+    // No wait between flips: the second save starts while the first is in flight.
     await flipSettingsSwitch(inbox);
     await flipSettingsSwitch(filter);
 
@@ -207,8 +203,6 @@ test("closed inbox shows a not-accepting-messages state on the public profile", 
 });
 
 test("profanity filter silently drops a flagged message", async ({ page }) => {
-  // Enable the filter, capture the inbox count, send a profane + a clean
-  // message, then assert only the clean one landed.
   await patchSettings(page, { profanityFilterEnabled: true });
   const session = await page.request.get("/api/session");
   const { did } = await session.json();
@@ -216,7 +210,6 @@ test("profanity filter silently drops a flagged message", async ({ page }) => {
   try {
     const statsBefore = await (await page.request.get("/api/stats")).json();
 
-    // Both sends return success to the sender...
     const profane = await page.request.post("/api/messages/send", {
       data: { recipient: did, message: `you are such a fuck [e2e ${Date.now()}]` },
     });
@@ -230,23 +223,19 @@ test("profanity filter silently drops a flagged message", async ({ page }) => {
     });
     expect(clean.ok(), "clean send returned success").toBeTruthy();
 
-    // ...but only the clean one reached the inbox (+1, not +2).
     const statsAfter = await (await page.request.get("/api/stats")).json();
     expect(statsAfter.messageCount).toBe(statsBefore.messageCount + 1);
 
-    // The profane text is absent from the inbox; the clean text is present.
     const msgs = await (await page.request.get(`/api/messages/${did}`)).json();
     const bodies: string[] = msgs.messages.map((m: { message: string }) => m.message);
     expect(bodies.some((b) => b.includes("fuck"))).toBeFalsy();
     expect(bodies.some((b) => b.includes("favorite color"))).toBeTruthy();
 
-    // Cleanup the clean message we inserted.
     const cleanMsg = msgs.messages.find((m: { message: string }) =>
       m.message.includes("favorite color")
     );
     if (cleanMsg) await page.request.delete(`/api/messages/${cleanMsg.tid}`);
   } finally {
-    // Restore the filter to off (default).
     await patchSettings(page, { profanityFilterEnabled: false });
   }
 });

@@ -5,12 +5,6 @@ import (
 	"testing"
 )
 
-// BuildOGResponse produces the HTML that the Bluesky Cardyb crawler fetches. It
-// is NOT the OG image itself — it is the per-profile index.html whose
-// og:image points at the generated PNG. It must carry og:image, og:title,
-// og:description, and a reasonable title, and the image URL must be absolute
-// (crawlers will not resolve relative URLs).
-
 func TestBuildOGResponse_ContainsAllRequiredOGTags(t *testing.T) {
 	got := BuildOGResponse(ResponseInput{
 		ProfileHandle: "alice.bsky.social",
@@ -33,7 +27,6 @@ func TestBuildOGResponse_ImageURLIsAbsolute(t *testing.T) {
 		ImageURL:      "/og-cache/did-plc-alice.png",
 		Origin:        "https://navyfragen.app",
 	})
-	// The absolute URL must appear; the relative one must not be the og:image.
 	mustContain(t, got, "https://navyfragen.app/og-cache/did-plc-alice.png")
 }
 

@@ -1,16 +1,7 @@
 #!/usr/bin/env bun
-// Fails when a code comment points at a test that no longer exists. The
-// comment policy in CLAUDE.md lets a test carry a business rule in place of
-// prose, which only holds while the link resolves.
-//
-// Checks two forms: a markdown link to a relative path anywhere in a
-// TypeScript/JavaScript comment, and Go doc links naming a test, which must
-// match a `func TestName(` in the same package.
-//
-// The markdown form is matched across the whole comment rather than only
-// where it trails a "see" tag: JSDoc wraps, so the tag and the link routinely
-// land on different lines, and a link the checker cannot see is a link that
-// rots silently.
+// Fails when a code comment links to a test or file that no longer exists (see
+// docs/comment-style.md). The markdown form is matched across the whole comment,
+// not only after a "see" tag, because JSDoc wraps the tag and link onto separate lines.
 
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
@@ -62,10 +53,7 @@ const LINE_COMMENT = /^\s*\/\/(.*)$/;
 const BLOCK_COMMENT_OPEN = /\/\*(.*)$/;
 const BLOCK_COMMENT_CLOSE = /^(.*?)\*\//;
 
-/**
- * Matching the whole file would read `arr[i](x)` as a markdown link, so only
- * comment text is offered to the link patterns.
- */
+/** Only comment text, or `arr[i](x)` would read as a markdown link. */
 function commentText(source) {
   const lines = [];
   let inBlock = false;
@@ -103,8 +91,6 @@ function commentText(source) {
   return lines.join("\n");
 }
 
-// A markdown link in prose ("[the docs](https://...)", "[1](#footnote)") is not
-// a file reference, so only repo-relative paths are resolved.
 function isRelativePath(target) {
   return target.startsWith("./") || target.startsWith("../");
 }
@@ -138,7 +124,6 @@ export function checkGo(files, root = REPO_ROOT) {
   const goFiles = files.filter((file) => file.endsWith(".go"));
   const failures = [];
 
-  // Go doc links resolve within a package, so index test functions per directory.
   const testsByDir = new Map();
   for (const file of goFiles) {
     const source = readFileSync(file, "utf8");

@@ -10,7 +10,6 @@ interface ConfirmationModalProps {
   message: string;
   confirmLabel?: string;
   cancelLabel?: string;
-  /** Colours the confirm button as a destructive action rather than a primary one. */
   destructive?: boolean;
   loading?: boolean;
 }
@@ -32,7 +31,7 @@ export function ConfirmationModal({
     <Modal opened={opened} onClose={onClose} title={title} centered>
       <Text mb="md">{message}</Text>
       <Group justify="flex-end">
-        <Button variant="default" onClick={onClose} disabled={loading}>
+        <Button variant="outline" onClick={onClose} disabled={loading}>
           {cancelLabel ?? messages.common.cancel}
         </Button>
         <Button color={destructive ? "danger" : "primary"} onClick={onConfirm} loading={loading}>

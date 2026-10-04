@@ -1,10 +1,6 @@
-// Renders public/sitemap.xml and public/client-metadata.json from the repo-root
-// brand.json (and OAUTH_SCOPE from server/src/lib/contracts.ts, the frozen
-// constant client-metadata.json's scope must match byte-for-byte). Committed
-// like opengraph-service's generated brand.go — Tests.yml's client job reruns
-// this script and fails on drift, so the Docker build never has to run it and
-// never needs server/src in its build context.
-//
+// Renders the brand-derived text files in public/ from brand.json; the rasters come from
+// scripts/mascot_assets.py. client-metadata.json's scope must match
+// OAUTH_SCOPE byte-for-byte. Committed output; Tests.yml's client job reruns this and fails on drift.
 // Run with `bun scripts/render-brand-assets.ts` from client/.
 import brand from "../../brand.json";
 import { OAUTH_SCOPE } from "../../server/src/lib/contracts";
@@ -38,7 +34,7 @@ const clientMetadataJson =
       dpop_bound_access_tokens: true,
     },
     null,
-    2,
+    2
   ) + "\n";
 
 const publicDir = new URL("../public/", import.meta.url);
@@ -48,7 +44,5 @@ const clientMetadataPath = Bun.fileURLToPath(new URL("client-metadata.json", pub
 await Bun.write(sitemapPath, sitemapXml);
 await Bun.write(clientMetadataPath, clientMetadataJson);
 
-// JSON.stringify always breaks arrays onto multiple lines; prettier collapses
-// short ones back to the repo's house style, so run it rather than
-// hand-formatting the template above.
+// JSON.stringify breaks every array onto multiple lines; prettier restores the house style.
 await Bun.$`bunx --bun prettier --write ${clientMetadataPath}`.quiet();

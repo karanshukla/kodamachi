@@ -34,9 +34,7 @@ const SHARE_NOTICE: Record<
 interface OpenInModalProps {
   opened: boolean;
   onClose: () => void;
-  /** The posted answer every destination in the list is resolved against. */
   target: WaypointTarget;
-  /** The client this user picked on /customise, hoisted to the top of the list. */
   defaultClientId: string | null;
 }
 

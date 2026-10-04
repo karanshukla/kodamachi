@@ -26,7 +26,6 @@ export interface SessionResponse {
   isLoggedIn: boolean;
   profile: UserProfile | null;
   did: string | null;
-  /** All accounts authenticated in this browser session (multi-account). */
   accounts?: AccountEntry[];
 }
 

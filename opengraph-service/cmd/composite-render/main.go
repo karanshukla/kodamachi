@@ -1,8 +1,5 @@
-// Command composite-render builds the OG composite HTML for a profile (banner
-// bg + avatar overlay + prompt text) and POSTs it to the running html-to-image
-// service, saving the returned PNG to disk. This is poc slice #3: prove the
-// composite renders a usable OG-sized PNG, with sensible fallbacks when
-// banner/avatar are unset.
+// Command composite-render POSTs the OG composite HTML for a profile to the
+// html-to-image service and saves the returned PNG.
 //
 // Usage:
 //
@@ -77,8 +74,7 @@ func postAndSave(htmlURL, htmlSrc, outPath string, deadline time.Duration) error
 		return fmt.Errorf("marshal body: %w", err)
 	}
 
-	// Mirror server/src/lib/image-generator.ts: bounded deadline, retry on
-	// network errors (not on HTTP errors — those mean the service is up).
+	// Retry on network errors only; an HTTP error means the service is up.
 	client := &http.Client{Timeout: deadline}
 	var lastErr error
 	delay := 500 * time.Millisecond

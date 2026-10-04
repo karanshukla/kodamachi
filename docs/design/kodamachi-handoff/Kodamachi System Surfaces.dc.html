@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- support.js (the Claude Design runtime) is not vendored; see ../README.md -->
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@500;600&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,300,0,0&display=swap" rel="stylesheet" />
+<style>
+  body { margin: 0; background: #EDF0F5; font-family: "Schibsted Grotesk", "Noto Sans JP", sans-serif; -webkit-font-smoothing: antialiased; line-height: 1.5; font-feature-settings: "palt" 1; text-wrap: pretty; }
+  a { color: #234B94; text-decoration: none; }
+  a:hover { color: #10224A; }
+  h1, h2, h3, h4 { line-height: 1.25; }
+  :focus-visible { outline: 2px solid #234B94; outline-offset: 2px; border-radius: 4px; }
+  ::selection { background: #C9D5EA; color: #10224A; }
+  * { scrollbar-width: thin; scrollbar-color: #C9D5EA transparent; }
+  *::-webkit-scrollbar { width: 10px; height: 10px; }
+  *::-webkit-scrollbar-thumb { background: #C9D5EA; border-radius: 6px; border: 3px solid transparent; background-clip: content-box; }
+  *::-webkit-scrollbar-thumb:hover { background: #A9B9D6; background-clip: content-box; }
+  *::-webkit-scrollbar-track { background: transparent; }
+  [lang="ja"], .jp { letter-spacing: 0.02em; font-feature-settings: "palt" 1; }
+  .ms { font-family: "Material Symbols Outlined"; font-weight: normal; font-style: normal; line-height: 1; letter-spacing: normal; text-transform: none; display: inline-block; white-space: nowrap; direction: ltr; -webkit-font-feature-settings: "liga"; -webkit-font-smoothing: antialiased; }
+  @keyframes km-drift { 0% { transform: translate(6px, 6px); } 50% { transform: translate(58px, 44px); } 100% { transform: translate(6px, 6px); } }
+  @keyframes km-spin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { .km-anim { animation: none !important; } }
+</style>
+</helmet>
+
+<div style="padding: 48px 40px 80px; display: flex; flex-direction: column; gap: 44px; align-items: flex-start;">
+  <div style="display: flex; flex-direction: column; gap: 6px; max-width: 720px;">
+    <div style="font-size: 11px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: #7684A0;">Kodamachi · redesign</div>
+    <div style="font-size: 26px; font-weight: 600; letter-spacing: -0.02em; color: #111C36;">System surfaces</div>
+    <p style="margin: 4px 0 0; font-size: 14px; line-height: 1.6; color: #63708C;">The pieces that live outside the app's own pages: OS notifications, the installed-app shell, the bot-detection interstitial, the notification bot's Bluesky profile, plus the two in-app states the screen set didn't cover.</p>
+  </div>
+
+  <!-- PUSH -->
+  <div style="display: flex; gap: 32px; align-items: flex-start; flex-wrap: wrap;">
+    <div style="display: flex; flex-direction: column; gap: 14px;">
+      <div style="font-size: 13px; font-weight: 600; color: #46536E;">Push notification · icon 192, badge 32</div>
+      <div data-screen-label="Push · android" style="width: 400px; background: #E8ECF3; border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 12px;">
+        <div style="background: #FFFFFF; border-radius: 14px; padding: 14px; box-shadow: 0 6px 18px -12px rgba(16,34,74,0.5);">
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+            <div style="width: 18px; height: 18px; border-radius: 5px; background: #10224A; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: 'Noto Serif JP', serif; font-weight: 600; font-size: 11px;">木</div>
+            <div style="font-size: 12px; color: #63708C;">kodamachi</div>
+            <div style="font-size: 12px; color: #94A1B8;">· now</div>
+          </div>
+          <div style="display: flex; gap: 12px; align-items: flex-start;">
+            <div style="flex: 1;">
+              <div style="font-size: 14px; font-weight: 600; color: #111C36;">3 new questions</div>
+              <div style="font-size: 13px; line-height: 1.45; color: #46536E; margin-top: 2px;">Someone just asked you something. Tap to answer.</div>
+            </div>
+            <div style="width: 40px; height: 40px; border-radius: 11px; background: #10224A; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: 'Noto Serif JP', serif; font-weight: 600; font-size: 23px; flex-shrink: 0;">木</div>
+          </div>
+        </div>
+        <div style="background: #FFFFFF; border-radius: 14px; padding: 14px; box-shadow: 0 6px 18px -12px rgba(16,34,74,0.5);">
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+            <div style="width: 18px; height: 18px; border-radius: 5px; background: #10224A; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: 'Noto Serif JP', serif; font-weight: 600; font-size: 11px;">木</div>
+            <div style="font-size: 12px; color: #63708C;">kodamachi</div>
+            <div style="font-size: 12px; color: #94A1B8;">· 4m</div>
+          </div>
+          <div style="display: flex; gap: 12px; align-items: flex-start;">
+            <div style="flex: 1;">
+              <div style="font-size: 14px; font-weight: 600; color: #111C36;">New question for @mio</div>
+              <div style="font-size: 13px; line-height: 1.45; color: #46536E; margin-top: 2px;">Opens the inbox on that account.</div>
+            </div>
+            <div style="width: 40px; height: 40px; border-radius: 11px; background: #10224A; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: 'Noto Serif JP', serif; font-weight: 600; font-size: 23px; flex-shrink: 0;">木</div>
+          </div>
+        </div>
+        <div style="font-size: 11px; line-height: 1.5; color: #7684A0; padding: 0 4px;">Body copy is per-recipient, so it never quotes the question itself — a lock-screen preview must not leak an anonymous message.</div>
+      </div>
+    </div>
+
+    <!-- INSTALLED SHELL -->
+    <div style="display: flex; flex-direction: column; gap: 14px;">
+      <div style="font-size: 13px; font-weight: 600; color: #46536E;">Installed app · splash &amp; title bar</div>
+      <div style="display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap;">
+        <div data-screen-label="PWA splash" style="width: 300px; height: 600px; background: #FFFFFF; border: 1px solid #E3E8F0; border-radius: 22px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px; box-shadow: 0 18px 40px -28px rgba(16,34,74,0.35);">
+          <div style="width: 112px; height: 112px; border-radius: 26px; background: #10224A; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: 'Noto Serif JP', serif; font-weight: 600; font-size: 62px;">木</div>
+          <div style="font-size: 22px; font-weight: 600; letter-spacing: -0.03em; color: #111C36;">kodamachi</div>
+          <div style="position: absolute; bottom: 0;"></div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+          <div data-screen-label="Window controls overlay" style="width: 420px; border: 1px solid #E3E8F0; border-radius: 12px; overflow: hidden; background: #FFFFFF; box-shadow: 0 18px 40px -28px rgba(16,34,74,0.35);">
+            <div style="height: 40px; background: #FFFFFF; border-bottom: 1px solid #E3E8F0; display: flex; align-items: center; justify-content: space-between; padding: 0 12px;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <div style="width: 20px; height: 20px; border-radius: 6px; background: #10224A; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: 'Noto Serif JP', serif; font-weight: 600; font-size: 12px;">木</div>
+                <div style="font-size: 13px; font-weight: 600; letter-spacing: -0.02em; color: #111C36;">kodamachi</div>
+              </div>
+              <div style="display: flex; gap: 14px; color: #8C99B2;"><span class="ms" style="font-size: 14px;">remove</span><span class="ms" style="font-size: 14px;">crop_square</span><span class="ms" style="font-size: 14px;">close</span></div>
+            </div>
+            <div style="padding: 18px; background: #F7F9FC;">
+              <div style="font-size: 12px; color: #63708C; line-height: 1.55;">Standalone window: the title bar carries the mark, so the wordmark inside the app header is the only place the name repeats.</div>
+            </div>
+          </div>
+          <div data-screen-label="Manifest identity" style="width: 420px; background: #FFFFFF; border: 1px solid #E3E8F0; border-radius: 12px; padding: 18px;">
+            <div style="font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #7684A0; margin-bottom: 12px;">Manifest</div>
+            <div style="display: flex; flex-direction: column; gap: 8px; font-size: 13px; color: #46536E;">
+              <div style="display: flex; justify-content: space-between; gap: 12px;">name<span style="color: #111C36; font-weight: 500;">kodamachi — anonymous questions</span></div>
+              <div style="display: flex; justify-content: space-between; gap: 12px;">short_name<span style="color: #111C36; font-weight: 500;">kodamachi</span></div>
+              <div style="display: flex; justify-content: space-between; gap: 12px;">theme_color<span style="display: flex; align-items: center; gap: 6px; color: #111C36; font-weight: 500;"><span style="width: 14px; height: 14px; border-radius: 4px; background: #FFFFFF; border: 1px solid #C9D5EA;"></span>#FFFFFF</span></div>
+              <div style="display: flex; justify-content: space-between; gap: 12px;">background_color<span style="display: flex; align-items: center; gap: 6px; color: #111C36; font-weight: 500;"><span style="width: 14px; height: 14px; border-radius: 4px; background: #FFFFFF; border: 1px solid #C9D5EA;"></span>#FFFFFF</span></div>
+            </div>
+            <div style="font-size: 12px; line-height: 1.55; color: #7684A0; margin-top: 12px;">Was <span style="color: #46536E;">#1E1B4B</span> on <span style="color: #46536E;">#FDF8FF</span>. Light-mode-centric means the splash is paper, not ink.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WAF + BOT -->
+  <div style="display: flex; gap: 32px; align-items: flex-start; flex-wrap: wrap;">
+    <div style="display: flex; flex-direction: column; gap: 14px;">
+      <div style="font-size: 13px; font-weight: 600; color: #46536E;">Bot-check interstitial · Anubis challenge page</div>
+      <div data-screen-label="WAF interstitial" style="width: 520px; background: #F7F9FC; border: 1px solid #E3E8F0; border-radius: 14px; padding: 64px 40px; text-align: center; box-shadow: 0 18px 40px -28px rgba(16,34,74,0.35);">
+        <div style="width: 56px; height: 56px; margin: 0 auto 20px; border-radius: 14px; background: #10224A; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: 'Noto Serif JP', serif; font-weight: 600; font-size: 30px;">木</div>
+        <div style="font-size: 21px; font-weight: 600; letter-spacing: -0.02em; color: #111C36;">Just checking you're human</div>
+        <p style="margin: 8px auto 22px; max-width: 320px; font-size: 14px; line-height: 1.55; color: #63708C;">No puzzle, no captcha — your browser does the work. This takes a second.</p>
+        <div style="width: 260px; height: 6px; margin: 0 auto; border-radius: 999px; background: #E3E8F0; overflow: hidden;">
+          <div style="width: 60%; height: 100%; border-radius: 999px; background: #10224A;"></div>
+        </div>
+        <div style="font-size: 12px; color: #94A1B8; margin-top: 22px;">Protected by Anubis</div>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 14px;">
+      <div style="font-size: 13px; font-weight: 600; color: #46536E;">Notification bot · its Bluesky profile and daily post</div>
+      <div data-screen-label="Bot profile" style="width: 520px; background: #FFFFFF; border: 1px solid #E3E8F0; border-radius: 14px; overflow: hidden; box-shadow: 0 18px 40px -28px rgba(16,34,74,0.35);">
+        <div style="height: 110px; background: #10224A; display: flex; align-items: center; justify-content: center;">
+          <div style="font-family: 'Noto Serif JP', serif; font-size: 46px; color: rgba(255,255,255,0.16);">木霊</div>
+        </div>
+        <div style="padding: 0 20px 18px; position: relative;">
+          <div style="width: 72px; height: 72px; border-radius: 18px; background: #FFFFFF; border: 4px solid #FFFFFF; position: absolute; top: -36px; left: 18px; display: flex; align-items: center; justify-content: center;">
+            <div style="width: 100%; height: 100%; border-radius: 14px; background: #10224A; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: 'Noto Serif JP', serif; font-weight: 600; font-size: 36px;">木</div>
+          </div>
+          <div style="padding-top: 46px;">
+            <div style="font-size: 19px; font-weight: 600; letter-spacing: -0.02em; color: #111C36;">kodamachi notifications</div>
+            <div style="font-size: 13px; color: #7684A0; margin-top: 2px;">@notify.kodamachi.app</div>
+            <p style="margin: 10px 0 0; font-size: 13px; line-height: 1.55; color: #46536E;">Follow for a daily nudge when questions are waiting in your inbox. Replies aren't read.</p>
+          </div>
+          <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #E3E8F0;">
+            <div style="font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #7684A0; margin-bottom: 10px;">Daily post</div>
+            <div style="background: #F7F9FC; border: 1px solid #E3E8F0; border-radius: 10px; padding: 14px;">
+              <div style="font-size: 14px; line-height: 1.5; color: #111C36;">Good morning — you have <strong style="font-weight: 600;">3 questions</strong> waiting. <a href="#">koda.ma/karan.bsky.social</a></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MISSED IN-APP STATES -->
+  <div style="display: flex; gap: 32px; align-items: flex-start; flex-wrap: wrap;">
+    <div data-screen-label="Confirm send modal" style="width: 460px; background: #EDF0F5; border: 1px solid #E3E8F0; border-radius: 14px; padding: 40px 32px; display: flex; align-items: center; justify-content: center; box-shadow: 0 18px 40px -28px rgba(16,34,74,0.35);">
+      <div style="width: 100%; background: #FFFFFF; border: 1px solid #E3E8F0; border-radius: 12px; padding: 22px; box-shadow: 0 24px 50px -24px rgba(16,34,74,0.4);">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+          <div style="font-size: 17px; font-weight: 600; color: #111C36;">Send anonymously?</div>
+          <span class="ms" style="font-size: 18px; color: #8C99B2;">close</span>
+        </div>
+        <p style="margin: 0 0 16px; font-size: 14px; line-height: 1.55; color: #46536E;">Karan won't see who sent this, and you can't undo it once it's away.</p>
+        <div style="background: #F7F9FC; border: 1px solid #E3E8F0; border-radius: 10px; padding: 12px 14px; font-size: 14px; line-height: 1.5; color: #111C36; margin-bottom: 18px;">how did you learn to draw?</div>
+        <div style="display: flex; gap: 8px; justify-content: flex-end;">
+          <div style="height: 38px; padding: 0 16px; border-radius: 10px; border: 1px solid #C9D5EA; color: #10224A; font-size: 14px; font-weight: 500; display: flex; align-items: center;">Cancel</div>
+          <div style="height: 38px; padding: 0 16px; border-radius: 10px; background: #10224A; color: #FFFFFF; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 7px;"><span class="ms" style="font-size: 16px;">send</span>Send message</div>
+        </div>
+      </div>
+    </div>
+
+    <div data-screen-label="Sidebar empty states" style="width: 300px; background: #FFFFFF; border: 1px solid #E3E8F0; border-radius: 14px; padding: 16px 14px; box-shadow: 0 18px 40px -28px rgba(16,34,74,0.35);">
+      <div style="font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #7684A0; margin: 0 2px 12px;">Sidebar · empty &amp; context</div>
+      <div style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 10px; background: #F7F9FC; border: 1px solid #E3E8F0; margin-bottom: 14px;">
+        <span class="ms" style="font-size: 15px; color: #8C99B2;">person</span>
+        <div style="min-width: 0;">
+          <div style="font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; color: #8C99B2;">Viewing profile</div>
+          <div style="font-size: 12px; font-weight: 600; color: #111C36;">@haru.dev</div>
+        </div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 6px; padding: 6px 2px;">
+        <div style="font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #7684A0; flex: 1;">Moots</div>
+        <span class="ms" style="font-size: 14px; color: #A3AEC4;">expand_more</span>
+      </div>
+      <div style="font-size: 12px; line-height: 1.6; color: #7684A0; padding: 2px 2px 12px;">No mutuals on kodamachi yet.</div>
+      <div style="display: flex; align-items: center; gap: 6px; padding: 6px 2px;">
+        <div style="font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #7684A0; flex: 1;">Following</div>
+        <span class="ms" style="font-size: 14px; color: #A3AEC4;">expand_more</span>
+      </div>
+      <div style="font-size: 12px; line-height: 1.6; color: #7684A0; padding: 2px 2px 12px;">No one-sided follows on kodamachi yet.</div>
+      <div style="display: flex; align-items: center; gap: 6px; padding: 6px 2px;">
+        <div style="font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #7684A0; flex: 1;">Oomfs</div>
+        <span class="ms" style="font-size: 14px; color: #A3AEC4;">expand_more</span>
+      </div>
+      <div style="font-size: 12px; line-height: 1.6; color: #7684A0; padding: 2px;">None of your followers are on kodamachi yet.</div>
+    </div>
+
+    <div data-screen-label="Drifting mark easter egg" style="width: 300px; height: 380px; background: #F7F9FC; border: 1px solid #E3E8F0; border-radius: 14px; position: relative; overflow: hidden; box-shadow: 0 18px 40px -28px rgba(16,34,74,0.35);">
+      <div style="position: absolute; top: 14px; left: 14px; font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #7684A0;">Gutter easter egg</div>
+      <div style="position: absolute; top: 40px; left: 0; right: 0; height: 240px; overflow: hidden;">
+        <div class="km-anim" style="position: absolute; top: 4px; left: 24px; opacity: 0.5; animation: km-drift 9s ease-in-out infinite;">
+          <div style="width: 48px; height: 48px; border-radius: 13px; background: #10224A; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: 'Noto Serif JP', serif; font-weight: 600; font-size: 27px;">木</div>
+        </div>
+        <div class="km-anim" style="position: absolute; top: 96px; left: 160px; opacity: 0.35; animation: km-drift 13s ease-in-out infinite reverse;">
+          <div style="width: 30px; height: 30px; border-radius: 9px; background: #10224A; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: 'Noto Serif JP', serif; font-weight: 600; font-size: 17px;">木</div>
+        </div>
+        <div class="km-anim" style="position: absolute; top: 52px; left: 36px; opacity: 0.22; animation: km-drift 17s ease-in-out infinite;">
+          <div style="width: 64px; height: 64px; border-radius: 16px; background: #10224A; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: 'Noto Serif JP', serif; font-weight: 600; font-size: 36px;">木</div>
+        </div>
+      </div>
+      <div style="position: absolute; bottom: 14px; left: 14px; right: 14px; font-size: 12px; line-height: 1.55; color: #7684A0;">Marks drift in the side gutters on wide screens. No sparkle, no spin — one glyph at three opacities.</div>
+    </div>
+  </div>
+
+  <div style="width: 1180px; background: #FFFFFF; border: 1px solid #E3E8F0; border-radius: 14px; padding: 24px 28px;">
+    <div style="font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #7684A0; margin-bottom: 14px;">Still to produce as real assets (not designs)</div>
+    <div style="display: flex; flex-direction: column; gap: 8px; font-size: 14px; line-height: 1.55; color: #46536E;">
+      <div>· <strong style="font-weight: 600;">favicon.svg / .ico / PNG set / android-chrome 192+512</strong> — regenerate from the 木 tile above, replacing the eight <span style="color: #7684A0;">navyfragen-*</span> files.</div>
+      <div>· <strong style="font-weight: 600;">Repo lockup + GitHub social preview</strong> — the README's 1791×590 banner and the three screenshots.</div>
+      <div>· <strong style="font-weight: 600;">Bot avatar and banner uploads</strong> — the profile above is a design; the bot account needs the images set on Bluesky.</div>
+      <div>· <strong style="font-weight: 600;">Anubis interstitial theming</strong> — Anubis serves its own page, so the design above lands as a template override in <span style="color: #7684A0;">/anubis</span>.</div>
+    </div>
+  </div>
+</div>
+
+</x-dc>
+</body>
+</html>

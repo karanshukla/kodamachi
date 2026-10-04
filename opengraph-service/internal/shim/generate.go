@@ -8,19 +8,15 @@ import (
 	"golang.org/x/sync/singleflight"
 )
 
-// ResolvedProfile is everything the OG HTML response needs: the DID that keys
-// the cached image's URL, plus whether a fresh render already backs it. Neither
-// field requires a render, which is what lets the response go out before one
-// has run.
+// ResolvedProfile is what the OG HTML response needs: the DID keying the image
+// URL and whether a fresh render already backs it.
 type ResolvedProfile struct {
 	DID    string
 	Cached bool
 }
 
-// Generator orchestrates the OG image pipeline: handle → DID → cache lookup →
-// indigo profile read → html-to-image render → store. It is split into a cheap
-// Resolve (everything a crawler's response needs) and an EnsureRendered (the
-// expensive half, run in the background), so no caller ever waits on a render.
+// Generator runs the OG image pipeline: a cheap Resolve and an expensive
+// EnsureRendered that callers run in the background.
 type Generator struct {
 	Cache    *FileCache
 	Fetcher  ProfileFetcher
@@ -28,15 +24,13 @@ type Generator struct {
 	group    singleflight.Group
 }
 
-// NewGenerator wires the orchestrator's dependencies.
+// NewGenerator wires a Generator.
 func NewGenerator(cache *FileCache, fetcher ProfileFetcher, renderer ImageRenderer) *Generator {
 	return &Generator{Cache: cache, Fetcher: fetcher, Renderer: renderer}
 }
 
-// Resolve maps a handle to its cache identity: one AppView call plus a stat of
-// the cached file, never a render. Failures surface as typed errors
-// (ErrProfileNotFound) so the HTTP layer can degrade without breaking the proxy
-// fast path.
+// Resolve maps a handle to its DID and cache state without rendering. Failures
+// are typed (ErrProfileNotFound).
 func (g *Generator) Resolve(ctx context.Context, handle string) (ResolvedProfile, error) {
 	did, err := g.Fetcher.ResolveDID(ctx, handle)
 	if err != nil {
@@ -45,18 +39,15 @@ func (g *Generator) Resolve(ctx context.Context, handle string) (ResolvedProfile
 	return ResolvedProfile{DID: did, Cached: g.Cache.Fresh(did)}, nil
 }
 
-// EnsureRendered renders and stores the OG image for did unless a fresh entry
-// already exists. Concurrent callers for one DID coalesce onto a single render
-// via singleflight, so a cache stampede costs exactly one html-to-image call.
+// EnsureRendered renders and stores the image for did unless a fresh entry
+// exists; concurrent callers coalesce via singleflight.
 //
 // [TestEnsureRendered_Singleflight_CoalescesConcurrentCalls] pins the dedup and
 // [TestEnsureRendered_FreshEntry_SkipsFetchAndRender] pins the no-op-when-warm
 // half that makes a repeat warm free.
 func (g *Generator) EnsureRendered(ctx context.Context, did string) error {
-	// The shared work is detached from the calling context. singleflight runs
-	// the body under whichever context the leader passed in, so a leader that
-	// goes away early would otherwise abort the render for every follower still
-	// waiting. The deadline is preserved; the cancellation is not.
+	// singleflight runs under the leader's context; detach it so a leader that
+	// hangs up does not abort the render for its followers.
 	workCtx, workCancel := detachContext(ctx)
 	defer workCancel()
 	_, err, _ := g.group.Do(did, func() (any, error) {
@@ -65,10 +56,8 @@ func (g *Generator) EnsureRendered(ctx context.Context, did string) error {
 	return err
 }
 
-// detachContext carries over ctx's deadline and values but is not canceled
-// when ctx is, so shared work respects a bounded deadline without dying because
-// one caller hung up. The returned cancel MUST be called to release the timer.
-// A ctx with no deadline yields background — only the unconfigured test path.
+// detachContext keeps ctx's deadline but not its cancellation. The returned
+// cancel MUST be called to release the timer.
 func detachContext(ctx context.Context) (context.Context, context.CancelFunc) {
 	if ctx == nil {
 		return context.Background(), func() {}
@@ -80,13 +69,11 @@ func detachContext(ctx context.Context) (context.Context, context.CancelFunc) {
 	return context.WithValue(bg, ctxKey{}, ctx), cancel
 }
 
-// ctxKey is an unexported key type so we can attach the original ctx's values
-// to the detached background ctx without colliding with caller keys.
+// ctxKey keys the original ctx on the detached one.
 type ctxKey struct{}
 
-// renderIfStale is the single-flight body: one caller runs it per concurrent
-// batch for a given DID. The freshness re-check inside the group is what makes
-// a follower's turn free once the leader has stored the image.
+// renderIfStale is the singleflight body; its freshness re-check makes a
+// follower's turn free once the leader has stored.
 func (g *Generator) renderIfStale(ctx context.Context, did string) error {
 	if g.Cache.Fresh(did) {
 		return nil
@@ -103,16 +90,14 @@ func (g *Generator) renderIfStale(ctx context.Context, did string) error {
 	}
 
 	if err := g.Cache.Store(did, pngBytes, "image/png"); err != nil {
-		// Non-fatal: the next request retries, and until then the cache route
-		// serves the branded fallback.
+		// Non-fatal: the next request retries; meanwhile the fallback is served.
 		log.Printf("opengraph-service: cache store for %s failed: %v", did, err)
 	}
 	return nil
 }
 
-// AsHTTPStatus maps an orchestrator error to the HTTP status the shim should
-// return. Unknown errors become 502 (we are acting as a proxy to the AT
-// Protocol / html-to-image).
+// AsHTTPStatus maps an orchestrator error to an HTTP status; unknown errors
+// are 502.
 func AsHTTPStatus(err error) int {
 	switch {
 	case err == nil:

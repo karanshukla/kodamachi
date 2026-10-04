@@ -1,4 +1,3 @@
-// test-bootstrap.js
 // This file is for test/CI only. All values are dummy and not used in production.
 // nodejsscan ignore: file
 process.env.CLIENT_URL ||= "http://localhost";

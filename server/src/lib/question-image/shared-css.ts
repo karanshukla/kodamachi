@@ -1,4 +1,3 @@
-/** The document head and reset every question-card theme shares. */
 export const PRECONNECT = `
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>`;
@@ -6,16 +5,10 @@ export const PRECONNECT = `
 export const NOTO_LINK = `<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700&family=Noto+Sans+JP:wght@400;700&family=Noto+Sans+KR:wght@400;700&family=Noto+Sans+SC:wght@400;700&family=Noto+Sans+TC:wght@400;700&family=Noto+Sans+Arabic:wght@400;700&family=Noto+Sans+Devanagari:wght@400;700&family=Noto+Sans+Hebrew:wght@400;700&family=Noto+Sans+Thai:wght@400;700&family=Noto+Color+Emoji&display=swap" rel="stylesheet">`;
 
 /**
- * 'Noto Color Emoji' has to stay last, after the generic and after the offline
- * text fallbacks. It ships a U+0020 with a 1.25em advance, so anywhere earlier
- * it wins the space glyph whenever the webfonts ahead of it have not loaded and
- * every word gap in the rendered image blows out to ~4.5x. Chromium's fallback
- * is per-glyph, so emoji still resolve from it in last place — no text font in
- * the stack has emoji glyphs to preempt it.
- *
- * `document.fonts.ready` resolves on a *failed* webfont load as well as a
- * successful one, so the renderer's font wait is no protection here: a Google
- * Fonts hiccup on a Railway cold start is enough to reproduce it.
+ * 'Noto Color Emoji' must stay last: its U+0020 has a 1.25em advance, so earlier
+ * it wins the space glyph when webfonts fail and word gaps blow out ~4.5x.
+ * `document.fonts.ready` resolves on failed loads too, so the font wait does
+ * not protect against this. Emoji still resolve per-glyph from last place.
  *
  * @see [question-image-templates.test.ts](../../tests/question-image-templates.test.ts): pins the
  * emoji family last and a local text fallback ahead of the generic.

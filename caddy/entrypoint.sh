@@ -2,14 +2,14 @@
 
 set -eu
 
-# for backwards compatibility, seperates host and port from url
+# Split host and port from a URL (backwards compatibility).
 export FRONTEND_DOMAIN=${FRONTEND_DOMAIN:-${FRONTEND_HOST%:*}}
 export FRONTEND_PORT=${FRONTEND_PORT:-${FRONTEND_HOST##*:}}
 
 export BACKEND_DOMAIN=${BACKEND_DOMAIN:-${BACKEND_HOST%:*}}
 export BACKEND_PORT=${BACKEND_PORT:-${BACKEND_HOST##*:}}
 
-# strip https:// or https:// from domain if necessary
+# Strip scheme from domain.
 FRONTEND_DOMAIN=${FRONTEND_DOMAIN##*://}
 BACKEND_DOMAIN=${BACKEND_DOMAIN##*://}
 

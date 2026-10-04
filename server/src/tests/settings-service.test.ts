@@ -81,7 +81,6 @@ describe("SettingsService", () => {
 
   describe("getUserSettings", () => {
     it("should fetch user settings successfully", async () => {
-      // Arrange
       const mockUserSettings: UserSettings = {
         did: "user123",
         pdsSyncEnabled: 1,
@@ -99,23 +98,19 @@ describe("SettingsService", () => {
       };
       mockSelectBuilder.executeTakeFirst = async () => mockUserSettings;
 
-      // Act
       const result = await settingsService.getUserSettings("user123");
 
-      // Assert
       assert.deepStrictEqual(result, mockUserSettings);
       assert.strictEqual(mockDb.selectFrom.mock.calls.length, 1);
       assert.deepStrictEqual(mockDb.selectFrom.mock.calls[0], ["user_settings"]);
     });
 
     it("should throw an error when the database query fails", async () => {
-      // Arrange
       const testError = new Error("Database connection failed");
       mockSelectBuilder.executeTakeFirst = async () => {
         throw testError;
       };
 
-      // Act & Assert
       await assert.rejects(async () => await settingsService.getUserSettings("user123"), {
         message: "Failed to fetch user settings",
       });
@@ -126,16 +121,13 @@ describe("SettingsService", () => {
 
   describe("createDefaultSettings", () => {
     it("should create default settings successfully", async () => {
-      // Arrange
       mockInsertBuilder.execute = async () => ({});
       const beforeDate = new Date().toISOString();
 
-      // Act
       const result = await settingsService.createDefaultSettings("user123");
 
       const afterDate = new Date().toISOString();
 
-      // Assert
       assert.strictEqual(result.did, "user123");
       assert.strictEqual(result.pdsSyncEnabled, 1);
       assert.strictEqual(result.inboxEnabled, 1);
@@ -156,13 +148,11 @@ describe("SettingsService", () => {
     });
 
     it("should throw an error when the database insert fails", async () => {
-      // Arrange
       const testError = new Error("Database insert failed");
       mockInsertBuilder.execute = async () => {
         throw testError;
       };
 
-      // Act & Assert
       await assert.rejects(
         async () => await settingsService.createDefaultSettings("user123"),
         (err: any) => {
@@ -177,7 +167,6 @@ describe("SettingsService", () => {
 
   describe("updateSettings", () => {
     it("should create new settings with defaults when they do not exist", async () => {
-      // Arrange
       executeTakeFirstQueue.push(undefined);
       executeTakeFirstQueue.push({
         did: "user123",
@@ -196,13 +185,11 @@ describe("SettingsService", () => {
       });
       (mockInsertBuilder.execute as any) = async () => ({});
 
-      // Act
       const result = await settingsService.updateSettings("user123", {
         pdsSyncEnabled: true,
         imageTheme: "default",
       });
 
-      // Assert
       assert.deepStrictEqual(result, {
         did: "user123",
         pdsSyncEnabled: 1,
@@ -223,16 +210,11 @@ describe("SettingsService", () => {
       assert.strictEqual(mockDb.updateTable.mock.calls.length, 0);
       assert.strictEqual(lastValuesArg.pdsSyncEnabled, 1);
       assert.strictEqual(lastValuesArg.imageTheme, "default");
-      // inboxEnabled defaults to 1 (open) on insert even when not provided.
       assert.strictEqual(lastValuesArg.inboxEnabled, 1);
       assert.strictEqual(lastValuesArg.customPrompt, null);
     });
 
     it("should fall back to defaults on insert when optional fields are omitted or falsy", async () => {
-      // Arrange — pdsSyncEnabled/imageTheme omitted (falsy ternary / ?? fallback),
-      // inboxEnabled/profanityFilterEnabled explicitly set to their non-default
-      // outcome, covering the insert-path branches the "with defaults" test
-      // above doesn't exercise.
       executeTakeFirstQueue.push(undefined);
       executeTakeFirstQueue.push({
         did: "user456",
@@ -251,13 +233,11 @@ describe("SettingsService", () => {
       });
       (mockInsertBuilder.execute as any) = async () => ({});
 
-      // Act
       await settingsService.updateSettings("user456", {
         inboxEnabled: false,
         profanityFilterEnabled: true,
       });
 
-      // Assert
       assert.strictEqual(lastValuesArg.pdsSyncEnabled, 0);
       assert.strictEqual(lastValuesArg.imageTheme, "default");
       assert.strictEqual(lastValuesArg.inboxEnabled, 0);
@@ -265,7 +245,6 @@ describe("SettingsService", () => {
     });
 
     it("stores the profile-link switch as 0/1, never as a raw boolean", async () => {
-      // Arrange
       const row = {
         did: "user123",
         pdsSyncEnabled: 1,
@@ -285,15 +264,12 @@ describe("SettingsService", () => {
       executeTakeFirstQueue.push({ ...row, openProfilesInApp: 0 });
       (mockUpdateBuilder.execute as any) = async () => ({});
 
-      // Act
       await settingsService.updateSettings("user123", { openProfilesInApp: false });
 
-      // Assert
       assert.strictEqual(lastSetArg.openProfilesInApp, 0);
     });
 
     it("should update only the provided fields on an existing row (partial update)", async () => {
-      // Arrange
       executeTakeFirstQueue.push({
         did: "user123",
         pdsSyncEnabled: 1,
@@ -326,23 +302,17 @@ describe("SettingsService", () => {
       });
       (mockUpdateBuilder.execute as any) = async () => ({});
 
-      // Act — a Customise card mutating ONLY inboxEnabled must not touch the
-      // other fields (pdsSyncEnabled, imageTheme, etc.).
       const result = await settingsService.updateSettings("user123", { inboxEnabled: false });
 
-      // Assert
-      assert.strictEqual(result!.inboxEnabled, 1); // mock returns the queue's row, unchanged
+      assert.strictEqual(result!.inboxEnabled, 1);
       assert.strictEqual(mockDb.selectFrom.mock.calls.length, 2);
       assert.strictEqual(mockDb.insertInto.mock.calls.length, 0);
       assert.strictEqual(mockDb.updateTable.mock.calls.length, 1);
-      // Only inboxEnabled is in the SET payload — the partial signature must
-      // not clobber the other columns to defaults.
       assert.deepStrictEqual(Object.keys(lastSetArg), ["inboxEnabled"]);
-      assert.strictEqual(lastSetArg.inboxEnabled, 0); // false → 0 for SQLite
+      assert.strictEqual(lastSetArg.inboxEnabled, 0);
     });
 
     it("should persist each individual /customise field when provided", async () => {
-      // Arrange
       const baseRow = {
         did: "user123",
         pdsSyncEnabled: 1,
@@ -362,7 +332,6 @@ describe("SettingsService", () => {
       executeTakeFirstQueue.push({ ...baseRow });
       (mockUpdateBuilder.execute as any) = async () => ({});
 
-      // Act — every Customise field at once (#199/#177/#275/#266/#58).
       await settingsService.updateSettings("user123", {
         customPrompt: "Ask me anything",
         profileCardTheme: "ember",
@@ -372,9 +341,6 @@ describe("SettingsService", () => {
         profanityFilterEnabled: true,
       });
 
-      // Assert — all six provided fields land in the SET payload, booleans
-      // converted to 1/0, nullables passed through as-is. Unprovided fields
-      // (inboxEnabled) are absent — the partial update never sets them.
       assert.deepStrictEqual(lastSetArg, {
         pdsSyncEnabled: 0,
         imageTheme: "twitter",
@@ -386,7 +352,6 @@ describe("SettingsService", () => {
     });
 
     it("should persist uiLocale independently of touchpointLocale", async () => {
-      // Arrange
       const baseRow = {
         did: "user123",
         pdsSyncEnabled: 1,
@@ -406,10 +371,8 @@ describe("SettingsService", () => {
       executeTakeFirstQueue.push({ ...baseRow, uiLocale: "de" });
       (mockUpdateBuilder.execute as any) = async () => ({});
 
-      // Act
       const result = await settingsService.updateSettings("user123", { uiLocale: "de" });
 
-      // Assert
       assert.deepStrictEqual(Object.keys(lastSetArg), ["uiLocale"]);
       assert.strictEqual(lastSetArg.uiLocale, "de");
       assert.strictEqual(result!.uiLocale, "de");
@@ -417,8 +380,6 @@ describe("SettingsService", () => {
     });
 
     it("should coerce truthy pdsSyncEnabled/inboxEnabled and falsy profanityFilterEnabled on update", async () => {
-      // Arrange — the other update tests only exercise the opposite boolean
-      // outcome for these three fields; this covers the remaining branches.
       const baseRow = {
         did: "user123",
         pdsSyncEnabled: 1,
@@ -438,14 +399,12 @@ describe("SettingsService", () => {
       executeTakeFirstQueue.push({ ...baseRow });
       (mockUpdateBuilder.execute as any) = async () => ({});
 
-      // Act
       await settingsService.updateSettings("user123", {
         pdsSyncEnabled: true,
         inboxEnabled: true,
         profanityFilterEnabled: false,
       });
 
-      // Assert
       assert.deepStrictEqual(lastSetArg, {
         pdsSyncEnabled: 1,
         inboxEnabled: 1,
@@ -454,7 +413,6 @@ describe("SettingsService", () => {
     });
 
     it("should persist a null customPrompt to unset it", async () => {
-      // Arrange
       const baseRow = {
         did: "user123",
         pdsSyncEnabled: 1,
@@ -474,21 +432,17 @@ describe("SettingsService", () => {
       executeTakeFirstQueue.push({ ...baseRow });
       (mockUpdateBuilder.execute as any) = async () => ({});
 
-      // Act
       await settingsService.updateSettings("user123", { customPrompt: null });
 
-      // Assert — null is a valid value (means "use the default"), not "skip".
       assert.deepStrictEqual(Object.keys(lastSetArg), ["customPrompt"]);
       assert.strictEqual(lastSetArg.customPrompt, null);
     });
 
     it("should throw an error when the database operations fail", async () => {
-      // Arrange
       mockSelectBuilder.executeTakeFirst = async () => {
         throw new Error("Database operation failed");
       };
 
-      // Act & Assert
       await assert.rejects(
         async () => await settingsService.updateSettings("user123", { pdsSyncEnabled: true }),
         { message: "Failed to update user settings" }
@@ -698,7 +652,7 @@ describe("SettingsService", () => {
     });
 
     it("should return 0 message count when there are no messages", async () => {
-      executeTakeFirstQueue.push(undefined); // no count row
+      executeTakeFirstQueue.push(undefined);
       executeTakeFirstQueue.push({ createdAt: "2025-01-01T00:00:00.000Z" } as any);
 
       const result = await settingsService.getStats("user123");
@@ -709,7 +663,7 @@ describe("SettingsService", () => {
 
     it("should return null memberSince when user is not in user_profile", async () => {
       executeTakeFirstQueue.push({ count: 5 } as any);
-      executeTakeFirstQueue.push(undefined); // no profile row
+      executeTakeFirstQueue.push(undefined);
 
       const result = await settingsService.getStats("user123");
 

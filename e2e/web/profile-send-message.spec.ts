@@ -2,7 +2,7 @@ import { test, expect, type Page } from "@playwright/test";
 
 import { en } from "../../client/src/lib/i18n/en";
 import { getTouchpointTranslations } from "../../client/src/lib/touchpointTranslations";
-import { escapeRegex, regexFromTemplate } from "../helpers/i18n";
+import { regexFromTemplate } from "../helpers/i18n";
 
 const t = getTouchpointTranslations("en");
 
@@ -21,6 +21,10 @@ const marker = () => `[e2e profile ${Date.now()}]`;
 // test would otherwise have to fetch from the session API.
 const askBox = (page: Page) => page.getByLabel(regexFromTemplate(t.headline));
 
+// The composer is replaced by the sent confirmation, which this button belongs to.
+const sendAnother = (page: Page) =>
+  page.getByRole("button", { name: en.publicProfilePage.sendAnother });
+
 test("send anonymous message to own profile succeeds", async ({ page }) => {
   await page.goto(`/profile/${handle()}`);
 
@@ -35,14 +39,9 @@ test("send anonymous message to own profile succeeds", async ({ page }) => {
   await expect(dialog).toBeVisible({ timeout: 5_000 });
   await dialog.getByRole("button", { name: en.publicProfilePage.sendMessage }).click();
 
-  // The cleared textarea is the deterministic success signal; the toast
-  // auto-closes after 5s, so it is only asserted opportunistically.
-  await expect(textarea).toHaveValue("", { timeout: 15_000 });
-  await expect(
-    page.locator('[role="alert"]').filter({ hasText: en.publicProfilePage.messageSentTitle })
-  ).toBeVisible({
-    timeout: 4_000,
-  });
+  await expect(sendAnother(page)).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByText(en.publicProfilePage.messageSentTitle)).toBeVisible();
+  await expect(textarea).toHaveCount(0);
 
   await cleanupMessages(page, [text]);
 });
@@ -80,11 +79,8 @@ test("cancel confirmation modal does not send the message", async ({ page }) => 
   await dialog.getByRole("button", { name: en.common.cancel }).click();
 
   await expect(dialog).toHaveCount(0);
-  await expect(
-    page.getByRole("alert", {
-      name: new RegExp(escapeRegex(en.publicProfilePage.messageSentTitle)),
-    })
-  ).toHaveCount(0);
+  await expect(sendAnother(page)).toHaveCount(0);
+  await expect(textarea).toBeVisible();
 });
 
 test("clear button empties the ask box", async ({ page }) => {

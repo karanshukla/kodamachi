@@ -13,9 +13,7 @@ import (
 	"github.com/bluesky-social/indigo/xrpc"
 )
 
-// FakeFetcher is a test ProfileFetcher stub. Profile is guarded because the
-// two methods now run on different goroutines: a crawler's request resolves the
-// handle while a background render reads the profile.
+// FakeFetcher: ResolveDID and FetchProfile run on different goroutines.
 type FakeFetcher struct {
 	DID          string // the DID ResolveDID returns
 	ResolveErr   error
@@ -60,7 +58,6 @@ func (f *FakeFetcher) FetchProfile(_ context.Context, did string) (Profile, erro
 	return f.Profile, nil
 }
 
-// FakeRenderer is a test ImageRenderer stub.
 type FakeRenderer struct {
 	PNG   []byte
 	Err   error
@@ -92,9 +89,6 @@ func newDeps(t *testing.T) (*FileCache, *FakeFetcher, *FakeRenderer) {
 	}}, &FakeRenderer{PNG: []byte("PNG-BYTES")}
 }
 
-// Resolve is the half a crawler waits on, so it must cost exactly one AppView
-// call and never touch the profile read or the renderer — on a warm cache
-// (below) or a cold one (TestResolve_ColdCache_ReportsUncachedWithoutRendering).
 func TestResolve_FreshEntry_ReportsCachedWithoutRendering(t *testing.T) {
 	cache, fetcher, renderer := newDeps(t)
 	if err := cache.Store("did:plc:test", []byte("CACHED"), "image/png"); err != nil {
@@ -137,8 +131,6 @@ func TestResolve_ColdCache_ReportsUncachedWithoutRendering(t *testing.T) {
 	if got.DID != "did:plc:test" {
 		t.Fatalf("DID = %q", got.DID)
 	}
-	// The point of the split: a miss is reported, not repaired, so the caller
-	// can answer immediately and repair in the background.
 	if atomic.LoadInt32(&renderer.Calls) != 0 {
 		t.Fatal("the renderer must not be called by Resolve on a miss")
 	}
@@ -186,7 +178,6 @@ func TestEnsureRendered_ColdCache_FetchesRendersStores(t *testing.T) {
 
 func TestEnsureRendered_Singleflight_CoalescesConcurrentCalls(t *testing.T) {
 	cache, fetcher, renderer := newDeps(t)
-	// Make the slow path slow enough that multiple goroutines are in-flight.
 	fetcher.Delay = 50 * time.Millisecond
 	gen := NewGenerator(cache, fetcher, renderer)
 
@@ -210,8 +201,6 @@ func TestEnsureRendered_Singleflight_CoalescesConcurrentCalls(t *testing.T) {
 			t.Fatalf("goroutine %d err: %v", i, err)
 		}
 	}
-	// All n calls coalesced: one profile fetch and one render (the leader won
-	// the race; followers rode along).
 	if got := atomic.LoadInt32(&fetcher.ProfileCalls); got != 1 {
 		t.Fatalf("FetchProfile called %d times, want 1 (singleflight)", got)
 	}
@@ -229,7 +218,6 @@ func TestResolve_UnresolvableHandle_ReturnsErrProfileNotFound(t *testing.T) {
 	if !errors.Is(err, ErrProfileNotFound) {
 		t.Fatalf("want ErrProfileNotFound, got %v", err)
 	}
-	// The profile read and renderer must not have been reached.
 	if atomic.LoadInt32(&fetcher.ProfileCalls) != 0 {
 		t.Fatal("FetchProfile must not be called when ResolveDID fails")
 	}
@@ -258,15 +246,12 @@ func TestEnsureRendered_ProfileFetchFailure_AfterCacheMiss(t *testing.T) {
 	if err == nil || !strings.Contains(err.Error(), "appview unavailable") {
 		t.Fatalf("want the FetchProfile error to propagate, got %v", err)
 	}
-	// The renderer must not have been reached — the pipeline stops at the
-	// profile-read failure.
 	if atomic.LoadInt32(&renderer.Calls) != 0 {
 		t.Fatal("renderer must not be called when FetchProfile fails")
 	}
 }
 
 func TestIsNotFound_XRPC400_IsNotFound(t *testing.T) {
-	// Handle resolution of a nonexistent handle returns XRPC ERROR 400.
 	xe := &xrpc.Error{StatusCode: 400, Wrapped: errors.New("InvalidRequest: Unable to resolve handle")}
 	if !isNotFound(xe) {
 		t.Fatal("XRPC 400 should be treated as not-found (maps to 404)")
@@ -281,8 +266,6 @@ func TestIsNotFound_XRPC404_IsNotFound(t *testing.T) {
 }
 
 func TestIsNotFound_XRPC500_NotNotFound(t *testing.T) {
-	// A 5xx from the AppView is a server error, not "not found" — must not map
-	// to 404 (it should surface as 502 so the operator sees a real problem).
 	xe := &xrpc.Error{StatusCode: 503, Wrapped: errors.New("Service Unavailable")}
 	if isNotFound(xe) {
 		t.Fatal("XRPC 503 must NOT be treated as not-found")
@@ -304,8 +287,6 @@ func TestEnsureRendered_EmptyBannerAvatar_StillRenders(t *testing.T) {
 	if err := gen.EnsureRendered(context.Background(), "did:plc:test"); err != nil {
 		t.Fatalf("EnsureRendered: %v", err)
 	}
-	// The HTML built internally must not contain empty src="" (would break the
-	// renderer). We verify indirectly: the renderer received non-empty HTML.
 	if atomic.LoadInt32(&renderer.Calls) != 1 {
 		t.Fatal("renderer should have been called once")
 	}
@@ -325,9 +306,6 @@ func TestProfile_NormalizeHandle_NoAt(t *testing.T) {
 	}
 }
 
-// ToOGInput passes Prompt/Locale through unresolved — it is resolvePrompt
-// (called from BuildOGTemplate), not this conversion, that turns an unset
-// Prompt into DefaultPrompt or the locale's default.
 func TestProfile_ToOGInput_PassesPromptAndLocaleThroughUnresolved(t *testing.T) {
 	p := Profile{
 		DID: "did:plc:abc", Handle: "foo.bsky.social",
@@ -343,8 +321,6 @@ func TestProfile_ToOGInput_PassesPromptAndLocaleThroughUnresolved(t *testing.T) 
 	}
 }
 
-// The other side: an unset Prompt/Locale passes through as empty, not
-// DefaultPrompt — BuildOGTemplate resolves the default, ToOGInput does not.
 func TestProfile_ToOGInput_UnsetPromptAndLocale_StayEmpty(t *testing.T) {
 	p := Profile{DID: "did:plc:abc", Handle: "foo.bsky.social", DisplayName: "Foo"}
 	in := p.ToOGInput()
@@ -353,43 +329,31 @@ func TestProfile_ToOGInput_UnsetPromptAndLocale_StayEmpty(t *testing.T) {
 	}
 }
 
-// TestEnsureRendered_LeaderCancelDoesNotAbortFollowers pins detachContext: when
-// the leader's context is canceled (its crawler closed the connection early, or
-// its own deadline was shorter), the shared render continues to completion for
-// the followers still waiting. Without the detach, the singleflight body runs
-// under the leader's ctx and its cancellation aborts the work for everyone.
 func TestEnsureRendered_LeaderCancelDoesNotAbortFollowers(t *testing.T) {
 	cache, fetcher, renderer := newDeps(t)
-	// Make the cold path slow enough that the leader's cancel arrives mid-flight.
 	fetcher.Delay = 80 * time.Millisecond
 	gen := NewGenerator(cache, fetcher, renderer)
 
 	errCh := make(chan error, 1)
 
-	// Leader: starts first, then cancels.
 	leaderCtx, leaderCancel := context.WithCancel(context.Background())
 	leaderDone := make(chan struct{})
 	go func() {
 		defer close(leaderDone)
 		_ = gen.EnsureRendered(leaderCtx, "did:plc:test")
 	}()
-	// Follower: starts slightly later, never cancels.
 	followerCtx, followerCancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer followerCancel()
-	// Give the leader time to win the singleflight Do call.
 	time.Sleep(20 * time.Millisecond)
 	followerDone := make(chan struct{})
 	go func() {
 		defer close(followerDone)
 		errCh <- gen.EnsureRendered(followerCtx, "did:plc:test")
 	}()
-	// Cancel the leader mid-flight.
 	time.Sleep(30 * time.Millisecond)
 	leaderCancel()
 
-	// The follower MUST succeed — the leader's cancel must not have aborted the
-	// shared render. Both goroutines are joined before returning so neither can
-	// still be writing into the t.TempDir() cleanup is about to walk.
+	// Join both goroutines so neither writes into the t.TempDir() cleanup is about to walk.
 	<-followerDone
 	<-leaderDone
 	if err := <-errCh; err != nil {

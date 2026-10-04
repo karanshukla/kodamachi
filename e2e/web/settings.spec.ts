@@ -5,8 +5,7 @@ import { flipSettingsSwitch, settingsSwitch } from "../helpers/settings-switch";
 
 test.use({ storageState: "e2e/.auth/user.json" });
 
-// The PDS-sync toggle writes through to the server, so each test restores the
-// original value — the account is shared with the other spec files.
+// Tests restore the PDS-sync toggle: it writes through on a shared account.
 
 async function pdsSyncEnabled(page: Page) {
   const res = await page.request.get("/api/settings");
@@ -25,11 +24,23 @@ test.beforeEach(async ({ page }) => {
 });
 
 test("settings page renders key cards", async ({ page }) => {
-  // Card titles are bold <Text>, not headings.
-  await expect(page.getByText(en.settingsPage.pdsSync, { exact: true })).toBeVisible({
+  await expect(
+    page.getByRole("heading", { name: en.settingsPage.pdsSync, exact: true })
+  ).toBeVisible({
     timeout: 10_000,
   });
-  await expect(page.getByText(en.pushNotificationsCard.title, { exact: true })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: en.pushNotificationsCard.title, exact: true })
+  ).toBeVisible();
+});
+
+test("feed card links to the kodamachi feed on Bluesky", async ({ page }) => {
+  const link = page.getByRole("link", { name: en.settingsPage.openFeedOnBluesky, exact: true });
+  await expect(link).toHaveAttribute(
+    "href",
+    "https://bsky.app/profile/kodamachi.app/feed/kodamachi"
+  );
+  await expect(link).toHaveAttribute("target", "_blank");
 });
 
 test("PDS sync toggle flips and is restored afterwards", async ({ page }) => {

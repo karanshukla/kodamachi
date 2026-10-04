@@ -153,144 +153,108 @@ describe("resolveUiLocale", () => {
 });
 
 describe("counts reach the catalog as numbers", () => {
-  // The signature is the point: Intl.PluralRules.select() takes a number, so
-  // an entry that only ever saw a formatted string could not choose a plural
-  // form. #406 depends on this staying a number.
+  // Intl.PluralRules.select() takes a number, so the count must stay a number (#406).
   it("formats a grouped count rather than interpolating it raw", () => {
     expect(en.nav.unreadCount(1234)).toBe("1,234 unread");
-    expect(en.messagesPage.newMessagesCount(1234)).toBe("1,234 new");
   });
 
-  it("formats both counts in the preferences summary", () => {
-    expect(en.postingPreferences.summary(1000, 2000)).toBe("1,000 of 2,000 on");
-  });
-
-  // Spanish adjectives agree in number with the noun — "1 nuevo" vs "2 nuevos" —
-  // which is exactly the shape #406 depends on the count arriving as a number
-  // for. One test inside the singular rule, one outside it.
   it("uses the singular Spanish form for exactly one", () => {
     expect(es.nav.unreadCount(1)).toBe("1 no leído");
-    expect(es.messagesPage.newMessagesCount(1)).toBe("1 nuevo");
   });
 
   it("uses the plural Spanish form for zero and for more than one", () => {
     expect(es.nav.unreadCount(0)).toBe("0 no leídos");
     expect(es.nav.unreadCount(1234)).toBe("1234 no leídos");
-    expect(es.messagesPage.newMessagesCount(2)).toBe("2 nuevos");
   });
 
-  // Portuguese and French both classify 0 with the singular ("one") category
-  // per CLDR, unlike Spanish — the opposite of the naive assumption, and
-  // exactly the kind of thing #410 warned is a common bug to get backwards.
+  // CLDR puts 0 in the singular ("one") category for pt and fr, unlike es (#410).
   it("uses the singular Portuguese form for both zero and one", () => {
     expect(pt.nav.unreadCount(0)).toBe("0 não lida");
     expect(pt.nav.unreadCount(1)).toBe("1 não lida");
-    expect(pt.messagesPage.newMessagesCount(0)).toBe("0 nova");
-    expect(pt.messagesPage.newMessagesCount(1)).toBe("1 nova");
   });
 
   it("uses the plural Portuguese form for more than one", () => {
     expect(pt.nav.unreadCount(2)).toBe("2 não lidas");
-    expect(pt.messagesPage.newMessagesCount(2)).toBe("2 novas");
   });
 
   it("uses the singular French form for both zero and one", () => {
     expect(fr.nav.unreadCount(0)).toBe("0 non lu");
     expect(fr.nav.unreadCount(1)).toBe("1 non lu");
-    expect(fr.messagesPage.newMessagesCount(0)).toBe("0 nouveau");
-    expect(fr.messagesPage.newMessagesCount(1)).toBe("1 nouveau");
   });
 
   it("uses the plural French form for more than one", () => {
     expect(fr.nav.unreadCount(2)).toBe("2 non lus");
-    expect(fr.messagesPage.newMessagesCount(2)).toBe("2 nouveaux");
   });
 
-  // German count labels are bare predicate adjectives that don't inflect for
-  // number ("1 ungelesen" / "2 ungelesen"), unlike the other three locales.
+  // German count labels don't inflect for number ("1 ungelesen" / "2 ungelesen").
   it("uses the same uninflected German form regardless of count", () => {
     expect(de.nav.unreadCount(0)).toBe("0 ungelesen");
     expect(de.nav.unreadCount(1)).toBe("1 ungelesen");
     expect(de.nav.unreadCount(2)).toBe("2 ungelesen");
-    expect(de.messagesPage.newMessagesCount(1)).toBe("1 neu");
-    expect(de.messagesPage.newMessagesCount(2)).toBe("2 neu");
   });
 
-  it("formats grouped counts per locale in the preferences summary", () => {
-    expect(pt.postingPreferences.summary(3, 5)).toBe("3 de 5 ativas");
-    expect(de.postingPreferences.summary(1000, 2000)).toBe("1.000 von 2.000 aktiv");
-    expect(fr.postingPreferences.summary(3, 5)).toBe("3 sur 5 actives");
+  it("groups thousands with the locale's own separator", () => {
+    expect(de.nav.unreadCount(1234)).toBe("1.234 ungelesen");
   });
 });
 
 describe("es catalog interpolations", () => {
-  // es is lazy-loaded and never the active catalog elsewhere in this suite (en
-  // is), so its own interpolating functions get no incidental coverage from
-  // component rendering the way en's do — each one needs a direct call here.
+  // Lazy-loaded catalogs are never active elsewhere, so each function-valued entry needs a direct call for coverage.
   it("interpolates every function-valued entry", () => {
     expect(es.common.switchedToAccount("alice.bsky.social")).toBe("Cambiaste a @alice.bsky.social");
-    expect(es.postingPreferences.summary(3, 5)).toBe("3 de 5 activas");
-    expect(es.nav.friendGroups.moots.emptyText("Navyfragen")).toBe(
-      "Todavía no tienes amigos mutuos en Navyfragen."
+    expect(es.nav.friendGroups.moots.emptyText("kodamachi")).toBe(
+      "Todavía no tienes amigos mutuos en kodamachi."
     );
-    expect(es.nav.friendGroups.following.emptyText("Navyfragen")).toBe(
-      "Todavía no tienes seguidos unidireccionales en Navyfragen."
+    expect(es.nav.friendGroups.following.emptyText("kodamachi")).toBe(
+      "Todavía no tienes seguidos unidireccionales en kodamachi."
     );
-    expect(es.nav.friendGroups.oomfs.emptyText("Navyfragen")).toBe(
-      "Ninguno de tus seguidores está en Navyfragen todavía."
+    expect(es.nav.friendGroups.oomfs.emptyText("kodamachi")).toBe(
+      "Ninguno de tus seguidores está en kodamachi todavía."
     );
-    expect(es.publicProfilePage.notOnAppTitle("Navyfragen")).toBe("No está en Navyfragen");
+    expect(es.publicProfilePage.notOnAppTitle("kodamachi")).toBe("No está en kodamachi");
     expect(es.userMenu.logOut("alice.bsky.social")).toBe("Cerrar sesión @alice.bsky.social");
-    expect(es.home.shareTitle("Navyfragen")).toBe("¡Envíame mensajes anónimos en Navyfragen!");
-    expect(es.settingsPage.pdsSyncDescription("Navyfragen")).toContain("Navyfragen");
-    expect(es.settingsPage.feedTitle("Navyfragen")).toBe("Feed de Navyfragen");
-    expect(es.settingsPage.feedDescription("Navyfragen")).toContain("Navyfragen");
-    expect(es.settingsPage.dailyNotificationsDescription("Navyfragen")).toContain("Navyfragen");
-    expect(es.settingsPage.deleteMyDataDescription("Navyfragen")).toContain("Navyfragen");
+    expect(es.home.shareTitle("kodamachi")).toBe("¡Envíame mensajes anónimos en kodamachi!");
+    expect(es.settingsPage.pdsSyncDescription("kodamachi")).toContain("kodamachi");
+    expect(es.settingsPage.feedTitle("kodamachi")).toBe("Feed de kodamachi");
+    expect(es.settingsPage.feedDescription("kodamachi")).toContain("kodamachi");
+    expect(es.settingsPage.dailyNotificationsDescription("kodamachi")).toContain("kodamachi");
+    expect(es.settingsPage.deleteMyDataDescription("kodamachi")).toContain("kodamachi");
     expect(es.openInPicker.openInLabel("Bluesky")).toBe("Abrir en Bluesky");
     expect(es.openInPicker.copyLinkLabel("Bluesky")).toBe("Copiar el enlace de Bluesky");
     expect(es.profileCard.viewOn("Tangled")).toBe("Ver en Tangled");
-    expect(es.customisePage.openProfilesInApp("Navyfragen")).toBe(
-      "Abrir los perfiles en Navyfragen"
-    );
-    expect(es.customisePage.openProfilesInAppDescription("Navyfragen")).toContain("Navyfragen");
+    expect(es.customisePage.openProfilesInApp("kodamachi")).toBe("Abrir los perfiles en kodamachi");
+    expect(es.customisePage.openProfilesInAppDescription("kodamachi")).toContain("kodamachi");
     expect(es.profileUrlBar.moreAtmosphereApps(2)).toBe("2 aplicaciones más");
   });
 });
 
 describe("pt/de/fr catalog interpolations", () => {
-  // Same rationale as the es block above: each of these is lazy-loaded and
-  // never the active catalog elsewhere in this suite, so every
-  // function-valued entry needs a direct call here for coverage.
   it("interpolates every function-valued entry in pt", () => {
     expect(pt.common.switchedToAccount("alice.bsky.social")).toBe(
       "Você mudou para @alice.bsky.social"
     );
-    expect(pt.postingPreferences.summary(3, 5)).toBe("3 de 5 ativas");
-    expect(pt.nav.friendGroups.moots.emptyText("Navyfragen")).toBe(
-      "Você ainda não tem amigos mútuos no Navyfragen."
+    expect(pt.nav.friendGroups.moots.emptyText("kodamachi")).toBe(
+      "Você ainda não tem amigos mútuos no kodamachi."
     );
-    expect(pt.nav.friendGroups.following.emptyText("Navyfragen")).toBe(
-      "Você ainda não tem seguidos unilaterais no Navyfragen."
+    expect(pt.nav.friendGroups.following.emptyText("kodamachi")).toBe(
+      "Você ainda não tem seguidos unilaterais no kodamachi."
     );
-    expect(pt.nav.friendGroups.oomfs.emptyText("Navyfragen")).toBe(
-      "Nenhum dos seus seguidores está no Navyfragen ainda."
+    expect(pt.nav.friendGroups.oomfs.emptyText("kodamachi")).toBe(
+      "Nenhum dos seus seguidores está no kodamachi ainda."
     );
-    expect(pt.publicProfilePage.notOnAppTitle("Navyfragen")).toBe("Não está no Navyfragen");
+    expect(pt.publicProfilePage.notOnAppTitle("kodamachi")).toBe("Não está no kodamachi");
     expect(pt.userMenu.logOut("alice.bsky.social")).toBe("Sair @alice.bsky.social");
-    expect(pt.home.shareTitle("Navyfragen")).toBe(
-      "Envie mensagens anônimas para mim no Navyfragen!"
-    );
-    expect(pt.settingsPage.pdsSyncDescription("Navyfragen")).toContain("Navyfragen");
-    expect(pt.settingsPage.feedTitle("Navyfragen")).toBe("Feed do Navyfragen");
-    expect(pt.settingsPage.feedDescription("Navyfragen")).toContain("Navyfragen");
-    expect(pt.settingsPage.dailyNotificationsDescription("Navyfragen")).toContain("Navyfragen");
-    expect(pt.settingsPage.deleteMyDataDescription("Navyfragen")).toContain("Navyfragen");
+    expect(pt.home.shareTitle("kodamachi")).toBe("Envie mensagens anônimas para mim no kodamachi!");
+    expect(pt.settingsPage.pdsSyncDescription("kodamachi")).toContain("kodamachi");
+    expect(pt.settingsPage.feedTitle("kodamachi")).toBe("Feed do kodamachi");
+    expect(pt.settingsPage.feedDescription("kodamachi")).toContain("kodamachi");
+    expect(pt.settingsPage.dailyNotificationsDescription("kodamachi")).toContain("kodamachi");
+    expect(pt.settingsPage.deleteMyDataDescription("kodamachi")).toContain("kodamachi");
     expect(pt.openInPicker.openInLabel("Bluesky")).toBe("Abrir em Bluesky");
     expect(pt.openInPicker.copyLinkLabel("Bluesky")).toBe("Copiar o link do Bluesky");
     expect(pt.profileCard.viewOn("Tangled")).toBe("Ver no Tangled");
-    expect(pt.customisePage.openProfilesInApp("Navyfragen")).toBe("Abrir os perfis no Navyfragen");
-    expect(pt.customisePage.openProfilesInAppDescription("Navyfragen")).toContain("Navyfragen");
+    expect(pt.customisePage.openProfilesInApp("kodamachi")).toBe("Abrir os perfis no kodamachi");
+    expect(pt.customisePage.openProfilesInAppDescription("kodamachi")).toContain("kodamachi");
     expect(pt.profileUrlBar.moreAtmosphereApps(2)).toBe("2 outros apps");
   });
 
@@ -298,61 +262,59 @@ describe("pt/de/fr catalog interpolations", () => {
     expect(de.common.switchedToAccount("alice.bsky.social")).toBe(
       "Zu @alice.bsky.social gewechselt"
     );
-    expect(de.postingPreferences.summary(3, 5)).toBe("3 von 5 aktiv");
-    expect(de.nav.friendGroups.moots.emptyText("Navyfragen")).toBe(
-      "Noch keine gegenseitigen Follows auf Navyfragen."
+    expect(de.nav.friendGroups.moots.emptyText("kodamachi")).toBe(
+      "Noch keine gegenseitigen Follows auf kodamachi."
     );
-    expect(de.nav.friendGroups.following.emptyText("Navyfragen")).toBe(
-      "Noch keine einseitigen Follows auf Navyfragen."
+    expect(de.nav.friendGroups.following.emptyText("kodamachi")).toBe(
+      "Noch keine einseitigen Follows auf kodamachi."
     );
-    expect(de.nav.friendGroups.oomfs.emptyText("Navyfragen")).toBe(
-      "Noch keiner deiner Follower ist auf Navyfragen."
+    expect(de.nav.friendGroups.oomfs.emptyText("kodamachi")).toBe(
+      "Noch keiner deiner Follower ist auf kodamachi."
     );
-    expect(de.publicProfilePage.notOnAppTitle("Navyfragen")).toBe("Nicht auf Navyfragen");
+    expect(de.publicProfilePage.notOnAppTitle("kodamachi")).toBe("Nicht auf kodamachi");
     expect(de.userMenu.logOut("alice.bsky.social")).toBe("@alice.bsky.social abmelden");
-    expect(de.home.shareTitle("Navyfragen")).toBe("Sende mir anonyme Nachrichten auf Navyfragen!");
-    expect(de.settingsPage.pdsSyncDescription("Navyfragen")).toContain("Navyfragen");
-    expect(de.settingsPage.feedTitle("Navyfragen")).toBe("Navyfragen-Feed");
-    expect(de.settingsPage.feedDescription("Navyfragen")).toContain("Navyfragen");
-    expect(de.settingsPage.dailyNotificationsDescription("Navyfragen")).toContain("Navyfragen");
-    expect(de.settingsPage.deleteMyDataDescription("Navyfragen")).toContain("Navyfragen");
+    expect(de.home.shareTitle("kodamachi")).toBe("Sende mir anonyme Nachrichten auf kodamachi!");
+    expect(de.settingsPage.pdsSyncDescription("kodamachi")).toContain("kodamachi");
+    expect(de.settingsPage.feedTitle("kodamachi")).toBe("kodamachi-Feed");
+    expect(de.settingsPage.feedDescription("kodamachi")).toContain("kodamachi");
+    expect(de.settingsPage.dailyNotificationsDescription("kodamachi")).toContain("kodamachi");
+    expect(de.settingsPage.deleteMyDataDescription("kodamachi")).toContain("kodamachi");
     expect(de.openInPicker.openInLabel("Bluesky")).toBe("In Bluesky öffnen");
     expect(de.openInPicker.copyLinkLabel("Bluesky")).toBe("Den Bluesky-Link kopieren");
     expect(de.profileCard.viewOn("Tangled")).toBe("Auf Tangled ansehen");
-    expect(de.customisePage.openProfilesInApp("Navyfragen")).toBe("Profile in Navyfragen öffnen");
-    expect(de.customisePage.openProfilesInAppDescription("Navyfragen")).toContain("Navyfragen");
+    expect(de.customisePage.openProfilesInApp("kodamachi")).toBe("Profile in kodamachi öffnen");
+    expect(de.customisePage.openProfilesInAppDescription("kodamachi")).toContain("kodamachi");
     expect(de.profileUrlBar.moreAtmosphereApps(2)).toBe("2 weitere Apps");
   });
 
   it("interpolates every function-valued entry in fr", () => {
     expect(fr.common.switchedToAccount("alice.bsky.social")).toBe("Passé à @alice.bsky.social");
-    expect(fr.postingPreferences.summary(3, 5)).toBe("3 sur 5 actives");
-    expect(fr.nav.friendGroups.moots.emptyText("Navyfragen")).toBe(
-      "Aucun mutuel sur Navyfragen pour l'instant."
+    expect(fr.nav.friendGroups.moots.emptyText("kodamachi")).toBe(
+      "Aucun mutuel sur kodamachi pour l'instant."
     );
-    expect(fr.nav.friendGroups.following.emptyText("Navyfragen")).toBe(
-      "Aucun abonnement à sens unique sur Navyfragen pour l'instant."
+    expect(fr.nav.friendGroups.following.emptyText("kodamachi")).toBe(
+      "Aucun abonnement à sens unique sur kodamachi pour l'instant."
     );
-    expect(fr.nav.friendGroups.oomfs.emptyText("Navyfragen")).toBe(
-      "Aucun de tes abonnés n'est encore sur Navyfragen."
+    expect(fr.nav.friendGroups.oomfs.emptyText("kodamachi")).toBe(
+      "Aucun de tes abonnés n'est encore sur kodamachi."
     );
-    expect(fr.publicProfilePage.notOnAppTitle("Navyfragen")).toBe("Pas sur Navyfragen");
+    expect(fr.publicProfilePage.notOnAppTitle("kodamachi")).toBe("Pas sur kodamachi");
     expect(fr.userMenu.logOut("alice.bsky.social")).toBe("Se déconnecter @alice.bsky.social");
-    expect(fr.home.shareTitle("Navyfragen")).toBe(
-      "Envoie-moi des messages anonymes sur Navyfragen !"
+    expect(fr.home.shareTitle("kodamachi")).toBe(
+      "Envoie-moi des messages anonymes sur kodamachi !"
     );
-    expect(fr.settingsPage.pdsSyncDescription("Navyfragen")).toContain("Navyfragen");
-    expect(fr.settingsPage.feedTitle("Navyfragen")).toBe("Flux Navyfragen");
-    expect(fr.settingsPage.feedDescription("Navyfragen")).toContain("Navyfragen");
-    expect(fr.settingsPage.dailyNotificationsDescription("Navyfragen")).toContain("Navyfragen");
-    expect(fr.settingsPage.deleteMyDataDescription("Navyfragen")).toContain("Navyfragen");
+    expect(fr.settingsPage.pdsSyncDescription("kodamachi")).toContain("kodamachi");
+    expect(fr.settingsPage.feedTitle("kodamachi")).toBe("Flux kodamachi");
+    expect(fr.settingsPage.feedDescription("kodamachi")).toContain("kodamachi");
+    expect(fr.settingsPage.dailyNotificationsDescription("kodamachi")).toContain("kodamachi");
+    expect(fr.settingsPage.deleteMyDataDescription("kodamachi")).toContain("kodamachi");
     expect(fr.openInPicker.openInLabel("Bluesky")).toBe("Ouvrir dans Bluesky");
     expect(fr.openInPicker.copyLinkLabel("Bluesky")).toBe("Copier le lien Bluesky");
     expect(fr.profileCard.viewOn("Tangled")).toBe("Voir sur Tangled");
-    expect(fr.customisePage.openProfilesInApp("Navyfragen")).toBe(
-      "Ouvrir les profils dans Navyfragen"
+    expect(fr.customisePage.openProfilesInApp("kodamachi")).toBe(
+      "Ouvrir les profils dans kodamachi"
     );
-    expect(fr.customisePage.openProfilesInAppDescription("Navyfragen")).toContain("Navyfragen");
+    expect(fr.customisePage.openProfilesInAppDescription("kodamachi")).toContain("kodamachi");
     expect(fr.profileUrlBar.moreAtmosphereApps(2)).toBe("2 autres applis");
   });
 });
@@ -367,9 +329,7 @@ describe("loadCatalog", () => {
   });
 
   it("reports en, not the request, for a locale this bundle does not (yet) register", async () => {
-    // The locale it reports is the one being rendered. Echoing "it" back here
-    // would label an English page Italian for a screen reader and format its
-    // dates in a language nothing on screen is written in.
+    // Echoing the unsupported "it" would label an English page Italian.
     expect(await loadCatalog("it")).toEqual({ locale: "en", messages: en });
   });
 
@@ -394,8 +354,7 @@ describe("loadCatalog", () => {
   });
 
   it("reduces a malformed tag to one the Intl formatters accept", async () => {
-    // "en-"/"es-" are what `Intl.NumberFormat` throws RangeError on. The
-    // catalog is still the right one; only the tag is trimmed back.
+    // "en-"/"es-" make `Intl.NumberFormat` throw RangeError.
     expect(await loadCatalog("en-")).toEqual({ locale: "en", messages: en });
     expect(await loadCatalog("es-")).toEqual({ locale: "es", messages: es });
   });
@@ -409,8 +368,7 @@ describe("loadCatalog", () => {
   });
 
   it("reports en for a prototype key rather than treating it as a loader", async () => {
-    // `LOCALE_LOADERS` is a Map, so `constructor` and `toString` are misses
-    // rather than inherited functions that would be called as loaders.
+    // LOCALE_LOADERS is a Map, so `constructor`/`toString` are misses, not inherited functions.
     for (const key of ["constructor", "toString", "__proto__", "hasOwnProperty"]) {
       expect(await loadCatalog(key)).toEqual({ locale: "en", messages: en });
     }
@@ -428,11 +386,7 @@ describe("loadCatalog", () => {
   });
 });
 
-/**
- * Seeded into `<html lang>` before every provider render so each assertion on
- * it proves the provider wrote the tag. Seeding `"en"` instead would let the
- * `en` cases pass without the provider ever running.
- */
+/** Seeded into `<html lang>` so assertions prove the provider wrote it; "en" would pass vacuously. */
 const LANG_BEFORE_PROVIDER = "zz";
 
 describe("I18nProvider / useTranslations / useLocale", () => {
@@ -616,7 +570,6 @@ describe("I18nProvider / useTranslations / useLocale", () => {
       expect(localStorage.getItem(STORAGE_KEY)).toBe(JSON.stringify("en"));
     });
 
-    // Simulate the reload: a fresh mount, now logged out.
     mockUseSession.mockReturnValue({ data: { isLoggedIn: false }, isLoading: false } as any);
     mockUseUserSettings.mockReturnValue({
       data: undefined,
@@ -627,8 +580,6 @@ describe("I18nProvider / useTranslations / useLocale", () => {
     await waitFor(() => {
       expect(screen.getAllByTestId("probe")[1]).toHaveTextContent(JSON.stringify(en));
     });
-    // The stored value from the logged-in session is still there for the
-    // resolution logic to pick up — this pins that a reload doesn't clear it.
     expect(localStorage.getItem(STORAGE_KEY)).toBe(JSON.stringify("en"));
   });
 
@@ -636,8 +587,7 @@ describe("I18nProvider / useTranslations / useLocale", () => {
     mockUseSession.mockReturnValue({ data: { isLoggedIn: false }, isLoading: false } as any);
     mockUseUserSettings.mockReturnValue({ data: undefined, isLoading: false } as any);
     const { unmount } = renderProvider();
-    // loadCatalog resolves on a microtask; unmounting before it fires exercises
-    // the effect's cancelled guard instead of calling setState after unmount.
+    // Unmounting before the loadCatalog microtask resolves exercises the effect's cancelled guard.
     unmount();
     await new Promise((resolve) => setTimeout(resolve, 0));
   });

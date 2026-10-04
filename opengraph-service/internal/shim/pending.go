@@ -2,19 +2,12 @@ package shim
 
 import "sync"
 
-// pendingRenders tracks the in-flight renders an image fetch is allowed to wait
-// on, keyed by the SafeDID that names the cache file.
+// pendingRenders tracks in-flight renders an image fetch may wait on, keyed by
+// SafeDID. Without it a fetch cannot tell "render a second away" from "nothing
+// coming", and Cardyb bakes the fallback in permanently.
 //
-// It exists because the render is no longer in front of the response. Without
-// it, the image fetch that follows the OG HTML cannot tell "a render for this
-// DID is a second away" from "nothing is coming", and has to answer both with
-// the fallback — which for Cardyb is permanent, since it fetches the card image
-// once and bakes those bytes into the post record.
-//
-// Entries are reference counted. A share-time warm and the crawl behind it each
-// begin a render for the same profile (singleflight coalesces them downstream
-// into one html-to-image call), and a waiter must stay parked until the last of
-// them is done rather than being woken by whichever finishes first.
+// Entries are reference counted: a warm and the crawl behind it both begin a
+// render for one profile, and waiters stay parked until the last finishes.
 //
 // [TestPendingRenders_SecondBeginKeepsWaitersParkedUntilBothRelease] pins the
 // refcount and [TestPendingRenders_WatchWithNothingInFlight_ReturnsNil] pins
@@ -29,10 +22,8 @@ type pendingRender struct {
 	refs int
 }
 
-// begin registers an in-flight render for key and returns the release that
-// closes it out. The caller MUST call the returned func exactly once when the
-// render finishes: skipping it parks every later waiter for its full wait on a
-// render that is already over.
+// begin registers an in-flight render for key. The caller MUST call the
+// returned release exactly once, or later waiters park for their full wait.
 func (p *pendingRenders) begin(key string) func() {
 	p.mu.Lock()
 	defer p.mu.Unlock()
@@ -61,10 +52,8 @@ func (p *pendingRenders) release(key string, entry *pendingRender) {
 	}
 }
 
-// watch returns the channel that closes when the in-flight render for key
-// finishes, or nil when there is no render to wait for — the caller must not
-// park in that case, or every request for a DID nobody is rendering would hold
-// a connection for the full wait.
+// watch returns a channel closed when the render for key finishes, or nil when
+// none is in flight; callers must not park on nil.
 func (p *pendingRenders) watch(key string) <-chan struct{} {
 	p.mu.Lock()
 	defer p.mu.Unlock()

@@ -2,17 +2,19 @@ import { getSignedCookie, setSignedCookie, deleteCookie } from "hono/cookie";
 import { env } from "#/lib/env";
 import type { Context, MiddlewareHandler } from "hono";
 import type { AppSessionData } from "#/auth/session";
+import type { Database } from "#/database/db";
 
 const SESSION_COOKIE = "nf-session";
 const MAX_AGE_SECONDS = 14 * 24 * 60 * 60;
 
 export const SESSION_VAR = "session";
+export const LIVE_DID_VAR = "liveDid";
 
 export interface SessionVars {
   [SESSION_VAR]: AppSessionData | null;
+  [LIVE_DID_VAR]: string | undefined;
 }
 
-/** A tampered or unreadable cookie yields null, i.e. logged out. */
 export const sessionMiddleware: MiddlewareHandler = async (c, next) => {
   const data = await getSignedCookie(c, env.COOKIE_SECRET, SESSION_COOKIE);
   if (data === false) {
@@ -28,6 +30,25 @@ export const sessionMiddleware: MiddlewareHandler = async (c, next) => {
   }
   await next();
 };
+
+/**
+ * The signed cookie outlives logout and revocation, so the active DID only
+ * counts while its OAuth session is still stored.
+ *
+ * @see [session-middleware.test.ts](../tests/session-middleware.test.ts):
+ * "keeps a DID whose OAuth session is stored" and "drops a DID whose OAuth
+ * session is gone".
+ */
+export function liveDidMiddleware(db: Database): MiddlewareHandler {
+  return async (c, next) => {
+    const did = getSession(c)?.did;
+    const stored =
+      did &&
+      (await db.selectFrom("auth_session").select("key").where("key", "=", did).executeTakeFirst());
+    c.set(LIVE_DID_VAR, stored ? did : undefined);
+    await next();
+  };
+}
 
 export function getSession(c: Context): AppSessionData | null {
   return (c.get(SESSION_VAR) as AppSessionData | null) ?? null;

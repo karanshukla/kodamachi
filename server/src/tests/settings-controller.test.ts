@@ -179,7 +179,6 @@ describe("Settings (Hono)", () => {
       });
       const passed = service.updateSettings.mock.calls[0][1];
       assert.strictEqual(passed.inboxEnabled, false);
-      // Fields the client didn't send come through as undefined (skip).
       assert.strictEqual(passed.pdsSyncEnabled, undefined);
       assert.strictEqual(passed.profanityFilterEnabled, undefined);
     });
@@ -253,6 +252,33 @@ describe("Settings (Hono)", () => {
       assert.strictEqual(res.status, 400);
       assert.strictEqual(service.updateSettings.mock.calls.length, 0);
     });
+
+    for (const [field, label] of [
+      ["imageTheme", "image theme"],
+      ["profileCardTheme", "profile card theme"],
+    ]) {
+      test(`accepts a 32-character ${label}`, async () => {
+        const { app, service, headers } = makeApp();
+        const res = await app.request("/settings", {
+          method: "POST",
+          headers: jsonHeaders(headers),
+          body: JSON.stringify({ [field]: "t".repeat(32) }),
+        });
+        assert.strictEqual(res.status, 200);
+        assert.strictEqual(service.updateSettings.mock.calls.length, 1);
+      });
+
+      test(`rejects an over-long ${label}`, async () => {
+        const { app, service, headers } = makeApp();
+        const res = await app.request("/settings", {
+          method: "POST",
+          headers: jsonHeaders(headers),
+          body: JSON.stringify({ [field]: "t".repeat(33) }),
+        });
+        assert.strictEqual(res.status, 400);
+        assert.strictEqual(service.updateSettings.mock.calls.length, 0);
+      });
+    }
 
     test("passes the profile-link switch through as a boolean", async () => {
       const { app, service, headers } = makeApp();

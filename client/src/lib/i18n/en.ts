@@ -1,17 +1,13 @@
 import type { Messages } from "./types";
 
-/**
- * Counts are formatted inside the catalog rather than by the caller, because
- * a plural form has to branch on the number — so the number is what an entry
- * receives. #406 adds an `Intl.PluralRules` beside this in each locale file;
- * English needs none, which is exactly why the shape has to be settled here
- * and not discovered by the first locale that does.
- */
+/** Count entries receive the number, not a string: a plural form has to branch on it. */
 const numberFormat = new Intl.NumberFormat("en");
 
 export const en = {
   common: {
+    skipToContent: "Skip to content",
     cancel: "Cancel",
+    close: "Close",
     confirm: "Confirm",
     delete: "Delete",
     retry: "Retry",
@@ -26,7 +22,7 @@ export const en = {
     settingsLoadErrorTitle: "Failed to load settings",
     switchedToAccount: (handle: string) => `Switched to @${handle}`,
     shortcuts: {
-      title: "Keyboard Shortcuts",
+      title: "Keyboard shortcuts",
       home: "Home",
       login: "Login",
       messages: "Messages",
@@ -39,25 +35,22 @@ export const en = {
   },
   messagesPage: {
     themeUpdateErrorTitle: "Error updating theme",
-    addExamplesErrorTitle: "Error Adding Examples",
-    deleteErrorTitle: "Error Deleting Message",
+    addExamplesErrorTitle: "Error adding examples",
+    deleteErrorTitle: "Error deleting message",
     threadReplyTitle: "Added to thread!",
-    responseSentTitle: "Response Sent!",
-    responseErrorTitle: "Response Error",
-    emptyResponseTitle: "Empty Response",
+    responseSentTitle: "Response sent!",
+    responseErrorTitle: "Response error",
+    emptyResponseTitle: "Empty response",
     emptyResponseMessage: "Response cannot be empty.",
-    imageRenderFailedTitle: "Image Render Failed",
+    imageRenderFailedTitle: "Image render failed",
     imageRenderFailedMessage: "Failed to render the question image.",
     notLoggedInTitle: "Not logged in",
     notLoggedInMessage: "Please log in to see your messages.",
     heading: "Messages",
-    noMessagesCount: "no messages",
-    newMessagesCount: (count: number) => `${numberFormat.format(count)} new`,
-    noMessagesTitle: "No messages",
-    noMessagesBody:
-      "You don't have any messages yet. Share your profile link to receive anonymous questions.",
+    noMessagesTitle: "No questions yet",
+    noMessagesBody: "Share your link and the first anonymous question will land here.",
     addExampleMessages: "Add example messages",
-    deleteConfirmTitle: "Confirm Deletion",
+    deleteConfirmTitle: "Confirm deletion",
     deleteConfirmMessage:
       "Are you sure you want to delete this message? This action cannot be undone.",
     threadReplyPosted: "Added to thread.",
@@ -66,20 +59,22 @@ export const en = {
     welcomeBackMessage: "You have successfully logged in.",
   },
   inboxLinkCard: {
-    eyebrow: "Your inbox link · publicly accessible",
+    eyebrow: "Your inbox link · public",
   },
   postingPreferences: {
     title: "Posting preferences",
     appendProfileLink: {
       label: "Auto-append inbox link",
+      shortLabel: "Inbox link",
       description: "Appends your link to every post. Reduces character budget.",
     },
     useGradients: {
-      label: "Gradient backgrounds",
-      description: "Pretty for screenshots. Turn off for higher contrast.",
+      label: "Ink backgrounds",
+      description: "Navy question cards with white text. Turn off for paper cards.",
     },
     includeQuestionAsImage: {
       label: "Question as image",
+      shortLabel: "Question as image",
       description: "Generates a shareable image with auto alt text.",
     },
     confirmBeforeDelete: {
@@ -90,8 +85,6 @@ export const en = {
       label: "Auto-scroll to messages",
       description: "Scrolls new messages into view when they load.",
     },
-    summary: (enabled: number, total: number) =>
-      `${numberFormat.format(enabled)} of ${numberFormat.format(total)} on`,
   },
   questionCard: {
     cannotDeleteThreadRootTooltip: "Unpin thread first",
@@ -134,20 +127,23 @@ export const en = {
     replyToThread: "Reply to thread",
     reply: "Reply",
   },
+  preferencesBar: {
+    open: "More settings",
+  },
   imageThemePicker: {
     title: "Image theme",
   },
   themes: {
     image: {
-      default: "Default",
-      compressed: "Compressed",
-      twitter: "Twitter Style",
+      default: "Quote",
+      compressed: "Compact",
+      twitter: "Post",
     },
     profileCard: {
-      royal: "Royal",
-      aurora: "Aurora",
-      ember: "Ember",
-      verdant: "Verdant",
+      royal: "Ink",
+      aurora: "Steel",
+      ember: "Midnight",
+      verdant: "Paper",
     },
   },
   nav: {
@@ -172,12 +168,11 @@ export const en = {
     disableAnimations: "Disable animations",
     enableAnimations: "Enable animations",
     toggleColorScheme: "Toggle color scheme",
+    toggleNavigation: "Toggle navigation",
   },
   customisePage: {
     heading: "Customise",
-    beta: "Beta",
     yourPublicProfile: "Your public profile",
-    yourPublicProfileHelp: "What visitors see before they send you an anonymous message.",
     profilePrompt: "Profile prompt",
     profilePromptDescription:
       "The headline shown above your message box. Leave blank to fall back to “Send [you] an anonymous message” in your selected language. This is overriden if you turn off your inbox. ",
@@ -186,8 +181,6 @@ export const en = {
     profileCardColourDescription:
       "The colour treatment of your ask card. Curated presets keep the text and button legible on every option.",
     languages: "Languages",
-    languagesHelp:
-      "Two audiences, two languages — the one you read the app in, and the one your visitors read.",
     appLanguage: "App language",
     appLanguageDescription:
       "The language you read the app in - nav, buttons, and toasts. Only you see it.",
@@ -195,7 +188,6 @@ export const en = {
     messageLanguageDescription:
       "Language of the prompt, share text, and anonymity disclaimer shown to visitors and your audience. Your custom message prompt overrides this setting.",
     messageIntake: "Message intake",
-    messageIntakeHelp: "Who can reach your inbox, and what gets through.",
     inbox: "Inbox",
     inboxDescription:
       "Turn off to stop receiving new messages while keeping your account, history, and settings intact. Visitors see a “not accepting messages” state.",
@@ -203,7 +195,6 @@ export const en = {
     profanityFilterDescription:
       "When on, incoming messages are screened against wordlists for English, Spanish, Portuguese, German and French - every message is checked against all five, whatever language you have the app set to. Flagged messages are silently dropped - the sender sees a success response, but the message never reaches your inbox.",
     atmosphereLinks: "Atmosphere links",
-    atmosphereLinksHelp: "Where links to posts and profiles take you.",
     openProfilesInApp: (appName) => `Open profiles in ${appName}`,
     openProfilesInAppDescription: (appName) =>
       `When on, an @mention in someone's bio opens their ${appName} profile. When off, it opens in your preferred client.`,
@@ -217,6 +208,7 @@ export const en = {
     recipientNotFoundMessage: "Cannot send message: User DID not found.",
     messageSentTitle: "Message sent!",
     messageSentBody: "Your anonymous message is on its way.",
+    sendAnother: "Send another",
     sendFailedTitle: "Failed to send",
     noBlueskyAccountTitle: "No Bluesky account found",
     noBlueskyAccountBody: "doesn't exist on Bluesky. Check the handle and try again.",
@@ -224,10 +216,10 @@ export const en = {
     notOnAppBodyPrefix: "has a Bluesky account but hasn't set up their ",
     notOnAppBodySuffix: " inbox yet.",
     profileLoadFailed: "Failed to load profile information.",
-    confirmSendTitle: "Confirm Anonymous Message",
+    confirmSendTitle: "Confirm anonymous message",
     confirmSendMessage:
       "Are you sure you want to send this anonymous message? This action cannot be undone.",
-    sendMessage: "Send Message",
+    sendMessage: "Send message",
     handleResolveFailed: "Failed to resolve handle. The handle may not exist.",
     sendMessageFailed: "Failed to send message. Please try again.",
   },
@@ -251,7 +243,7 @@ export const en = {
     oauthFailedMessage: "Login failed. Please try again.",
     logInToPrefix: "Log in to ",
     subtitle: "Enter your AT Protocol handle to continue",
-    atmosphereHandle: "Atmosphere Handle",
+    atmosphereHandle: "Atmosphere handle",
     handlePlaceholder: "e.g. yourname.bsky.social",
     continueButton: "Continue",
     disclaimerPrefix: "You will be directed to Bluesky to authenticate. ",
@@ -264,12 +256,12 @@ export const en = {
     startTyping: "Start typing to get handle suggestions",
   },
   e2eLoginPanel: {
-    modeNotice: "E2E Test Mode - not for production use",
+    modeNotice: "E2E test mode - not for production use",
     identifier: "Identifier",
     identifierPlaceholder: "handle.pds.example",
-    appPassword: "App Password",
+    appPassword: "App password",
     appPasswordPlaceholder: "xxxx-xxxx-xxxx-xxxx",
-    signIn: "Sign In (E2E)",
+    signIn: "Sign in (E2E)",
   },
   oauthCallback: {
     missingToken: "Missing OAuth token in callback URL.",
@@ -287,7 +279,7 @@ export const en = {
     browserBlocked:
       "Blocked in your browser settings. Re-allow notifications for this site to turn it on.",
     toastTitle: "Push notifications",
-    title: "Push Notifications",
+    title: "Push notifications",
   },
   shareButton: {
     linkCopiedTitle: "Copied!",
@@ -312,31 +304,31 @@ export const en = {
     ariaLabel: "Update available — reload to apply",
     buttonLabel: "Update",
     applyingAriaLabel: "Applying the update — the page will reload",
-    applyingLabel: "Updating…",
   },
   userMenu: {
     switchAccountErrorTitle: "Couldn't switch account",
-    userAvatarAltFallback: "User Avatar",
+    userAvatarAltFallback: "User avatar",
     accountsLabel: "Accounts",
     addAccount: "Add account",
-    viewProfile: "View Profile",
+    viewProfile: "View profile",
     logOut: (handle: string | undefined) => `Log out @${handle}`,
   },
   home: {
-    titleSuffix: " - Anonymous questions and answers on Bluesky",
-    subtitle: "Receive questions from the web and post the answers directly on Bluesky.",
+    title: "Anonymous questions, answered on Bluesky.",
+    subtitle:
+      "Share one link, collect questions from anyone, and post your answers straight to your feed.",
     sellingPoints: {
       fastAndFree: {
         title: "Fast and free",
-        body: "No downloads required, just log in with your Bluesky credentials and share your inbox link",
+        body: "No downloads. Log in with Bluesky and share your inbox link.",
       },
       spamProtection: {
-        title: "Spam protection, without captchas",
-        body: "Protected by Anubis, a powerful bot detection service",
+        title: "Spam protection, no captchas",
+        body: "Protected by Anubis bot detection, so visitors never solve a puzzle.",
       },
       openSource: {
         title: "Open source",
-        body: "Contribute directly to the project, or host your own version if you want!",
+        body: "Contribute to the project, or host your own copy.",
       },
     },
     questionsFeedback: "Questions? Feedback?",
@@ -345,18 +337,19 @@ export const en = {
     githubContactLabel: "GitHub - ",
     disclaimer:
       "Disclaimer: Please follow Bluesky's ToS. Cookies are used to keep you logged in. This app does not include any moderation.",
+    mascotCredit: "Mascot art by Angela Clifford",
     welcomeBackGreetingPrefix: "Good to see you again,",
-    viewYourMessages: "View Your Messages",
+    viewYourMessages: "View your messages",
     copyProfileLink: "Copy profile link",
-    copyLinkButton: "Copy Link",
-    getStarted: "Get Started",
+    copyLinkButton: "Copy link",
+    getStarted: "Get started",
     shareTitle: (appName: string) => `Send me anonymous messages on ${appName}!`,
   },
   settingsPage: {
     heading: "Settings",
-    accountOverview: "Account Overview",
-    updateFailedTitle: "Update Failed",
-    pdsSync: "PDS Sync",
+    accountOverview: "Account overview",
+    updateFailedTitle: "Update failed",
+    pdsSync: "PDS sync",
     messagesInInbox: "Messages in inbox",
     answersOnPds: "Answers on PDS",
     activeSince: "Active since",
@@ -364,17 +357,17 @@ export const en = {
     defaultClient: "Preferred client",
     defaultClientDescription:
       "Which Atmosphere client opens the posts and profiles you follow from here.",
-    openFeedOnBluesky: "Open Feed on Bluesky",
-    dailyNotifications: "Daily Notifications",
+    openFeedOnBluesky: "Open feed on Bluesky",
+    dailyNotifications: "Daily notifications",
     viewBotOnBluesky: "View bot on Bluesky",
     followTheBotOnBluesky: "Follow the bot on Bluesky",
-    deleteMyData: "Delete my Data",
-    deleteAccountTitle: "Delete Account",
+    deleteMyData: "Delete my data",
+    deleteAccountTitle: "Delete account",
     deleteAccountMessage:
       "Are you sure you want to delete your account and all data? This cannot be undone.",
     pdsSyncDescription: (appName: string) =>
       `${appName} syncs your anonymous messages to your Bluesky PDS (Personal Data Server). Turn this off to keep them on ${appName}'s servers only. Posting to Bluesky is unaffected.`,
-    feedTitle: (appName: string) => `${appName} Feed`,
+    feedTitle: (appName: string) => `${appName} feed`,
     feedDescription: (appName: string) =>
       `Browse anonymous questions and answers posted by everyone on ${appName} worldwide. This feed may contain content intended for adults. View at your own discretion.`,
     dailyNotificationsDescription: (appName: string) =>
@@ -434,7 +427,9 @@ export const en = {
     generic: "Something went wrong. Please try again.",
   },
   notFoundPage: {
-    title: "404 - Not Found",
-    message: "The requested resource was not found.",
+    title: "404 — not found",
+    message: "That page doesn't exist. The link may be old, or the handle may have changed.",
+    goHome: "Go home",
+    yourMessages: "Your messages",
   },
 } satisfies Messages;

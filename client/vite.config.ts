@@ -5,15 +5,14 @@ import { configDefaults } from "vitest/config";
 
 import brand from "../brand.json" with { type: "json" };
 
-// index.html can't import brand.ts (it isn't a module), so its brand text
-// goes through %APP_NAME%/%APP_DOMAIN% placeholders substituted here instead
-// of via Vite's built-in %VITE_*% HTML replacement — that reads from env
-// vars, and brand.json is the source of truth, not the environment.
+// Not Vite's %VITE_*% replacement: that reads env vars, and brand.json is the source of truth.
 function brandHtmlPlugin(): Plugin {
   return {
     name: "brand-html-vars",
     transformIndexHtml(html) {
-      return html.replaceAll("%APP_NAME%", brand.appName).replaceAll("%APP_DOMAIN%", brand.appDomain);
+      return html
+        .replaceAll("%APP_NAME%", brand.appName)
+        .replaceAll("%APP_DOMAIN%", brand.appDomain);
     },
   };
 }
@@ -26,23 +25,16 @@ export default defineConfig({
       strategies: "injectManifest",
       srcDir: "src",
       filename: "sw.ts",
-      // "prompt", not "autoUpdate": autoUpdate reloads the page as soon as a new
-      // worker activates, which interrupts whatever the user is doing. In prompt
-      // mode the registration reports the waiting worker to main.tsx, which
-      // surfaces it as the header's "Update" button (see src/sw.ts).
+      // "autoUpdate" would reload mid-task; prompt mode surfaces the header's "Update" button instead.
       registerType: "prompt",
-      // We register the SW ourselves via virtual:pwa-register in main.tsx so we
-      // can keep the push-notification registration flow (and its error
-      // handling) in one place.
+      // main.tsx registers via virtual:pwa-register to keep push registration in one place.
       injectRegister: false,
 
-      // Port of client/public/site.webmanifest. vite-plugin-pwa generates and
-      // injects the manifest link, so the static file is no longer needed.
       manifest: {
-        name: `${brand.appName} - Anonymous question inbox for Bluesky`,
+        name: `${brand.appName} — anonymous questions`,
         short_name: brand.appName,
-        theme_color: "#1E1B4B",
-        background_color: "#FDF8FF",
+        theme_color: "#FFFFFF",
+        background_color: "#FFFFFF",
         display: "standalone",
         display_override: ["window-controls-overlay", "standalone"],
         start_url: "/",
@@ -58,11 +50,7 @@ export default defineConfig({
         ],
       },
 
-      // Core fix for the dev-mode interference bug (issue #193): keep the
-      // service worker entirely disabled during `vite dev`. The plugin will
-      // also proactively unregister any SW left over from a previous production
-      // build/preview on the same origin, so a stale worker can no longer
-      // intercept TanStack Query's first fetches on a fresh dev reload.
+      // #193: a stale worker intercepted TanStack Query's first fetches in dev; this also unregisters leftovers.
       devOptions: {
         enabled: false,
       },
@@ -74,15 +62,7 @@ export default defineConfig({
     setupFiles: ["./src/tests/setupTests.ts"],
     exclude: [...configDefaults.exclude, "**/*.e2e.test.ts"],
     coverage: {
-      // istanbul, not v8: @vitest/coverage-v8 drives node:inspector's Profiler
-      // domain, which Bun did not implement before 1.4, so every worker threw
-      // "Coverage APIs are not supported" and the run reported 0% while still
-      // exiting green. Bun 1.4 implements it, so v8 is viable again; istanbul
-      // stays because it needs no V8 inspector at all and the swap would buy
-      // nothing at 100% on every metric.
-      // Unreachable code is suppressed with `/* istanbul ignore ... */` markers
-      // (istanbul does not honor the `/* v8 ignore */` form) — see
-      // docs/testing-notes.md.
+      // Why istanbul: docs/runtime-notes.md. Suppress with `/* istanbul ignore */`, not `v8 ignore`.
       provider: "istanbul",
       reporter: ["text", "lcov", "html", "json-summary"],
       reportsDirectory: "./coverage",
@@ -94,10 +74,6 @@ export default defineConfig({
         "src/Theme.tsx",
         "src/vite-env.d.ts",
         "src/styles/tokens.ts",
-        // `*.styles.ts` modules hold CSS objects and the pure functions that
-        // select between them — no behaviour, nothing an assertion could pin
-        // that reading the file would not tell you more directly. Rendering
-        // logic stays in the `.tsx` beside them, which is measured.
         "src/**/*.styles.ts",
         "src/pushPayload.ts",
         "src/index.css",

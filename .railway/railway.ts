@@ -66,7 +66,7 @@ export default defineRailway(() => {
     source: github("karanshukla/navyfragen-app", { checkSuites: true, rootDirectory: "/caddy" }),
     build: { builder: "DOCKERFILE", dockerfilePath: "Dockerfile", watchPatterns: ["/caddy/*"] },
     replicas: { "us-east4-eqdc4a": 1 },
-    domains: ["navyfragen.app"],
+    domains: ["navyfragen.app", { domain: "kodamachi.app", port: 8080 }],
     networking: { privateNetworkEndpoint: "caddy-proxy" },
     env: {
       BACKEND_DOMAIN: preserve(),
@@ -205,7 +205,7 @@ export default defineRailway(() => {
     source: github("karanshukla/navyfragen-feed", { checkSuites: true }),
     replicas: { "europe-west4-drams3a": 1 },
     deploy: { limitOverride: { containers: { cpu: 8, memoryBytes: 8000000000 } }, sleepApplication: true },
-    domains: [{ domain: "feed.navyfragen.app", port: 3000 }],
+    domains: [{ domain: "feed.kodamachi.app", port: 3000 }],
     networking: { privateNetworkEndpoint: "navyfragen-feed" },
     volumeMounts: {
       "/data": navyfragenFeedVolumeGZRf,
@@ -249,7 +249,7 @@ export default defineRailway(() => {
     source: image("zappi/redirector", { autoUpdates: { schedule: [{ day: 0, endHour: 24, startHour: 0 }, { day: 6, endHour: 24, startHour: 0 }], type: "patch" } }),
     build: { builder: "NIXPACKS" },
     replicas: { "europe-west4-drams3a": 1 },
-    domains: ["fragen.navy"],
+    domains: ["fragen.navy", { domain: "kodamachi.online", port: 8080 }],
     networking: { privateNetworkEndpoint: "redirector" },
     env: {
       IGNORE_REQUEST_URI: preserve(),

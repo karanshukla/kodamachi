@@ -1,14 +1,4 @@
-import {
-  Alert,
-  Badge,
-  Button,
-  Grid,
-  Group,
-  Select,
-  Skeleton,
-  TextInput,
-  Title,
-} from "@mantine/core";
+import { Alert, Button, Grid, Select, Skeleton, TextInput, Title } from "@mantine/core";
 import { useState, useEffect } from "react";
 
 import { useSession } from "../api/authService";
@@ -20,6 +10,7 @@ import { SettingsSection } from "../components/customise/SettingsSection";
 import { SettingsCard } from "../components/SettingsCard";
 import { SettingsToggle } from "../components/SettingsToggle";
 import { uiLocaleOptions, useTranslations } from "../lib/i18n";
+import { usePageTitle } from "../lib/usePageTitle";
 import { touchpointLocales } from "../lib/touchpointTranslations";
 import { useNumberFormat } from "../lib/useNumberFormat";
 
@@ -30,6 +21,7 @@ const CARD_SPAN = { base: 12, md: 6 };
 
 export default function Customise() {
   const messages = useTranslations();
+  usePageTitle(messages.customisePage.heading);
   const formatNumber = useNumberFormat();
   const { data: session, isLoading: sessionLoading } = useSession();
   const {
@@ -58,14 +50,12 @@ export default function Customise() {
     </Alert>
   );
 
-  /** Every bottom-anchored control shows the same three states. */
   const field = (skeletonHeight: number, control: React.ReactNode) => {
     if (settingsLoading) return <Skeleton height={skeletonHeight} radius="sm" />;
     if (settingsError) return loadError;
     return control;
   };
 
-  /** Header switches shrink to a track-sized skeleton; the error goes in the body. */
   const headerToggle = (toggle: React.ReactNode) => {
     if (settingsLoading) return <Skeleton height={22} width={38} radius="xl" />;
     if (settingsError) return null;
@@ -82,19 +72,11 @@ export default function Customise() {
 
   return (
     <>
-      <Group gap="sm" align="center" mb="xs">
-        <Title order={1} style={{ letterSpacing: "-0.03em" }}>
-          {messages.customisePage.heading}
-        </Title>
-        <Badge color="accent" variant="light" radius="sm">
-          {messages.customisePage.beta}
-        </Badge>
-      </Group>
+      <Title order={1} mb="xs">
+        {messages.customisePage.heading}
+      </Title>
 
-      <SettingsSection
-        eyebrow={messages.customisePage.yourPublicProfile}
-        help={messages.customisePage.yourPublicProfileHelp}
-      >
+      <SettingsSection eyebrow={messages.customisePage.yourPublicProfile}>
         <Grid.Col span={CARD_SPAN} style={{ display: "flex" }}>
           <SettingsCard
             title={messages.customisePage.profilePrompt}
@@ -137,10 +119,7 @@ export default function Customise() {
         </Grid.Col>
       </SettingsSection>
 
-      <SettingsSection
-        eyebrow={messages.customisePage.languages}
-        help={messages.customisePage.languagesHelp}
-      >
+      <SettingsSection eyebrow={messages.customisePage.languages}>
         <Grid.Col span={CARD_SPAN} style={{ display: "flex" }}>
           <SettingsCard
             title={messages.customisePage.appLanguage}
@@ -196,10 +175,7 @@ export default function Customise() {
         </Grid.Col>
       </SettingsSection>
 
-      <SettingsSection
-        eyebrow={messages.customisePage.messageIntake}
-        help={messages.customisePage.messageIntakeHelp}
-      >
+      <SettingsSection eyebrow={messages.customisePage.messageIntake}>
         <Grid.Col span={CARD_SPAN} style={{ display: "flex" }}>
           <SettingsCard
             title={messages.customisePage.inbox}
@@ -235,11 +211,7 @@ export default function Customise() {
         </Grid.Col>
       </SettingsSection>
 
-      <SettingsSection
-        eyebrow={messages.customisePage.atmosphereLinks}
-        help={messages.customisePage.atmosphereLinksHelp}
-        last
-      >
+      <SettingsSection eyebrow={messages.customisePage.atmosphereLinks} last>
         <Grid.Col span={CARD_SPAN} style={{ display: "flex" }}>
           <SettingsCard
             title={messages.customisePage.atmosphereLinksSetting}

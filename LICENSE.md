@@ -1,6 +1,6 @@
 # Software License (MIT)
 
-Copyright (c) 2025 Navyfragen APp
+Copyright (c) 2025 kodamachi
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,10 +22,11 @@ SOFTWARE.
 
 # Asset & Design License (All Rights Reserved)
 
-The MIT license above applies strictly to the source code and logic files of this project. 
-All rights to visual design elements, custom artwork, sprites, 3D models, audio, and logos 
+The MIT license above applies strictly to the source code and logic files of this project.
+All rights to visual design elements, custom artwork, sprites, 3D models, audio, and logos
 located in within the source code directories are strictly reserved by the copyright owner.
 
 Forks and derivative works of this software:
+
 - MUST remove or replace these visual assets before redistribution.
 - MAY NOT use the project's official branding, logos, or name in a way that implies endorsement.

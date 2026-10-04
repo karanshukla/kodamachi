@@ -15,9 +15,7 @@ vi.mock("../../api/authService", async (importOriginal) => {
   return { ...actual, useSession: vi.fn() };
 });
 
-// Settings renders <PushNotificationsCard>, whose usePushAvailable() hook
-// otherwise makes a real apiClient.get() fetch call that races with (and can
-// consume) the delete-account fetch mocks used by several tests below.
+// Stops PushNotificationsCard's usePushAvailable() fetch from consuming the delete-account fetch mocks.
 vi.mock("../../api/notificationService", async (importOriginal) => {
   const actual = await importOriginal<typeof import("../../api/notificationService")>();
   return {
@@ -144,7 +142,6 @@ describe("Settings page", () => {
     mockUsePdsInfo.mockReturnValue({ data: undefined, isLoading: true } as any);
     renderWithProviders(<Settings />);
     expect(screen.getByText(/account overview/i)).toBeInTheDocument();
-    // Stats values not visible while loading
     expect(screen.queryByText(en.settingsPage.messagesInInbox)).toBeNull();
   });
 
@@ -171,7 +168,6 @@ describe("Settings page", () => {
     expect(screen.getByText("42")).toBeInTheDocument();
     expect(screen.getByText(en.settingsPage.answersOnPds)).toBeInTheDocument();
     expect(screen.getByText(en.settingsPage.activeSince)).toBeInTheDocument();
-    // PDS URL with https:// stripped
     expect(screen.getByText("bsky.social")).toBeInTheDocument();
     expect(screen.getByText(en.settingsPage.pdsLabel)).toBeInTheDocument();
   });
@@ -256,7 +252,6 @@ describe("Settings page", () => {
       isLoading: false,
     } as any);
     renderWithProviders(<Settings />);
-    // Invoke the onSuccess callback — it's intentionally empty but must be covered
     act(() => {
       capturedOnSuccess?.();
     });
@@ -326,7 +321,7 @@ describe("Settings page", () => {
     expect(screen.queryByRole("link", { name: en.settingsPage.followTheBotOnBluesky })).toBeNull();
   });
 
-  it("opens delete account modal when 'Delete my Data' is clicked", async () => {
+  it("opens delete account modal when 'Delete my data' is clicked", async () => {
     setupLoggedIn();
     mockUseUserSettings.mockReturnValue({
       data: { pdsSyncEnabled: 1, imageTheme: "default" },
@@ -448,7 +443,6 @@ describe("Settings page", () => {
     renderWithProviders(<Settings />);
     fireEvent.click(screen.getByRole("button", { name: en.settingsPage.deleteMyData }));
     await waitFor(() => screen.getByText(en.settingsPage.deleteAccountMessage));
-    // Click Cancel to trigger onClose → setDeleteModalOpened(false)
     fireEvent.click(screen.getByRole("button", { name: en.common.cancel }));
     await waitFor(() => {
       expect(screen.queryByText(en.settingsPage.deleteAccountMessage)).toBeNull();
@@ -475,7 +469,6 @@ describe("Settings page", () => {
     renderWithProviders(<Settings />);
     const alerts = screen.getAllByText(/failed to load settings/i);
     expect(alerts.length).toBeGreaterThanOrEqual(1);
-    // Click Retry — covers the onClick on the Button inside settingsLoadError (line 80)
     fireEvent.click(screen.getAllByRole("button", { name: en.common.retry })[0]);
     await waitFor(() => expect(mockRefetch).toHaveBeenCalled());
   });
@@ -623,15 +616,9 @@ describe("Settings page", () => {
       isLoading: false,
     } as any);
     renderWithProviders(<Settings />);
-    // botFollowLoading=true → covers the sessionLoading||botFollowLoading true branch
     expect(screen.getByText(en.settingsPage.dailyNotifications)).toBeInTheDocument();
   });
-  /**
-   * The feed rkey is a frozen contract and the handle is not, so this spells
-   * the rkey out as a literal while letting the domain follow `brand.json`.
-   * A rename therefore fails here and nowhere else, which is the point: the
-   * `at://` URI is already in the hands of anyone who pinned the feed.
-   */
+  // The feed rkey is a frozen contract (pinned feeds hold the at:// URI), so it is a literal; only the domain follows brand.json.
   it("links the feed at its published rkey, which a rename must not silently change", () => {
     mockUseSession.mockReturnValue({
       data: { isLoggedIn: true, profile: { did: "did:plc:abc", handle: "alice.bsky.social" } },
@@ -655,7 +642,7 @@ describe("Settings page", () => {
     const feedLink = screen.getByRole("link", { name: en.settingsPage.openFeedOnBluesky });
     expect(feedLink).toHaveAttribute(
       "href",
-      `https://bsky.app/profile/${APP_DOMAIN}/feed/navyfragen`
+      `https://bsky.app/profile/${APP_DOMAIN}/feed/kodamachi`
     );
   });
 });

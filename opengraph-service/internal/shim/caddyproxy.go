@@ -13,20 +13,15 @@ import (
 
 	"github.com/caddyserver/caddy/v2"
 	"github.com/caddyserver/caddy/v2/caddyconfig"
-	_ "github.com/caddyserver/caddy/v2/caddyconfig/caddyfile"          // registers the "caddyfile" config adapter
-	_ "github.com/caddyserver/caddy/v2/modules/caddyhttp/reverseproxy" // registers the reverse_proxy directive
-	_ "github.com/caddyserver/caddy/v2/modules/caddyhttp/standard"     // registers core Caddyfile HTTP directives (handle, respond, etc.)
+	_ "github.com/caddyserver/caddy/v2/caddyconfig/caddyfile"          // caddyfile adapter
+	_ "github.com/caddyserver/caddy/v2/modules/caddyhttp/reverseproxy" // reverse_proxy directive
+	_ "github.com/caddyserver/caddy/v2/modules/caddyhttp/standard"     // core HTTP directives
 )
 
-// caddyUpstreamHeader carries the real per-request destination (host:port)
-// into the embedded Caddy engine. Caddy models "the running config" as a
-// process-wide singleton (caddy.Load replaces it wholesale), so rather than
-// give every Handler its own engine/listener/shutdown lifecycle, the process
-// runs exactly one loopback-only Caddy engine and every Handler's proxy path
-// tags its request with where it actually needs to go. Production only ever
-// has one Handler (one FRONTEND_URL for the process's life); the test suite
-// constructs many Handlers against many different httptest upstreams, and
-// this is what lets them all share the one engine safely.
+// caddyUpstreamHeader carries the per-request destination (host:port) into the
+// embedded engine. Caddy's running config is a process-wide singleton, so one
+// loopback engine is shared by every Handler (tests build many, with different
+// upstreams) and each request is tagged with where it goes.
 const caddyUpstreamHeader = "X-Navyfragen-Internal-Upstream"
 
 var (
@@ -35,11 +30,8 @@ var (
 	caddyEngineErr  error
 )
 
-// ensureCaddyEngine lazily starts the embedded Caddy reverse-proxy engine the
-// first time any Handler needs to proxy a request, and returns the loopback
-// address it is listening on. The engine is never reachable outside this
-// process: it binds 127.0.0.1 on an OS-assigned port, and nothing forwards
-// that port out of the container.
+// ensureCaddyEngine lazily starts the embedded engine and returns its loopback
+// address (127.0.0.1, OS-assigned port).
 func ensureCaddyEngine() (string, error) {
 	caddyEngineOnce.Do(func() {
 		ln, err := net.Listen("tcp", "127.0.0.1:0")
@@ -79,10 +71,8 @@ http://%s {
 	return caddyEngineAddr, caddyEngineErr
 }
 
-// newCaddyProxy returns an http.Handler that forwards every request to target
-// via the embedded Caddy engine, which owns buffering, streaming, and
-// connection handling. The only Go code here is the loopback hop that tags each
-// request with its real destination.
+// newCaddyProxy returns a handler that forwards every request to target via
+// the embedded engine.
 func newCaddyProxy(target *url.URL) (http.Handler, error) {
 	engineAddr, err := ensureCaddyEngine()
 	if err != nil {
@@ -93,9 +83,8 @@ func newCaddyProxy(target *url.URL) (http.Handler, error) {
 	baseDirector := proxy.Director
 	proxy.Director = func(req *http.Request) {
 		baseDirector(req)
-		// The default director rewrites req.URL.Host but not req.Host. The
-		// engine's site block is host-matched, so without the outgoing Host
-		// header Caddy never matches the site and silently no-ops.
+		// The default director leaves req.Host alone, and the engine's site
+		// block is host-matched: without this Caddy silently no-ops.
 		req.Host = engineURL.Host
 		req.Header.Set(caddyUpstreamHeader, target.Host)
 	}
@@ -103,17 +92,14 @@ func newCaddyProxy(target *url.URL) (http.Handler, error) {
 	return proxy, nil
 }
 
-// IsErrServerClosed reports whether err is http.ErrServerClosed — the expected
-// error from Server.Shutdown. Main callers use this to distinguish graceful
-// shutdown from a real listen failure.
+// IsErrServerClosed reports whether err is http.ErrServerClosed, the expected
+// result of a graceful shutdown.
 func IsErrServerClosed(err error) bool {
 	return errors.Is(err, http.ErrServerClosed)
 }
 
-// proxyErrorHandler fires when the loopback hop into the embedded engine
-// fails. Since the engine is in-process, that means the engine itself failed —
-// distinct from the frontend being down, which Caddy reports with its own 502.
-// Client disconnects are deliberately not logged as errors.
+// proxyErrorHandler handles a failed hop into the embedded engine (not a down
+// frontend, which Caddy reports itself). Client disconnects are not logged.
 func proxyErrorHandler(w http.ResponseWriter, r *http.Request, err error) {
 	if errors.Is(err, context.Canceled) {
 		return

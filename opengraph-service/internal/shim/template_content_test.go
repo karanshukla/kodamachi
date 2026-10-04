@@ -5,11 +5,6 @@ import (
 	"testing"
 )
 
-// Content rules for BuildOGTemplate: what gets rendered for a given profile,
-// and what a hostile profile field cannot do to the markup.
-
-// The footer link legitimately names the handle again, so the rule is scoped to
-// the identity block: the headline and the @row must not say the same thing.
 func TestBuildOGTemplate_NoDisplayName_DoesNotPrintTheHandleTwice(t *testing.T) {
 	html := BuildOGTemplate(OGInput{DisplayName: "", Handle: "dave.bsky.social"})
 	meta := between(html, `<div class="meta">`, `</div>
@@ -22,7 +17,6 @@ func TestBuildOGTemplate_NoDisplayName_DoesNotPrintTheHandleTwice(t *testing.T) 
 	}
 }
 
-// The other side of that boundary: with a display name, both rows are present.
 func TestBuildOGTemplate_WithDisplayName_ShowsNameAndHandleRows(t *testing.T) {
 	html := BuildOGTemplate(OGInput{DisplayName: "Dave Lister", Handle: "dave.bsky.social"})
 	if !strings.Contains(html, `class="handle"`) {
@@ -33,7 +27,6 @@ func TestBuildOGTemplate_WithDisplayName_ShowsNameAndHandleRows(t *testing.T) {
 	}
 }
 
-// A handle already carrying its @ must not end up rendered as "@@handle".
 func TestBuildOGTemplate_HandleAtPrefixIsNotDoubled(t *testing.T) {
 	html := BuildOGTemplate(OGInput{DisplayName: "Dave", Handle: "@dave.bsky.social"})
 	if strings.Contains(html, "@@") {
@@ -41,10 +34,7 @@ func TestBuildOGTemplate_HandleAtPrefixIsNotDoubled(t *testing.T) {
 	}
 }
 
-// The template is expanded by a single-pass strings.Replacer, so a profile field
-// containing a slot marker is inserted literally rather than re-expanded. A
-// sequential implementation would substitute it and let a display name reach
-// into the CSS.
+// Single-pass strings.Replacer: a slot marker in a profile field is inserted literally, not re-expanded.
 func TestBuildOGTemplate_UserContentCannotInjectTemplateSlots(t *testing.T) {
 	html := BuildOGTemplate(OGInput{
 		DisplayName: "{{CHIP_BG}}",
@@ -59,8 +49,6 @@ func TestBuildOGTemplate_UserContentCannotInjectTemplateSlots(t *testing.T) {
 	}
 }
 
-// Every slot must be filled: an unreplaced marker would render as visible
-// "{{...}}" text or, in the CSS, silently break a rule.
 func TestBuildOGTemplate_LeavesNoUnfilledSlots(t *testing.T) {
 	html := BuildOGTemplate(OGInput{
 		DisplayName: "Alice",
@@ -77,20 +65,16 @@ func TestBuildOGTemplate_LeavesNoUnfilledSlots(t *testing.T) {
 	}
 }
 
-// The footer carries the link a reader is meant to act on. It has to be the
-// short share URL the app hands out (fragen.navy/<handle>), not the
-// /profile/<handle> path the crawler happened to fetch.
 func TestBuildOGTemplate_FooterShowsTheUsersShareLink(t *testing.T) {
 	html := BuildOGTemplate(OGInput{DisplayName: "Alice", Handle: "alice.bsky.social"})
 	chip := between(html, `<div class="chip">`, "</div>")
-	if !strings.Contains(chip, "fragen.navy/") {
+	if !strings.Contains(chip, "kodamachi.online/") {
 		t.Fatalf("footer should carry the share domain, got %q", chip)
 	}
 	if !strings.Contains(chip, "alice.bsky.social") {
 		t.Fatalf("footer link should name the profile, got %q", chip)
 	}
-	// The brand text sits alongside the link rather than being replaced by it.
-	if !strings.Contains(html, AppNameWordmarkHTML) {
+	if !strings.Contains(html, `<div class="wordmark">`+AppName+`</div>`) {
 		t.Fatal("the wordmark should still be in the footer")
 	}
 }
@@ -98,7 +82,7 @@ func TestBuildOGTemplate_FooterShowsTheUsersShareLink(t *testing.T) {
 func TestBuildOGTemplate_ShareLinkUsesTheTrimmedHandle(t *testing.T) {
 	html := BuildOGTemplate(OGInput{DisplayName: "Alice", Handle: "@alice.bsky.social"})
 	chip := between(html, `<div class="chip">`, "</div>")
-	if strings.Contains(chip, "fragen.navy/@") {
+	if strings.Contains(chip, "kodamachi.online/@") {
 		t.Fatalf("share link should not carry the handle's leading @, got %q", chip)
 	}
 }
@@ -110,9 +94,6 @@ func TestBuildOGTemplate_ShareLinkEscapesTheHandle(t *testing.T) {
 	}
 }
 
-// A long handle must ellipsise inside the pill rather than push the footer
-// wider than the canvas. [TestBuildOGTemplate_LongHandle_HasTruncationCSS]
-// covers the @handle row; this is the same rule for the footer link.
 func TestBuildOGTemplate_ShareLinkPillTruncates(t *testing.T) {
 	css := between(BuildOGTemplate(OGInput{Handle: "a.bsky.social"}), "<style>", "</style>")
 	rule := between(css, ".chip {", "}")
@@ -135,8 +116,6 @@ func TestSafeImageURL(t *testing.T) {
 		}
 	}
 
-	// Rejected shapes fall back to the gradient/glyph rather than being
-	// sanitised into something half-trusted.
 	rejected := map[string]string{
 		"empty":               "",
 		"whitespace only":     "   ",
@@ -157,8 +136,6 @@ func TestSafeImageURL(t *testing.T) {
 		}
 	}
 
-	// A quote in an otherwise valid URL is escaped, not passed through, so it
-	// cannot close the src attribute.
 	if got := safeImageURL(`https://cdn.bsky.app/a.jpg?x="onerror="alert(1)`); strings.Contains(got, `"`) {
 		t.Errorf("raw quote survived escaping: %q", got)
 	}
@@ -174,10 +151,9 @@ func TestBuildOGTemplate_RejectedURLsFallBackToTheBrandTreatment(t *testing.T) {
 	if strings.Contains(html, "javascript:") {
 		t.Fatal("a javascript: URL reached the rendered markup")
 	}
-	if strings.Contains(html, "<img") {
-		t.Fatal("no <img> should be emitted when both URLs are refused")
+	if strings.Contains(strings.Replace(html, brandMark, "", 1), "<img") {
+		t.Fatal("no <img> besides the brand mark should be emitted when both URLs are refused")
 	}
-	// The glyph fallback stands in for the avatar.
 	if !strings.Contains(html, `<div class="avatar">E</div>`) {
 		t.Fatalf("expected the glyph fallback avatar\n%s", between(html, `class="identity"`, "</div>"))
 	}

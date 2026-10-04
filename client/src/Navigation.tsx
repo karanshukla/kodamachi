@@ -27,7 +27,6 @@ interface NavigationProps {
 export function Navigation({ onLinkClick }: NavigationProps) {
   const location = useLocation();
   const messages = useTranslations();
-  /** The three ways a Navyfragen user can be related to you. */
   const friendGroups = [
     {
       key: "moots",
@@ -80,7 +79,7 @@ export function Navigation({ onLinkClick }: NavigationProps) {
     <Box style={styles.root}>
       <Box style={{ flexShrink: 0 }}>
         <NavLink
-          {...linkProps("/", messages.common.shortcuts.home, <IconHome size={16} stroke={1.5} />)}
+          {...linkProps("/", messages.common.shortcuts.home, <IconHome size={20} stroke={1.5} />)}
         />
 
         {isLoggedIn ? (
@@ -89,7 +88,7 @@ export function Navigation({ onLinkClick }: NavigationProps) {
               {...linkProps(
                 "/messages",
                 messages.common.shortcuts.messages,
-                <IconMessage size={16} stroke={1.5} />
+                <IconMessage size={20} stroke={1.5} />
               )}
               rightSection={
                 !isActive("/messages") && unread > 0 ? (
@@ -101,14 +100,14 @@ export function Navigation({ onLinkClick }: NavigationProps) {
               {...linkProps(
                 "/customise",
                 messages.common.shortcuts.customise,
-                <IconAdjustments size={16} stroke={1.5} />
+                <IconAdjustments size={20} stroke={1.5} />
               )}
             />
             <NavLink
               {...linkProps(
                 "/settings",
                 messages.common.shortcuts.settings,
-                <IconSettings size={16} stroke={1.5} />
+                <IconSettings size={20} stroke={1.5} />
               )}
             />
           </>
@@ -122,7 +121,7 @@ export function Navigation({ onLinkClick }: NavigationProps) {
             {...linkProps(
               "/login",
               messages.common.shortcuts.login,
-              <IconLogin size={16} stroke={1.5} />
+              <IconLogin size={20} stroke={1.5} />
             )}
           />
         )}
@@ -154,7 +153,6 @@ export function Navigation({ onLinkClick }: NavigationProps) {
   );
 }
 
-/** Context chip shown while looking at someone else's public profile. */
 function ViewingProfile({ handle }: { handle: string }) {
   const messages = useTranslations();
   return (

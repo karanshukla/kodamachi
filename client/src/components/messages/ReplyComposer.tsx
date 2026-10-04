@@ -6,7 +6,6 @@ import { useTranslations } from "../../lib/i18n";
 import type { Messages } from "../../lib/i18n/types";
 import { useNumberFormat } from "../../lib/useNumberFormat";
 import { useSlowRequestHint } from "../../lib/useSlowRequestHint";
-import { BRAND_GRADIENT } from "../../styles/tokens";
 
 import { CharRing } from "./CharRing";
 import * as styles from "./ReplyComposer.styles";
@@ -18,13 +17,9 @@ interface ReplyComposerProps {
   onSend: () => void;
   onCancel: () => void;
   sending: boolean;
-  /** True while an unanswered thread root is holding this reply back. */
   blocked: boolean;
-  /** Whether sending will chain onto an existing thread rather than post fresh. */
   inThread: boolean;
-  /** Whether this reply will carry a rendered question image, which is the slow path. */
   includesImage: boolean;
-  /** True while the send is held back by the question image, not by Bluesky. */
   awaitingRender: boolean;
   textareaRef: React.RefObject<HTMLTextAreaElement | null>;
 }
@@ -120,9 +115,8 @@ export function ReplyComposer({
             }}
             loading={sending}
             disabled={blocked}
-            variant="gradient"
-            gradient={BRAND_GRADIENT}
-            leftSection={<IconSend2 size={12} />}
+            variant="filled"
+            leftSection={<IconSend2 size={14} />}
           >
             {inThread ? messages.replyComposer.replyToThread : messages.replyComposer.reply}
           </Button>

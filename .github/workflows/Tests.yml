@@ -10,10 +10,7 @@ permissions:
   contents: read
   pull-requests: write
 
-# A superseded PR run holds its runners until it finishes, and this workflow
-# fans out to seven jobs, so pushing twice in quick succession starves the next
-# run of the queue. Main is exempt: its runs are the merge-status record and
-# cancelling one leaves a commit with no verdict.
+# Cancels superseded PR runs: seven jobs per run would starve the queue. Main is exempt, since its runs are the merge-status record.
 concurrency:
   group: tests-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
@@ -27,13 +24,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Bun is the installer (issue #250) and the runtime for every client
-      # script. Deliberately no setup-node: the runner image ships a Node
-      # anyway, and `bun run <script>` hands node-shebang binaries (vite,
-      # vitest, tsc) to it whenever it is on PATH, which is why every client
-      # script routes through `bunx --bun`. The probe below asserts the runtime
-      # rather than trusting that — a silent Node fallback would leave the whole
-      # job measuring the wrong thing.
+      # No setup-node: with Node on PATH, `bun run` hands node-shebang binaries (vite,
+      # vitest, tsc) to it, hence `bunx --bun` everywhere. The probe below asserts the runtime.
       - name: Set up Bun
         uses: oven-sh/setup-bun@v2
         with:
@@ -43,9 +35,6 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Verify generated brand static assets are current
-        # public/sitemap.xml and public/client-metadata.json are generated
-        # from the repo-root brand.json (issue #386) — regenerate and fail if
-        # the committed files drifted.
         working-directory: client
         run: |
           bun run render:brand-assets
@@ -59,12 +48,8 @@ jobs:
             echo
           } > "$GITHUB_STEP_SUMMARY"
 
-          # createServer + fetch of a TSX route through @vitejs/plugin-react.
-          # `vite build` (the Docker path) and vitest (its own module runner)
-          # both skip the dev server, so this is its only coverage.
-          # Capture through a file, not `$(...)`: command substitution waits for
-          # the pipe to close rather than for the process, so a dev server that
-          # fails to release its socket hangs the step indefinitely.
+          # Only coverage of the vite dev server (build and vitest skip it). Capture via a
+          # file: `$(...)` hangs if the server fails to release its socket.
           set +e
           timeout --signal=TERM --kill-after=15s 120s bun run probe:bun \
             > "$RUNNER_TEMP/probe.log" 2>&1
@@ -90,23 +75,13 @@ jobs:
             exit 1
           fi
 
-      # tsc + vite build, the same pair docker/Dockerfile.client runs on the
-      # oven/bun image. Covers src/ only — client/tsconfig.json excludes the
-      # tests, so the step below is what type-checks those.
       - name: Build under Bun
         run: cd client && bun run build
 
-      # #406: the es uiLocale catalog must ship as its own lazy-loaded chunk,
-      # not folded into the entry bundle every visitor downloads regardless of
-      # language. Asserted on the dist/ the build step above just produced —
-      # see client/scripts/check-locale-chunking.mjs.
       - name: Check the es locale ships as its own chunk
         run: cd client && bun run check:locale-chunking
 
-      # `typecheck` runs both configs: the app one the build already covered,
-      # and tsconfig.test.json for src/tests. Without this the suite compiles
-      # nothing — vitest strips types rather than checking them — so a test
-      # could call a catalog entry with the wrong argument type and stay green.
+      # Also type-checks tests (tsconfig.test.json); vitest strips types.
       - name: Typecheck client, tests included
         run: cd client && bun run typecheck
 
@@ -148,39 +123,24 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Bun is both the installer (#250) and the server test runtime. The Node
-      # `node --test` path and the runtime-agnostic mock shim were retired in
-      # #288 — the suite now runs wholesale under `bun test`, and coverage comes
-      # from Bun's built-in reporter (#287, configured in server/bunfig.toml).
       - name: Set up Bun
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
 
       - name: Install dependencies
-        # Native addons (sharp) need their build scripts; bun blocks dep
-        # lifecycle scripts by default, so trust the ones we need. (better-sqlite3
-        # was removed in #288 — SQLite now runs through bun:sqlite, which ships
-        # inside the Bun runtime and needs no native build.)
+        # bun blocks dep lifecycle scripts by default; sharp needs its build.
         run: bun install --frozen-lockfile
 
-      # Nothing else compiles this workspace. Bun runs TypeScript by stripping
-      # types, docker/Dockerfile.server has no build step for the same reason,
-      # and `bun test` strips them too — so before this step a server type
-      # error had no way to fail anything short of production. The config it
-      # runs covers src/tests as well; unlike the client there is no second
-      # config, because a server test reaching a Node global is fine.
+      # Nothing else type-checks the server: bun and bun test strip types.
       - name: Typecheck server, tests included
         run: cd server && bun run typecheck
 
-      # Runtime probes that guard Bun-specific regressions not covered by the
-      # test suite itself. Both gate the job.
       - name: Probe SQLite data layer + OAuth handle resolution under Bun
         id: probe
         working-directory: server
         env:
-          # createDb's SQLite branch pulls #/lib/env, which requires these at
-          # load time. Mirror src/tests/test-bootstrap.js's dummy values.
+          # createDb's SQLite branch needs these at load time (mirrors test-bootstrap.js).
           NODE_ENV: test
           OAUTH_TOKEN_SECRET: 0123456789abcdef0123456789abcdef
         run: |
@@ -189,11 +149,8 @@ jobs:
             echo
           } > "$GITHUB_STEP_SUMMARY"
 
-          # SQLite data layer — the bun:sqlite adapter bridged onto Kysely
-          # (#263). The bun command exits non-zero on any failure (mismatch or
-          # thrown error) and prints "OK" on success. Gate on the exit code
-          # (authoritative) and confirm "OK" appeared (the dotenv banner can
-          # prepend lines).
+          # bun:sqlite adapter bridged onto Kysely. Gate on the exit code and require "OK"
+          # (the dotenv banner can prepend lines).
           set +e
           sqlite_out=$(bun -e "import('./src/database/db.ts').then(async ({createDb,migrateToLatest})=>{const db=await createDb(':memory:');await migrateToLatest(db);await db.insertInto('message').values({tid:'t1',message:'hi',createdAt:'2024-01-01',recipient:'did:web:x'}).execute();const row=await db.selectFrom('message').selectAll().executeTakeFirstOrThrow();await db.destroy();if(row.tid!=='t1')throw new Error('row mismatch '+JSON.stringify(row));console.log('OK',JSON.stringify(row))}).catch(e=>{console.error('FAIL',e.message);process.exit(1)})" 2>&1)
           sqlite_exit=$?
@@ -213,12 +170,8 @@ jobs:
             exit 1
           fi
 
-          # OAuth handle resolution — the one production surface with no other CI
-          # coverage. E2E signs in with an app password and never resolves a
-          # handle, so this path (patched fetch-node → unicastFetchWrap) is only
-          # exercised here. Its Bun failure mode is silent (resolution returns
-          # undefined, surfacing only as "does not resolve to a DID"), so assert
-          # a did: string comes back rather than trusting the call not to throw.
+          # OAuth handle resolution has no other CI coverage (E2E uses an app password). Its Bun
+          # failure mode is silent (undefined), so assert a did: string comes back.
           set +e
           probe_out=$(bun -e "
             import { AtprotoHandleResolverNode } from '@atproto/oauth-client-node';
@@ -246,12 +199,8 @@ jobs:
             exit 1
           fi
 
-      # Gating. This step used to carry continue-on-error, because Bun's
-      # coverageThreshold exits 1 for any coverage below 100% whatever the
-      # threshold — which also swallowed genuine test failures (#380 merged a
-      # red suite green). server/bunfig.toml sets no threshold now, so the exit
-      # code tracks test results and this step can gate. Coverage is bar-checked
-      # by Coveralls below. `pipefail` keeps `tee` from masking the exit code.
+      # Gates on test results: server/bunfig.toml sets no coverageThreshold (Bun exits 1
+      # below 100% regardless, which hid failures). `pipefail` keeps tee from masking the exit code.
       - name: Run server tests with coverage
         shell: bash
         run: |
@@ -315,13 +264,9 @@ jobs:
           flag-name: server
           base-path: server
           parallel: true
-          # Bun's lcov carries line + function coverage only (no branch records),
-          # so the server flag reports branch% as 0/N/A on Coveralls. Bun's own
-          # `coverageThreshold` is unusable (see server/bunfig.toml), so this is
-          # the coverage gate, not a secondary defense — it tolerates the
-          # missing branch metric. The test-pass gate is the step above.
+          # Bun's lcov has no branch records, so branch% reads 0/N/A. coverageThreshold is
+          # unusable (see server/bunfig.toml), so this is the coverage gate.
           coverage-threshold-percent: 97
-
 
   opengraph-tests:
     name: OpenGraph Service (Go) Tests
@@ -345,8 +290,6 @@ jobs:
         run: go mod download
 
       - name: Verify generated brand.go is current
-        # internal/shim/brand.go is generated from the repo-root brand.json
-        # (issue #384) — regenerate and fail if the committed file drifted.
         run: |
           go generate ./internal/...
           git diff --exit-code internal/shim/brand.go
@@ -355,9 +298,7 @@ jobs:
         run: go vet ./...
 
       - name: Run tests
-        # -race exercises the singleflight / cache-mutex / semaphore
-        # concurrency surface that this change introduces. CGO is required for
-        # the race detector; setup-go enables it by default on linux.
+        # CGO is required for the race detector; setup-go enables it on linux.
         run: go test -race -count=1 ./...
 
   html-to-image-tests:
@@ -376,34 +317,20 @@ jobs:
         with:
           bun-version: latest
 
-      # html-to-image is a bun workspace member (#314), so deps come from the
-      # single root bun.lock — no standalone package-lock.json anymore.
       - name: Install dependencies
-        # The unit tests never launch a browser — they drive
-        # createApp/createBrowserPool through fakes — so the ~150MB Chrome
-        # download is pure CI cost. The probe step below downloads it
-        # explicitly only when it needs to launch one. The production image
-        # supplies Alpine's system Chromium instead.
+        # Unit tests use fakes, so skip the ~150MB Chrome download; the probe installs it.
         env:
           PUPPETEER_SKIP_DOWNLOAD: "true"
         run: bun install --frozen-lockfile
 
-      # Bun-runtime regression canary (#314). The service runs on Bun in
-      # production; two surfaces in the render path are the load-bearing risk
-      # under that runtime — the child_process.spawn of Chromium (Puppeteer
-      # launches the browser via child_process) and the CDP WebSocket transport
-      # between puppeteer and Chromium. This probe exercises both end-to-end
-      # (launch → newPage → goto → evaluate → screenshot → close), mirroring
-      # the server's SQLite/OAuth canaries. The probe needs a real Chromium,
-      # so install the browser the resolved puppeteer expects here.
+      # Bun-runtime canary: Chromium child_process.spawn and the puppeteer CDP WebSocket,
+      # end-to-end (launch, newPage, goto, evaluate, screenshot, close).
       - name: Probe Puppeteer under Bun
         id: probe
         env:
           PUPPETEER_SKIP_DOWNLOAD: "false"
         run: |
-          # `bunx puppeteer browsers install chrome` downloads the build that
-          # puppeteer.launch() with no executablePath picks up. bunx, not npx,
-          # so this job needs no Node.
+          # bunx, not npx, so this job needs no Node.
           bunx puppeteer browsers install chrome
 
           {
@@ -411,10 +338,7 @@ jobs:
             echo
           } > "$GITHUB_STEP_SUMMARY"
 
-          # The probe lives in a checked-in file rather than a `bun -e` heredoc
-          # so the JS isn't fighting bash's double-quote escaping (template
-          # literals and ${} in particular). It imports CHROMIUM_LAUNCH_ARGS
-          # from the real app so it exercises the actual launch flags.
+          # Checked-in file to avoid bash quote escaping; imports the real CHROMIUM_LAUNCH_ARGS.
           set +e
           probe_out=$(bun probe-bun-puppeteer.mjs 2>&1)
           probe_exit=$?
@@ -442,9 +366,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
-    # CLAUDE.md lets a test carry a business rule in place of a comment, on the
-    # condition that the code links to that test. A renamed test breaks the link
-    # silently, which puts the rule back to being undocumented.
+    # Tests that carry a rule must stay linked from the code; a rename breaks the link silently.
     steps:
       - uses: actions/checkout@v4
 
@@ -453,8 +375,7 @@ jobs:
         with:
           bun-version: latest
 
-      # The checker silently missed a wrapped @see once, so it is pinned by its
-      # own boundary pairs before it is trusted to gate anything.
+      # Pinned by boundary pairs: it once silently missed a wrapped @see.
       - name: Test the checker
         run: bun run test:doc-links
 
@@ -466,10 +387,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
-    # The policy allowed /site.webmanifest long after vite-plugin-pwa started
-    # emitting /manifest.webmanifest, so the real file was challenged while the
-    # rule sat there looking correct. Nothing caught it because nothing read the
-    # policy and the client build together.
+    # The policy once allowed /site.webmanifest after the PWA plugin moved to
+    # /manifest.webmanifest; this reads the policy and the client build together.
     steps:
       - uses: actions/checkout@v4
 
@@ -486,13 +405,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
-    # The root tsconfig.json covers e2e/ and scripts/, and no script had ever
-    # run it — it still named `moduleResolution: "node"`, removed from tsc, so
-    # the config could not load at all and had been checking nothing for as
-    # long as it had existed. Deliberately not a step in E2E.yml: that workflow
-    # serializes on one shared live Bluesky account and takes half an hour, so
-    # a spec with a type error should fail here in a minute rather than wait
-    # for the lock.
+    # Not in E2E.yml: that job waits on the shared-account lock; type errors in e2e/
+    # and scripts/ should fail fast here.
     steps:
       - uses: actions/checkout@v4
 
@@ -529,8 +443,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
-    # #402 moved the client's ~210 UI strings into client/src/lib/i18n/en.ts;
-    # this is what stops a new bare literal from creeping back in.
+    # Stops bare UI string literals creeping back outside client/src/lib/i18n/en.ts.
     steps:
       - uses: actions/checkout@v4
 

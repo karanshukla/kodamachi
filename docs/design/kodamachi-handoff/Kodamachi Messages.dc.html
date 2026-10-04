@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- support.js (the Claude Design runtime) is not vendored; see ../README.md -->
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@500;600&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,300,0,0&display=swap" rel="stylesheet" />
+<style>
+  body { margin: 0; background: #EDF0F5; font-family: "Schibsted Grotesk", "Noto Sans JP", sans-serif; -webkit-font-smoothing: antialiased; line-height: 1.5; font-feature-settings: "palt" 1; text-wrap: pretty; }
+  a { color: #234B94; text-decoration: none; }
+  a:hover { color: #10224A; }
+  h1, h2, h3, h4 { line-height: 1.25; }
+  :focus-visible { outline: 2px solid #234B94; outline-offset: 2px; border-radius: 4px; }
+  ::selection { background: #C9D5EA; color: #10224A; }
+  * { scrollbar-width: thin; scrollbar-color: #C9D5EA transparent; }
+  *::-webkit-scrollbar { width: 10px; height: 10px; }
+  *::-webkit-scrollbar-thumb { background: #C9D5EA; border-radius: 6px; border: 3px solid transparent; background-clip: content-box; }
+  *::-webkit-scrollbar-thumb:hover { background: #A9B9D6; background-clip: content-box; }
+  *::-webkit-scrollbar-track { background: transparent; }
+  [lang="ja"], .jp { letter-spacing: 0.02em; font-feature-settings: "palt" 1; }
+  .ms { font-family: "Material Symbols Outlined"; font-weight: normal; font-style: normal; line-height: 1; letter-spacing: normal; text-transform: none; display: inline-block; white-space: nowrap; direction: ltr; -webkit-font-feature-settings: "liga"; -webkit-font-smoothing: antialiased; }
+</style>
+</helmet>
+
+<div style="padding: 48px 40px 80px; display: flex; flex-direction: column; gap: 48px; align-items: flex-start;">
+  <div style="display: flex; flex-direction: column; gap: 6px;">
+    <div style="font-size: 11px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: #7684A0;">Kodamachi · redesign</div>
+    <div style="font-size: 26px; font-weight: 600; letter-spacing: -0.02em; color: #111C36;">Messages</div>
+  </div>
+
+  <!-- desktop inbox -->
+  <div data-screen-label="Messages · desktop inbox" style="width: 1280px; background: #FFFFFF; border: 1px solid #E3E8F0; border-radius: 14px; overflow: hidden; box-shadow: 0 18px 40px -28px rgba(16,34,74,0.35);">
+    <div style="height: 60px; border-bottom: 1px solid #E3E8F0; display: flex; align-items: center; justify-content: space-between; padding: 0 20px;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <div style="width: 30px; height: 30px; border-radius: 9px; background: #10224A; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: 'Noto Serif JP', serif; font-weight: 600; font-size: 18px;">木</div>
+        <div style="font-size: 17px; font-weight: 600; letter-spacing: -0.02em; color: #111C36;">kodamachi</div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <div style="height: 32px; padding: 0 12px; border-radius: 999px; border: 1px solid #C9D5EA; background: #EDF2FB; color: #234B94; font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 7px;"><span class="ms" style="font-size: 16px;">refresh</span>Update</div>
+        <div style="width: 34px; height: 34px; border-radius: 10px; border: 1px solid #E3E8F0; display: flex; align-items: center; justify-content: center;"><span class="ms" style="font-size: 18px; color: #63708C;">dark_mode</span></div>
+        <div style="display: flex; align-items: center; gap: 9px; height: 34px; padding: 0 12px 0 5px; border: 1px solid #E3E8F0; border-radius: 999px;">
+          <div style="width: 24px; height: 24px; border-radius: 999px; background: #EDF2FB; color: #234B94; font-size: 11px; font-weight: 600; display: flex; align-items: center; justify-content: center;">KS</div>
+          <div style="font-size: 13px; font-weight: 500; color: #111C36;">Karan</div>
+          <span class="ms" style="font-size: 16px; color: #8C99B2;">expand_more</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="display: flex; align-items: stretch;">
+      <div style="width: 244px; border-right: 1px solid #E3E8F0; padding: 16px 14px; display: flex; flex-direction: column; gap: 4px; flex-shrink: 0;">
+        <div style="display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 10px; color: #46536E; font-size: 14px; font-weight: 500;"><span class="ms" style="font-size: 20px; color: #7684A0;">home</span>Home</div>
+        <div style="display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 10px; background: #EDF2FB; color: #10224A; font-size: 14px; font-weight: 600;"><span class="ms" style="font-size: 20px;">mail</span>Messages</div>
+        <div style="display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 10px; color: #46536E; font-size: 14px; font-weight: 500;"><span class="ms" style="font-size: 20px; color: #7684A0;">tune</span>Customise</div>
+        <div style="display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 10px; color: #46536E; font-size: 14px; font-weight: 500;"><span class="ms" style="font-size: 20px; color: #7684A0;">settings</span>Settings</div>
+        <div style="height: 1px; background: #E3E8F0; margin: 18px 2px 12px;"></div>
+        <div style="display: flex; align-items: center; gap: 6px; padding: 4px 2px 8px;">
+          <div style="font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #7684A0; flex: 1;">Moots</div>
+          <span class="ms" style="font-size: 14px; color: #A3AEC4;">expand_more</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px; padding: 6px;">
+          <div style="width: 28px; height: 28px; border-radius: 999px; background: #EDF2FB; flex-shrink: 0;"></div>
+          <div><div style="font-size: 13px; font-weight: 600; color: #111C36; line-height: 1.3;">mio</div><div style="font-size: 11px; color: #7684A0; line-height: 1.3;">@mio.bsky.social</div></div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px; padding: 6px;">
+          <div style="width: 28px; height: 28px; border-radius: 999px; background: #EDF2FB; flex-shrink: 0;"></div>
+          <div><div style="font-size: 13px; font-weight: 600; color: #111C36; line-height: 1.3;">haru.dev</div><div style="font-size: 11px; color: #7684A0; line-height: 1.3;">@haru.dev</div></div>
+        </div>
+      </div>
+
+      <div style="flex: 1; min-width: 0; background: #F7F9FC; padding: 32px 36px 44px;">
+        <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 22px;">
+          <div>
+            <h1 style="margin: 0; font-size: 30px; font-weight: 600; letter-spacing: -0.03em; color: #111C36;">Messages</h1>
+            <div style="font-size: 12px; color: #63708C; margin-top: 6px; letter-spacing: 0.02em;">3 new</div>
+          </div>
+        </div>
+
+        <div style="background: #10224A; border-radius: 12px; padding: 22px 24px; display: flex; align-items: center; gap: 20px; flex-wrap: wrap; margin-bottom: 22px;">
+          <div style="flex: 1; min-width: 220px;">
+            <div style="font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.62); margin-bottom: 7px;">Your inbox link · public</div>
+            <div style="font-size: 18px; font-weight: 600; color: #FFFFFF; letter-spacing: -0.01em;">koda.ma/karan.bsky.social</div>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <div style="height: 38px; padding: 0 16px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.28); color: #FFFFFF; font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 7px;"><span class="ms" style="font-size: 16px;">content_copy</span>Copy</div>
+            <div style="height: 38px; padding: 0 16px; border-radius: 10px; background: #FFFFFF; color: #10224A; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 7px;"><span class="ms" style="font-size: 16px;">ios_share</span>Share</div>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 22px; align-items: start;">
+          <div style="background: #FFFFFF; border: 1px solid #E3E8F0; border-radius: 12px; overflow: hidden;">
+            <div style="padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #E3E8F0;">
+              <div style="font-size: 15px; font-weight: 600; color: #111C36;">Posting preferences</div>
+              <div style="display: flex; align-items: center; gap: 6px;"><span style="font-size: 12px; color: #7684A0;">3 of 5 on</span><span class="ms" style="font-size: 16px; color: #8C99B2;">expand_less</span></div>
+            </div>
+            <div style="padding: 4px 18px 12px;">
+              <div style="display: flex; align-items: flex-start; gap: 12px; padding: 14px 0;">
+                <div style="width: 36px; height: 20px; border-radius: 999px; background: #DDE3ED; flex-shrink: 0; padding: 2px; display: flex;"><div style="width: 16px; height: 16px; border-radius: 999px; background: #FFFFFF;"></div></div>
+                <div><div style="font-size: 13px; font-weight: 600; color: #111C36;">Auto-append inbox link</div><div style="font-size: 12px; color: #7684A0; margin-top: 2px;">Adds your link to every post. Uses characters.</div></div>
+              </div>
+              <div style="display: flex; align-items: flex-start; gap: 12px; padding: 14px 0;">
+                <div style="width: 36px; height: 20px; border-radius: 999px; background: #10224A; flex-shrink: 0; padding: 2px; display: flex; justify-content: flex-end;"><div style="width: 16px; height: 16px; border-radius: 999px; background: #FFFFFF;"></div></div>
+                <div><div style="font-size: 13px; font-weight: 600; color: #111C36;">Question as image</div><div style="font-size: 12px; color: #7684A0; margin-top: 2px;">Makes a shareable image with alt text.</div></div>
+              </div>
+              <div style="display: flex; align-items: flex-start; gap: 12px; padding: 14px 0;">
+                <div style="width: 36px; height: 20px; border-radius: 999px; background: #DDE3ED; flex-shrink: 0; padding: 2px; display: flex;"><div style="width: 16px; height: 16px; border-radius: 999px; background: #FFFFFF;"></div></div>
+                <div><div style="font-size: 13px; font-weight: 600; color: #111C36;">Confirm before deleting</div><div style="font-size: 12px; color: #7684A0; margin-top: 2px;">Leave off to bulk-delete quickly.</div></div>
+              </div>
+              <div style="display: flex; align-items: flex-start; gap: 12px; padding: 12px 0;">
+                <div style="width: 36px; height: 20px; border-radius: 999px; background: #10224A; flex-shrink: 0; padding: 2px; display: flex; justify-content: flex-end;"><div style="width: 16px; height: 16px; border-radius: 999px; background: #FFFFFF;"></div></div>
+                <div><div style="font-size: 13px; font-weight: 600; color: #111C36;">Auto-scroll to new messages</div><div style="font-size: 12px; color: #7684A0; margin-top: 2px;">Brings arrivals into view.</div></div>
+              </div>
+            </div>
+          </div>
+
+          <div style="background: #FFFFFF; border: 1px solid #E3E8F0; border-radius: 12px; overflow: hidden;">
+            <div style="padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #E3E8F0;">
+              <div style="font-size: 15px; font-weight: 600; color: #111C36;">Image theme</div>
+              <div style="display: flex; align-items: center; gap: 6px;"><span style="font-size: 12px; color: #7684A0;">Quote</span><span class="ms" style="font-size: 16px; color: #8C99B2;">expand_less</span></div>
+            </div>
+            <div style="padding: 16px 18px 18px;">
+              <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+                <div style="border: 1.5px solid #10224A; background: #EDF2FB; border-radius: 10px; padding: 8px; display: flex; flex-direction: column; gap: 7px;">
+                  <div style="aspect-ratio: 4/3; border-radius: 6px; background: #10224A; padding: 10px; display: flex; flex-direction: column; justify-content: center; gap: 7px;">
+                    <div style="height: 3px; width: 55%; margin: 0 auto; border-radius: 2px; background: rgba(255,255,255,0.55);"></div>
+                    <div style="background: #FFFFFF; border-radius: 5px; padding: 7px 8px;"><div style="height: 3px; background: #C9D2E1; border-radius: 2px; margin-bottom: 4px;"></div><div style="height: 3px; width: 65%; background: #C9D2E1; border-radius: 2px;"></div></div>
+                    <div style="height: 2px; width: 40%; margin: 0 auto; border-radius: 2px; background: rgba(255,255,255,0.35);"></div>
+                  </div>
+                  <div style="font-size: 12px; font-weight: 600; text-align: center; color: #111C36;">Quote</div>
+                </div>
+                <div style="border: 1px solid #E3E8F0; border-radius: 10px; padding: 8px; display: flex; flex-direction: column; gap: 7px;">
+                  <div style="aspect-ratio: 4/3; border-radius: 6px; background: #0B1428; padding: 10px; display: flex; align-items: center;">
+                    <div style="background: #101E3C; border-left: 3px solid #FFFFFF; border-radius: 5px; padding: 8px; width: 100%;"><div style="height: 3px; width: 45%; background: rgba(255,255,255,0.7); border-radius: 2px; margin-bottom: 5px;"></div><div style="height: 3px; background: rgba(255,255,255,0.28); border-radius: 2px; margin-bottom: 3px;"></div><div style="height: 3px; width: 70%; background: rgba(255,255,255,0.28); border-radius: 2px;"></div></div>
+                  </div>
+                  <div style="font-size: 12px; font-weight: 600; text-align: center; color: #111C36;">Compact</div>
+                </div>
+                <div style="border: 1px solid #E3E8F0; border-radius: 10px; padding: 8px; display: flex; flex-direction: column; gap: 7px;">
+                  <div style="aspect-ratio: 4/3; border-radius: 6px; background: #F1F4F9; padding: 10px; display: flex; align-items: center;">
+                    <div style="background: #FFFFFF; border: 1px solid #C9D5EA; border-radius: 5px; padding: 8px; width: 100%;">
+                      <div style="display: flex; gap: 5px; align-items: center; margin-bottom: 5px;"><div style="width: 12px; height: 12px; border-radius: 999px; background: #10224A; flex-shrink: 0;"></div><div style="flex: 1;"><div style="height: 2.5px; background: #333F55; border-radius: 2px; margin-bottom: 2px;"></div><div style="height: 2.5px; width: 55%; background: #B9C2D2; border-radius: 2px;"></div></div></div>
+                      <div style="height: 2.5px; background: #C9D2E1; border-radius: 2px; margin-bottom: 3px;"></div>
+                      <div style="height: 2.5px; width: 75%; background: #C9D2E1; border-radius: 2px;"></div>
+                    </div>
+                  </div>
+                  <div style="font-size: 12px; font-weight: 600; text-align: center; color: #111C36;">Post</div>
+                </div>
+              </div>
+              <div style="height: 1px; background: #E3E8F0; margin: 16px 0 14px;"></div>
+              <div style="font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #7684A0; margin-bottom: 10px;">Keyboard shortcuts</div>
+              <div style="display: flex; flex-direction: column; gap: 8px;">
+                <div style="display: flex; justify-content: space-between; font-size: 13px; color: #111C36;">Focus / cycle cards<span style="color: #7684A0;">Alt/⌘ R</span></div>
+                <div style="display: flex; justify-content: space-between; font-size: 13px; color: #111C36;">Navigate cards<span style="color: #7684A0;">↑ / ↓</span></div>
+                <div style="display: flex; justify-content: space-between; font-size: 13px; color: #111C36;">Close expanded card<span style="color: #7684A0;">Esc</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 18px; align-items: start;">
+          <!-- pinned thread root -->
+          <div style="background: #FFFFFF; border: 1.5px solid #10224A; border-radius: 12px; padding: 10px 20px 20px; display: flex; flex-direction: column; gap: 12px;">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <div style="font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: #8C99B2;">Aug 22, 2026, 9:41 PM GMT+2</div>
+              <div style="display: flex; gap: 4px; color: #10224A;"><span class="ms" style="font-size: 18px;">keep</span><span class="ms" style="font-size: 18px; color: #A3AEC4;">delete</span></div>
+            </div>
+            <div style="min-height: 76px; display: flex; align-items: center; justify-content: center; padding: 6px 0;">
+              <div style="font-size: 19px; font-weight: 600; line-height: 1.35; text-align: center; color: #111C36; text-wrap: balance;">what's the one album you'd take to a desert island?</div>
+            </div>
+            <a href="#" style="display: flex; align-items: center; gap: 5px; font-size: 12px;"><span class="ms" style="font-size: 14px;">open_in_new</span>bsky.app/profile/karan/post/3kl9</a>
+            <div style="height: 44px; border-radius: 10px; background: #10224A; color: #FFFFFF; font-size: 14px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px;"><span class="ms" style="font-size: 17px;">reply</span>Reply to thread</div>
+          </div>
+
+          <!-- expanded composer -->
+          <div style="background: #FFFFFF; border: 1.5px solid #234B94; border-radius: 12px; padding: 10px 20px 20px; display: flex; flex-direction: column; gap: 12px;">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <div style="font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: #8C99B2;">Aug 22, 2026, 8:02 PM GMT+2</div>
+              <div style="display: flex; gap: 4px; color: #A3AEC4;"><span class="ms" style="font-size: 18px;">push_pin</span><span class="ms" style="font-size: 18px;">delete</span></div>
+            </div>
+            <div style="min-height: 60px; display: flex; align-items: center; justify-content: center; padding: 6px 0;">
+              <div style="font-size: 19px; font-weight: 600; line-height: 1.35; text-align: center; color: #111C36; text-wrap: balance;">how did you learn to draw?</div>
+            </div>
+            <div style="background: #F7F9FC; border: 1px solid #C9D5EA; border-radius: 10px; padding: 12px;">
+              <div style="font-size: 14px; line-height: 1.5; color: #111C36;">badly, for about four years. then daily 10-minute studies<span style="display: inline-block; width: 1px; height: 16px; background: #10224A; vertical-align: -3px; margin-left: 1px;"></span></div>
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 12px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <div style="width: 20px; height: 20px; border-radius: 999px; border: 2.5px solid #DDE4EF; border-top-color: #10224A; border-right-color: #10224A;"></div>
+                  <div style="font-size: 12px; color: #63708C;">56/277</div>
+                </div>
+                <div style="height: 32px; padding: 0 14px; border-radius: 8px; background: #10224A; color: #FFFFFF; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 6px;"><span class="ms" style="font-size: 15px;">send</span>Reply</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- plain cards -->
+          <div style="background: #FFFFFF; border: 1px solid #E3E8F0; border-radius: 12px; padding: 10px 20px 20px; display: flex; flex-direction: column; gap: 12px;">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <div style="font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: #8C99B2;">Aug 21, 2026, 11:15 AM GMT+2</div>
+              <div style="display: flex; gap: 4px; color: #A3AEC4;"><span class="ms" style="font-size: 18px;">push_pin</span><span class="ms" style="font-size: 18px;">delete</span></div>
+            </div>
+            <div style="min-height: 76px; display: flex; align-items: center; justify-content: center; padding: 6px 0;">
+              <div style="font-size: 19px; font-weight: 600; line-height: 1.35; text-align: center; color: #111C36; text-wrap: balance;">is kodamachi a real town or did you make it up</div>
+            </div>
+            <div style="height: 44px; border-radius: 10px; border: 1px solid #C9D5EA; color: #10224A; font-size: 14px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px;"><span class="ms" style="font-size: 17px;">reply</span>Reply</div>
+          </div>
+
+          <div style="background: #FFFFFF; border: 1px solid #E3E8F0; border-radius: 12px; padding: 10px 20px 20px; display: flex; flex-direction: column; gap: 12px;">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <div style="font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: #8C99B2;">Aug 20, 2026, 6:48 PM GMT+2</div>
+              <div style="display: flex; gap: 4px; color: #A3AEC4;"><span class="ms" style="font-size: 18px;">push_pin</span><span class="ms" style="font-size: 18px;">delete</span></div>
+            </div>
+            <div style="min-height: 76px; display: flex; align-items: center; justify-content: center; padding: 6px 0;">
+              <div style="font-size: 19px; font-weight: 600; line-height: 1.35; text-align: center; color: #111C36; text-wrap: balance;">best coffee in the city, go</div>
+            </div>
+            <div style="height: 44px; border-radius: 10px; border: 1px solid #C9D5EA; color: #10224A; font-size: 14px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px;"><span class="ms" style="font-size: 17px;">reply</span>Reply</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display: flex; gap: 32px; align-items: flex-start; flex-wrap: wrap;">
+    <!-- empty state -->
+    <div data-screen-label="Messages · empty" style="width: 620px; background: #F7F9FC; border: 1px solid #E3E8F0; border-radius: 14px; padding: 32px; box-shadow: 0 18px 40px -28px rgba(16,34,74,0.35);">
+      <h1 style="margin: 0 0 4px; font-size: 30px; font-weight: 600; letter-spacing: -0.03em; color: #111C36;">Messages</h1>
+      <div style="font-size: 12px; color: #63708C; margin-bottom: 22px;">no messages</div>
+      <div style="background: #10224A; border-radius: 12px; padding: 20px 22px; margin-bottom: 20px;">
+        <div style="font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.62); margin-bottom: 6px;">Your inbox link · public</div>
+        <div style="font-size: 17px; font-weight: 600; color: #FFFFFF;">koda.ma/karan.bsky.social</div>
+      </div>
+      <div style="background: #FFFFFF; border: 1px solid #E3E8F0; border-radius: 12px; padding: 40px 32px; text-align: center;">
+        <div style="width: 52px; height: 52px; margin: 0 auto 16px; border-radius: 14px; background: #F1F4F9; color: #A3AEC4; display: flex; align-items: center; justify-content: center;"><span class="ms" style="font-size: 26px;">mark_email_unread</span></div>
+        <div style="font-size: 18px; font-weight: 600; color: #111C36;">No questions yet</div>
+        <p style="margin: 6px auto 22px; max-width: 340px; font-size: 14px; line-height: 1.55; color: #63708C;">Share your link and the first anonymous question will land here.</p>
+        <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
+          <div style="height: 40px; padding: 0 18px; border-radius: 10px; background: #10224A; color: #FFFFFF; font-size: 14px; font-weight: 600; display: flex; align-items: center;">Share your link</div>
+          <div style="height: 40px; padding: 0 18px; border-radius: 10px; border: 1px solid #C9D5EA; color: #10224A; font-size: 14px; font-weight: 500; display: flex; align-items: center;">Add example messages</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- loading -->
+    <div data-screen-label="Messages · loading" style="width: 300px; background: #F7F9FC; border: 1px solid #E3E8F0; border-radius: 14px; padding: 24px; box-shadow: 0 18px 40px -28px rgba(16,34,74,0.35);">
+      <div style="font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #7684A0; margin-bottom: 16px;">Loading</div>
+      <div style="background: #FFFFFF; border: 1px solid #E3E8F0; border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 10px;">
+        <div style="height: 9px; width: 40%; border-radius: 4px; background: #E8ECF3;"></div>
+        <div style="height: 14px; border-radius: 4px; background: #E8ECF3;"></div>
+        <div style="height: 14px; width: 72%; border-radius: 4px; background: #E8ECF3;"></div>
+        <div style="height: 40px; border-radius: 10px; background: #EEF1F6; margin-top: 6px;"></div>
+      </div>
+      <div style="background: #FFFFFF; border: 1px solid #E3E8F0; border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 10px; margin-top: 14px;">
+        <div style="height: 9px; width: 52%; border-radius: 4px; background: #E8ECF3;"></div>
+        <div style="height: 14px; border-radius: 4px; background: #E8ECF3;"></div>
+        <div style="height: 40px; border-radius: 10px; background: #EEF1F6; margin-top: 6px;"></div>
+      </div>
+    </div>
+
+    <!-- mobile inbox -->
+    <div data-screen-label="Messages · mobile" style="width: 390px; height: 844px; background: #F7F9FC; border: 1px solid #E3E8F0; border-radius: 22px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 18px 40px -28px rgba(16,34,74,0.35);">
+      <div style="height: 56px; background: #FFFFFF; border-bottom: 1px solid #E3E8F0; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; flex-shrink: 0;">
+        <div style="display: flex; align-items: center; gap: 9px;">
+          <div style="width: 28px; height: 28px; border-radius: 8px; background: #10224A; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: 'Noto Serif JP', serif; font-weight: 600; font-size: 16px;">木</div>
+          <div style="font-size: 16px; font-weight: 600; letter-spacing: -0.02em; color: #111C36;">kodamachi</div>
+        </div>
+        <div style="width: 28px; height: 28px; border-radius: 999px; background: #EDF2FB; color: #234B94; font-size: 11px; font-weight: 600; display: flex; align-items: center; justify-content: center;">KS</div>
+      </div>
+      <div style="flex: 1; overflow: hidden; padding: 18px 16px; display: flex; flex-direction: column; gap: 14px;">
+        <div>
+          <h1 style="margin: 0; font-size: 26px; font-weight: 600; letter-spacing: -0.03em; color: #111C36;">Messages</h1>
+          <div style="font-size: 12px; color: #63708C; margin-top: 4px;">3 new</div>
+        </div>
+        <div style="background: #10224A; border-radius: 12px; padding: 16px 18px;">
+          <div style="font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.62); margin-bottom: 5px;">Your inbox link</div>
+          <div style="font-size: 15px; font-weight: 600; color: #FFFFFF;">koda.ma/karan.bsky.social</div>
+          <div style="display: flex; gap: 8px; margin-top: 14px;">
+            <div style="flex: 1; height: 40px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.28); color: #FFFFFF; font-size: 13px; font-weight: 500; display: flex; align-items: center; justify-content: center; gap: 6px;"><span class="ms" style="font-size: 16px;">content_copy</span>Copy</div>
+            <div style="flex: 1; height: 40px; border-radius: 10px; background: #FFFFFF; color: #10224A; font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 6px;"><span class="ms" style="font-size: 16px;">ios_share</span>Share</div>
+          </div>
+        </div>
+        <div style="background: #FFFFFF; border: 1px solid #E3E8F0; border-radius: 12px; padding: 10px 16px 16px; display: flex; flex-direction: column; gap: 10px;">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <div style="font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: #8C99B2;">Aug 22, 9:41 PM</div>
+            <div style="display: flex; gap: 4px; color: #A3AEC4;"><span class="ms" style="font-size: 18px;">push_pin</span><span class="ms" style="font-size: 18px;">delete</span></div>
+          </div>
+          <div style="font-size: 18px; font-weight: 600; line-height: 1.35; text-align: center; color: #111C36; padding: 8px 0; text-wrap: balance;">what's the one album you'd take to a desert island?</div>
+          <div style="height: 46px; border-radius: 10px; border: 1px solid #C9D5EA; color: #10224A; font-size: 15px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px;"><span class="ms" style="font-size: 18px;">reply</span>Reply</div>
+        </div>
+        <div style="background: #FFFFFF; border: 1px solid #E3E8F0; border-radius: 12px; padding: 10px 16px 16px; display: flex; flex-direction: column; gap: 10px;">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <div style="font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: #8C99B2;">Aug 22, 8:02 PM</div>
+            <div style="display: flex; gap: 4px; color: #A3AEC4;"><span class="ms" style="font-size: 18px;">push_pin</span><span class="ms" style="font-size: 18px;">delete</span></div>
+          </div>
+          <div style="font-size: 18px; font-weight: 600; line-height: 1.35; text-align: center; color: #111C36; padding: 8px 0;">how did you learn to draw?</div>
+          <div style="height: 46px; border-radius: 10px; border: 1px solid #C9D5EA; color: #10224A; font-size: 15px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px;"><span class="ms" style="font-size: 18px;">reply</span>Reply</div>
+        </div>
+      </div>
+      <div style="height: 76px; background: #FFFFFF; border-top: 1px solid #E3E8F0; display: flex; align-items: flex-start; padding: 10px 8px 0; flex-shrink: 0;">
+        <div style="flex: 1; min-height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; color: #7684A0;"><span class="ms" style="font-size: 24px;">home</span><span style="font-size: 11px; font-weight: 500;">Home</span></div>
+        <div style="flex: 1; min-height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; color: #10224A;"><span class="ms" style="font-size: 24px;">mail</span><span style="font-size: 11px; font-weight: 600;">Messages</span></div>
+        <div style="flex: 1; min-height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; color: #7684A0;"><span class="ms" style="font-size: 24px;">tune</span><span style="font-size: 11px; font-weight: 500;">Customise</span></div>
+        <div style="flex: 1; min-height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; color: #7684A0;"><span class="ms" style="font-size: 24px;">settings</span><span style="font-size: 11px; font-weight: 500;">Settings</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</x-dc>
+</body>
+</html>

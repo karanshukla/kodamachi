@@ -20,28 +20,16 @@ export interface ImageGenerationResult {
   height?: number;
 }
 
-/**
- * The rendered card is requested at this multiple of its CSS size and
- * downsampled back to half of it, so text stays sharp on a retina timeline
- * without shipping a 4x PNG to Bluesky.
- */
+/** Rendered at this multiple of CSS size, downsampled to half: sharp on retina without a 4x PNG. */
 const RENDER_SCALE = 4;
 const OUTPUT_SCALE = 2;
 
 const PNG_COMPRESSION_LEVEL = 9;
 
-/**
- * sharp bundles libvips as a native addon (tens of MB, plus its own thread
- * pool), so a static `import "sharp"` pulls that into every server process
- * at boot even though it's only invoked here, on the reply-with-image path.
- * Deferred to first use so an idle process — the common case — never pays
- * for it; the dynamic import is cached after that.
- */
+/** Deferred: a static `import "sharp"` loads libvips and its thread pool into every idle process. */
 async function loadSharp() {
   const sharp = (await import("sharp")).default;
-  // Every render is a distinct message, so sharp's operation cache (up to
-  // 50MB by default) never gets a hit here — only holds memory an idle
-  // process doesn't get back.
+  // Every render is distinct, so sharp's cache (50MB default) never hits.
   sharp.cache(false);
   return sharp;
 }
@@ -69,14 +57,17 @@ export async function generateQuestionImage(
     return {};
   }
 
-  const footerText = userBskyHandle ? `${SHARE_DOMAIN}/${userBskyHandle}` : APP_DOMAIN;
+  // A handle is read off a DID document its owner controls, so it is escaped like the message.
+  // @see [image-generator-generate.test.ts](../tests/image-generator-generate.test.ts): "escapes the handle drawn into the ... card".
+  const handle = userBskyHandle && escapeHtml(userBskyHandle);
+  const footerText = handle ? `${SHARE_DOMAIN}/${handle}` : APP_DOMAIN;
   const theme = isThemeName(themeName) ? themeName : "default";
   const { html, width, height } = renderQuestionCard(
     theme,
     escapeHtml(originalMessage),
     footerText,
     originalMessage,
-    userBskyHandle
+    handle
   );
 
   try {

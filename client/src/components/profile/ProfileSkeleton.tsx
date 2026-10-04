@@ -1,12 +1,11 @@
-import { Box, Container, Group, Paper, Skeleton } from "@mantine/core";
+import { Box, Group, Paper, Skeleton } from "@mantine/core";
 
 import * as cardStyles from "./ProfileCard.styles";
 import * as styles from "./ProfileSkeleton.styles";
 
-/** Placeholder matching the loaded profile's geometry, so nothing jumps. */
 export function ProfileSkeleton() {
   return (
-    <Container>
+    <>
       <Skeleton height={28} width={180} radius={999} mb="sm" />
 
       <Paper mb="lg" withBorder style={cardStyles.card}>
@@ -33,6 +32,6 @@ export function ProfileSkeleton() {
           <Skeleton height={36} width={90} radius={999} />
         </Group>
       </Paper>
-    </Container>
+    </>
   );
 }

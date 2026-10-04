@@ -5,11 +5,8 @@ import * as styles from "./SettingsCard.styles";
 interface SettingsCardProps {
   title: string;
   description: string;
-  /** This card's state, shown beside the title: a switch, or a status badge. */
   control?: React.ReactNode;
-  /** Dimmed line closing the description — usually why the card is unavailable. */
   note?: string;
-  /** The action — a button, an input, a picker. Anchored to the card's bottom. */
   children?: React.ReactNode;
 }
 
@@ -24,7 +21,7 @@ export function SettingsCard({ title, description, control, note, children }: Se
   return (
     <Paper withBorder style={styles.card}>
       <Group justify="space-between" align="center" wrap="nowrap" gap="sm" style={styles.header}>
-        <Text fw={700} fz={18}>
+        <Text component="h2" fw={600} fz={16}>
           {title}
         </Text>
         {control}

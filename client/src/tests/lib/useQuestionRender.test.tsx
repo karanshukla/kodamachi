@@ -30,10 +30,7 @@ type StartCallbacks = {
 };
 type Poll = { status: string; error?: string } | undefined;
 
-/**
- * What the fake server reports, per attempt. Attempt-keyed because that is the
- * real difference between a key that was lost once and one that keeps vanishing.
- */
+/** What the fake server reports, per attempt (separates a key lost once from one that keeps vanishing). */
 let polled: (attempt: number) => Poll;
 const always = (poll: Poll) => () => poll;
 /** Set when a test wants to resolve the start mutation itself. */
@@ -79,7 +76,6 @@ describe("useQuestionRender", () => {
     nextRenderId = "render-1";
     pollError = undefined;
     mockUseStartRender.mockReturnValue(startRenderResult as any);
-    // Mirrors the real query, which is disabled until there is a key to poll.
     mockUseRenderStatus.mockImplementation(
       (renderId, attempt) =>
         ({
@@ -144,7 +140,6 @@ describe("useQuestionRender", () => {
   it("re-renders on an unknown key instead of surfacing an error", () => {
     polled = (attempt) => (attempt === 0 ? { status: "unknown" } : { status: "rendering" });
     const { result } = renderQuestionRender();
-    // One start for the open composer, one for the key the server lost.
     expect(startRender).toHaveBeenCalledTimes(2);
     expect(result.current.status).toBe("rendering");
     expect(result.current.error).toBeUndefined();

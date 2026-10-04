@@ -53,7 +53,6 @@ describe("AppLayout", () => {
       isLoading: false,
     } as any);
     mockUseSwitchAccount.mockReturnValue({ mutate: vi.fn(), isPending: false } as any);
-    // Ensure no leftover ?accountSwitched= param leaks between tests.
     window.history.replaceState({}, "", "/");
   });
 
@@ -64,7 +63,6 @@ describe("AppLayout", () => {
 
   it("renders the navigation sidebar", () => {
     renderWithProviders(<AppLayout />);
-    // The nav is always present in DOM (collapsed on mobile via CSS)
     const nav = document.querySelector("nav, aside");
     expect(nav).not.toBeNull();
   });
@@ -79,11 +77,24 @@ describe("AppLayout", () => {
     expect(screen.getByText(/404/)).toBeInTheDocument();
   });
 
+  it("offers no inbox link on the 404 page to a signed-out visitor", () => {
+    renderWithProviders(<AppLayout />, { route: "/this-does-not-exist" });
+    expect(screen.queryByText(en.notFoundPage.yourMessages)).toBeNull();
+  });
+
+  it("offers the inbox link on the 404 page to a signed-in user", () => {
+    mockUseSession.mockReturnValue({
+      data: { isLoggedIn: true, profile: { handle: "user.bsky.social" }, did: "did:example:123" },
+      isLoading: false,
+    } as any);
+    renderWithProviders(<AppLayout />, { route: "/this-does-not-exist" });
+    expect(screen.getByText(en.notFoundPage.yourMessages)).toBeInTheDocument();
+  });
+
   it("adds mousedown listener when nav is opened via burger click", async () => {
     const addListenerSpy = vi.spyOn(document, "addEventListener");
     renderWithProviders(<AppLayout />);
 
-    // Find the burger button (hiddenFrom="sm" Mantine burger)
     const buttons = document.querySelectorAll("button");
     const burgerBtn = Array.from(buttons).find(
       (b) => b.getAttribute("aria-label") !== "Toggle color scheme"
@@ -139,24 +150,20 @@ describe("AppLayout", () => {
         fireEvent.click(burgerBtn);
       });
 
-      // Click outside both navbar and burger to trigger setNavOpen(false)
       await act(async () => {
         fireEvent.mouseDown(document.body);
       });
 
-      // Nav should be closed — no error should be thrown
       expect(document.body).toBeInTheDocument();
     }
   });
 
   it("clicking a nav link (Home) triggers onLinkClick → setNavOpen(false)", async () => {
     renderWithProviders(<AppLayout />, { route: "/" });
-    // The Navigation 'Home' NavLink calls handleClick which invokes onLinkClick
     const homeLinks = screen.getAllByText("Home");
     await act(async () => {
       fireEvent.click(homeLinks[0]);
     });
-    // Covers AppLayout line 66: onLinkClick={() => setNavOpen(false)}
     expect(document.body).toBeInTheDocument();
   });
 
@@ -173,8 +180,6 @@ describe("AppLayout", () => {
         fireEvent.click(burgerBtn);
       });
 
-      // Fire mousedown on the navbar element itself — navbarRef.current.contains(target) is true
-      // so !contains(...) is false and the click-outside handler short-circuits without closing
       const navEl = document.querySelector("nav");
       if (navEl) {
         await act(async () => {
@@ -182,7 +187,6 @@ describe("AppLayout", () => {
         });
       }
 
-      // No crash and nav did not close (no error thrown)
       expect(document.body).toBeInTheDocument();
     }
   });
@@ -200,8 +204,6 @@ describe("AppLayout", () => {
         fireEvent.click(burgerBtn);
       });
 
-      // Fire mousedown on the burger button — burgerRef.current.contains(target) is true
-      // so !contains(...) is false and the handler short-circuits
       await act(async () => {
         fireEvent.mouseDown(burgerBtn);
       });
@@ -212,17 +214,13 @@ describe("AppLayout", () => {
 
   it("clicking the Login button in AppHeader triggers onNavClose → setNavOpen(false)", async () => {
     renderWithProviders(<AppLayout />, { route: "/" });
-    // The AppHeader Login gradient button calls onNavClose when clicked
-    // Use getAllByText because there is also a Login NavLink in Navigation
     const loginElements = screen.getAllByText("Login");
-    // Click whichever is a button (AppHeader renders <Button component={Link}>)
     const loginBtn = loginElements.find((el) => el.closest("a") || el.closest("button"));
     if (loginBtn) {
       await act(async () => {
         fireEvent.click(loginBtn);
       });
     }
-    // Covers AppLayout line 60: onNavClose={() => setNavOpen(false)}
     expect(document.body).toBeInTheDocument();
   });
 
@@ -236,7 +234,6 @@ describe("AppLayout", () => {
       message: en.common.switchedToAccount("tester.bsky.social"),
       color: "green",
     });
-    // The marker is stripped so it can't re-fire on refresh.
     expect(window.location.search).toBe("");
   });
 
@@ -255,7 +252,6 @@ describe("AppLayout", () => {
       { did: "did:plc:foo" },
       expect.objectContaining({ onSuccess: expect.any(Function) })
     );
-    // The notify params are stripped immediately so a re-render can't re-fire it.
     expect(window.location.search).toBe("");
   });
 
@@ -277,21 +273,12 @@ describe("AppLayout", () => {
   describe("onSuccess of a notifyDid switch", () => {
     const originalLocation = window.location;
 
-    /**
-     * `window` is `Window & typeof globalThis`, whose `location` setter takes
-     * `string & Location` so that `location = "/path"` compiles, while the
-     * getter returns a plain `Location`. Restoring a saved one therefore needs
-     * a widening cast as much as installing a stub does, so both go through
-     * here instead of repeating it at three call sites.
-     */
+    // The `location` setter is typed `string & Location`, so assigning a Location needs this cast.
     function assignLocation(next: Location): void {
       window.location = next as unknown as string & Location;
     }
 
-    /**
-     * Swaps in a `location` whose `href` setter records instead of navigating,
-     * and hands back a reader for whatever was written to it.
-     */
+    /** Swaps in a `location` whose `href` setter records instead of navigating; returns a reader. */
     function captureHrefWrites(): () => string {
       let captured = "";
       assignLocation({

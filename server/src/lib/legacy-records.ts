@@ -5,7 +5,7 @@ import { ids } from "../lexicon/lexicons";
 import { type Record as LegacyRecord } from "../lexicon/types/app/navyfragen/message";
 import { withRetry } from "./retry";
 
-/** What `com.atproto.repo.listRecords` accepts as its per-page maximum. */
+/** `com.atproto.repo.listRecords` per-page maximum. */
 const PDS_PAGE_SIZE = 100;
 
 export interface LegacyRecordEntry {

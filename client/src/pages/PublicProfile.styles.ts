@@ -1,9 +1,10 @@
 import type { CSSProperties } from "react";
 
-import { radiusControl, surfaceGhost } from "../styles/tokens";
+import { border, radiusControl, surface } from "../styles/tokens";
 
 export const disclaimer: CSSProperties = {
-  background: surfaceGhost,
+  background: surface,
+  border,
   borderRadius: radiusControl,
-  padding: "12px 14px",
+  padding: "14px 16px",
 };

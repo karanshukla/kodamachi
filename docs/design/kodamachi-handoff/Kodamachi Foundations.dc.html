@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- support.js (the Claude Design runtime) is not vendored; see ../README.md -->
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@500;600&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,300,0,0&display=swap" rel="stylesheet" />
+<style>
+  body { margin: 0; background: #EDF0F5; font-family: "Schibsted Grotesk", "Noto Sans JP", sans-serif; -webkit-font-smoothing: antialiased; line-height: 1.5; font-feature-settings: "palt" 1; text-wrap: pretty; }
+  a { color: #234B94; text-decoration: none; }
+  a:hover { color: #10224A; }
+  h1, h2, h3, h4 { line-height: 1.25; }
+  :focus-visible { outline: 2px solid #234B94; outline-offset: 2px; border-radius: 4px; }
+  ::selection { background: #C9D5EA; color: #10224A; }
+  * { scrollbar-width: thin; scrollbar-color: #C9D5EA transparent; }
+  *::-webkit-scrollbar { width: 10px; height: 10px; }
+  *::-webkit-scrollbar-thumb { background: #C9D5EA; border-radius: 6px; border: 3px solid transparent; background-clip: content-box; }
+  *::-webkit-scrollbar-thumb:hover { background: #A9B9D6; background-clip: content-box; }
+  *::-webkit-scrollbar-track { background: transparent; }
+  [lang="ja"], .jp { letter-spacing: 0.02em; font-feature-settings: "palt" 1; }
+  .ms { font-family: "Material Symbols Outlined"; font-weight: normal; font-style: normal; line-height: 1; letter-spacing: normal; text-transform: none; display: inline-block; white-space: nowrap; direction: ltr; -webkit-font-feature-settings: "liga"; -webkit-font-smoothing: antialiased; }
+</style>
+</helmet>
+
+<div style="padding: 48px 40px 80px; display: flex; flex-direction: column; gap: 44px; align-items: flex-start;">
+  <div style="display: flex; flex-direction: column; gap: 6px;">
+    <div style="font-size: 11px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: #7684A0;">Kodamachi · redesign</div>
+    <div style="font-size: 26px; font-weight: 600; letter-spacing: -0.02em; color: #111C36;">Foundations, chrome &amp; states</div>
+  </div>
+
+  <!-- logo -->
+  <div data-screen-label="Brand" style="width: 1180px; background: #FFFFFF; border: 1px solid #E3E8F0; border-radius: 14px; padding: 32px; box-shadow: 0 18px 40px -28px rgba(16,34,74,0.35);">
+    <div style="font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #7684A0; margin-bottom: 22px;">Mark &amp; wordmark</div>
+    <div style="display: flex; align-items: center; gap: 48px; flex-wrap: wrap;">
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
+        <div style="width: 96px; height: 96px; border-radius: 22px; background: #10224A; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: 'Noto Serif JP', serif; font-weight: 600; font-size: 54px;">木</div>
+        <div style="font-size: 11px; color: #7684A0;">app icon</div>
+      </div>
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
+        <div style="width: 96px; height: 96px; border-radius: 22px; background: #FFFFFF; border: 1px solid #E3E8F0; color: #10224A; display: flex; align-items: center; justify-content: center; font-family: 'Noto Serif JP', serif; font-weight: 600; font-size: 54px;">木</div>
+        <div style="font-size: 11px; color: #7684A0;">light</div>
+      </div>
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
+        <div style="width: 96px; height: 96px; border-radius: 22px; background: #0B1428; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: 'Noto Serif JP', serif; font-weight: 600; font-size: 54px;">木</div>
+        <div style="font-size: 11px; color: #7684A0;">dark</div>
+      </div>
+      <div style="height: 96px; width: 1px; background: #E3E8F0;"></div>
+      <div style="display: flex; flex-direction: column; gap: 22px;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div style="width: 40px; height: 40px; border-radius: 11px; background: #10224A; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: 'Noto Serif JP', serif; font-weight: 600; font-size: 23px;">木</div>
+          <div style="font-size: 28px; font-weight: 600; letter-spacing: -0.03em; color: #111C36;">kodamachi</div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div style="width: 26px; height: 26px; border-radius: 8px; background: #10224A; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: 'Noto Serif JP', serif; font-weight: 600; font-size: 15px;">木</div>
+          <div style="font-size: 17px; font-weight: 600; letter-spacing: -0.02em; color: #111C36;">kodamachi</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- mascot brief -->
+  <div data-screen-label="Mascot slots" style="width: 1180px; background: #FFFFFF; border: 1px solid #E3E8F0; border-radius: 14px; padding: 32px; box-shadow: 0 18px 40px -28px rgba(16,34,74,0.35);">
+    <div style="font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #7684A0; margin-bottom: 8px;">Mascot slots</div>
+    <p style="margin: 0 0 24px; max-width: 720px; font-size: 13px; line-height: 1.6; color: #63708C;">Placeholders below are drawn at the real sizes used in the screens. Single-weight ink line, no fill, no shading, no second hue: <span style="color: #234B94;">#10224A</span> on paper, <span style="color: #234B94;">#F4F7FC</span> on midnight. Drawn at 4×. Never below 96px, so every icon 48px and under stays 木.</p>
+    <div style="display: flex; align-items: flex-end; gap: 28px; flex-wrap: wrap;">
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
+        <div style="width: 148px; height: 148px; border-radius: 12px; border: 1px dashed #A9B9D6; background: #EDF2FB; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;">
+          <div style="font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: #63708C;">mascot</div>
+          <div style="font-size: 11px; color: #7684A0;">148px</div>
+        </div>
+        <div style="font-size: 12px; font-weight: 600; color: #111C36;">Empty-handed</div>
+        <div style="font-size: 11px; color: #7684A0; text-align: center; max-width: 148px;">404, inbox zero, closed inbox</div>
+      </div>
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
+        <div style="width: 132px; height: 132px; border-radius: 12px; border: 1px dashed #A9B9D6; background: #EDF2FB; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;">
+          <div style="font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: #63708C;">mascot</div>
+          <div style="font-size: 11px; color: #7684A0;">132px</div>
+        </div>
+        <div style="font-size: 12px; font-weight: 600; color: #111C36;">Greeting</div>
+        <div style="font-size: 11px; color: #7684A0; text-align: center; max-width: 132px;">Home hero, first run</div>
+      </div>
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
+        <div style="width: 112px; height: 112px; border-radius: 12px; border: 1px dashed #A9B9D6; background: #EDF2FB; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;">
+          <div style="font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: #63708C;">mascot</div>
+          <div style="font-size: 11px; color: #7684A0;">112px</div>
+        </div>
+        <div style="font-size: 12px; font-weight: 600; color: #111C36;">Idle</div>
+        <div style="font-size: 11px; color: #7684A0; text-align: center; max-width: 112px;">OAuth loading, PWA splash</div>
+      </div>
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
+        <div style="width: 104px; height: 104px; border-radius: 12px; border: 1px dashed rgba(255,255,255,0.38); background: #10224A; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;">
+          <div style="font-size: 10px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255,255,255,0.72);">mascot</div>
+          <div style="font-size: 10px; color: rgba(255,255,255,0.5);">104px · on navy</div>
+        </div>
+        <div style="font-size: 12px; font-weight: 600; color: #111C36;">Carrying a letter</div>
+        <div style="font-size: 11px; color: #7684A0; text-align: center; max-width: 104px;">Send confirmed, new question</div>
+      </div>
+      <div style="height: 148px; width: 1px; background: #E3E8F0;"></div>
+      <div style="display: flex; flex-direction: column; gap: 12px; max-width: 300px;">
+        <div style="font-size: 14px; font-weight: 600; color: #111C36;">Rationing rules</div>
+        <div style="display: flex; flex-direction: column; gap: 8px; font-size: 13px; line-height: 1.55; color: #63708C;">
+          <div>One mascot per screen. Never two in view.</div>
+          <div>Only where nothing is happening: empty, loading, error, confirmed.</div>
+          <div>Never in the inbox list, in Settings, or beside a destructive action.</div>
+          <div>Favicon, app icon, maskable, badge and the header lockup stay 木.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- palette + type -->
+  <div style="display: flex; gap: 32px; align-items: stretch; flex-wrap: wrap;">
+    <div data-screen-label="Palette" style="width: 600px; background: #FFFFFF; border: 1px solid #E3E8F0; border-radius: 14px; padding: 28px; box-shadow: 0 18px 40px -28px rgba(16,34,74,0.35);">
+      <div style="font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #7684A0; margin-bottom: 20px;">Palette</div>
+      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;">
+        <div><div style="height: 64px; border-radius: 10px; background: #FFFFFF; border: 1px solid #E3E8F0;"></div><div style="font-size: 12px; font-weight: 600; color: #111C36; margin-top: 7px;">Paper</div><div style="font-size: 11px; color: #7684A0;">#FFFFFF</div></div>
+        <div><div style="height: 64px; border-radius: 10px; background: #F7F9FC; border: 1px solid #E3E8F0;"></div><div style="font-size: 12px; font-weight: 600; color: #111C36; margin-top: 7px;">Canvas</div><div style="font-size: 11px; color: #7684A0;">#F7F9FC</div></div>
+        <div><div style="height: 64px; border-radius: 10px; background: #E3E8F0;"></div><div style="font-size: 12px; font-weight: 600; color: #111C36; margin-top: 7px;">Line</div><div style="font-size: 11px; color: #7684A0;">#E3E8F0</div></div>
+        <div><div style="height: 64px; border-radius: 10px; background: #EDF2FB; border: 1px solid #C9D5EA;"></div><div style="font-size: 12px; font-weight: 600; color: #111C36; margin-top: 7px;">Tint</div><div style="font-size: 11px; color: #7684A0;">#EDF2FB</div></div>
+        <div><div style="height: 64px; border-radius: 10px; background: #10224A;"></div><div style="font-size: 12px; font-weight: 600; color: #111C36; margin-top: 7px;">Navy</div><div style="font-size: 11px; color: #7684A0;">#10224A</div></div>
+        <div><div style="height: 64px; border-radius: 10px; background: #0B1428;"></div><div style="font-size: 12px; font-weight: 600; color: #111C36; margin-top: 7px;">Midnight</div><div style="font-size: 11px; color: #7684A0;">#0B1428</div></div>
+        <div><div style="height: 64px; border-radius: 10px; background: #234B94;"></div><div style="font-size: 12px; font-weight: 600; color: #111C36; margin-top: 7px;">Link</div><div style="font-size: 11px; color: #7684A0;">#234B94</div></div>
+        <div><div style="height: 64px; border-radius: 10px; background: #A93636;"></div><div style="font-size: 12px; font-weight: 600; color: #111C36; margin-top: 7px;">Danger</div><div style="font-size: 11px; color: #7684A0;">#A93636</div></div>
+      </div>
+      <div style="display: flex; gap: 12px; margin-top: 20px;">
+        <div style="flex: 1; padding: 12px 14px; border-radius: 10px; background: #FFFFFF; border: 1px solid #E3E8F0;"><div style="font-size: 14px; color: #111C36;">Ink #111C36</div><div style="font-size: 13px; color: #46536E;">Body #46536E</div><div style="font-size: 13px; color: #63708C;">Muted #63708C</div><div style="font-size: 12px; color: #7684A0;">Faint #7684A0</div></div>
+        <div style="flex: 1; padding: 12px 14px; border-radius: 10px; background: #0B1428;"><div style="font-size: 14px; color: #F4F7FC;">Ink #F4F7FC</div><div style="font-size: 13px; color: #C6D0E3;">Body #C6D0E3</div><div style="font-size: 13px; color: #9BA9C4;">Muted #9BA9C4</div><div style="font-size: 12px; color: #8798B8;">Faint #8798B8</div></div>
+      </div>
+    </div>
+
+    <div data-screen-label="Type" style="width: 540px; background: #FFFFFF; border: 1px solid #E3E8F0; border-radius: 14px; padding: 28px; box-shadow: 0 18px 40px -28px rgba(16,34,74,0.35);">
+      <div style="font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #7684A0; margin-bottom: 20px;">Type</div>
+      <div style="font-size: 12px; color: #7684A0; margin-bottom: 4px;">Schibsted Grotesk · 600 · −0.03em</div>
+      <div style="font-size: 34px; font-weight: 600; letter-spacing: -0.03em; color: #111C36; line-height: 1.15; margin-bottom: 20px;">Anonymous questions, answered.</div>
+      <div style="font-size: 12px; color: #7684A0; margin-bottom: 4px;">Noto Serif JP · 600 · the mark only</div>
+      <div style="font-family: 'Noto Serif JP', serif; font-size: 40px; font-weight: 600; color: #10224A; margin-bottom: 20px;">木霊 · 木</div>
+      <div style="font-size: 12px; color: #7684A0; margin-bottom: 4px;">Noto Sans JP · 400 · Japanese copy</div>
+      <div style="font-family: 'Noto Sans JP', sans-serif; font-size: 17px; color: #111C36; margin-bottom: 20px;">匿名の質問に、そのまま答える。</div>
+      <div style="font-size: 12px; color: #7684A0; margin-bottom: 6px;">Body · 15/1.6 · 400</div>
+      <p style="margin: 0; font-size: 15px; line-height: 1.6; color: #46536E;">Share one link, collect questions from anyone on the atmosphere, and post your answers straight to your Bluesky feed. No gradients, no noise — white paper and dark blue ink.</p>
+    </div>
+  </div>
+
+  <!-- chrome + states -->
+  <div data-screen-label="Interaction rules" style="width: 1180px; background: #FFFFFF; border: 1px solid #E3E8F0; border-radius: 14px; padding: 32px; box-shadow: 0 18px 40px -28px rgba(16,34,74,0.35);">
+    <div style="font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #7684A0; margin-bottom: 22px;">Interaction, elevation &amp; colour discipline</div>
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px;">
+
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        <div style="font-size: 14px; font-weight: 600; color: #111C36;">Hover is a fill, never a lift</div>
+        <p style="margin: 0; font-size: 13px; line-height: 1.6; color: #63708C;">On white, shadow-on-hover reads as smudge. Rows and cards tint to Canvas; navy surfaces lighten one step.</p>
+        <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 2px;">
+          <div style="display: flex; align-items: center; gap: 10px; padding: 11px 14px; border-radius: 10px; border: 1px solid #E3E8F0; background: #FFFFFF; font-size: 13px; color: #46536E;"><span class="ms" style="font-size: 18px; color: #7684A0;">mail</span>rest — Paper</div>
+          <div style="display: flex; align-items: center; gap: 10px; padding: 11px 14px; border-radius: 10px; border: 1px solid #E3E8F0; background: #F7F9FC; font-size: 13px; color: #46536E;"><span class="ms" style="font-size: 18px; color: #7684A0;">mail</span>hover — #F7F9FC</div>
+          <div style="display: flex; align-items: center; gap: 10px; padding: 11px 14px; border-radius: 10px; border: 1px solid #C9D5EA; background: #EDF2FB; font-size: 13px; font-weight: 600; color: #10224A;"><span class="ms" style="font-size: 18px; color: #234B94;">mail</span>selected — Tint</div>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        <div style="font-size: 14px; font-weight: 600; color: #111C36;">One focus ring, everywhere</div>
+        <p style="margin: 0; font-size: 13px; line-height: 1.6; color: #63708C;">2px Link navy with 2px offset, set globally on <span style="color: #234B94;">:focus-visible</span>. The old dark theme forgave weak focus; white does not.</p>
+        <div style="display: flex; gap: 12px; margin-top: 4px;">
+          <div style="height: 38px; padding: 0 18px; border-radius: 10px; background: #10224A; color: #FFFFFF; font-size: 13px; font-weight: 600; display: flex; align-items: center; outline: 2px solid #234B94; outline-offset: 2px;">Focused</div>
+          <div style="height: 38px; padding: 0 18px; border-radius: 10px; background: #FFFFFF; border: 1px solid #E3E8F0; color: #46536E; font-size: 13px; font-weight: 500; display: flex; align-items: center; outline: 2px solid #234B94; outline-offset: 2px;">Focused</div>
+        </div>
+        <div style="font-size: 14px; font-weight: 600; color: #111C36; margin-top: 12px;">Elevation is scarce</div>
+        <p style="margin: 0; font-size: 13px; line-height: 1.6; color: #63708C;">Shadows only for things that float — modals, sheets, menus, toasts. Inline cards use a hairline. In dark mode shadows vanish, so elevation becomes a <span style="color: #234B94;">#1B2A4D</span> border.</p>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        <div style="font-size: 14px; font-weight: 600; color: #111C36;">Two hues, plus danger</div>
+        <p style="margin: 0; font-size: 13px; line-height: 1.6; color: #63708C;">Navy and Link carry every state. Success and warning are icon plus navy text — no green, no amber. Danger is the one exception.</p>
+        <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 2px;">
+          <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #10224A;"><span class="ms" style="font-size: 18px; color: #234B94;">check_circle</span>Saved to your PDS</div>
+          <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #10224A;"><span class="ms" style="font-size: 18px; color: #234B94;">info</span>Sync is paused</div>
+          <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #A93636;"><span class="ms" style="font-size: 18px;">error</span>Message could not be deleted</div>
+        </div>
+        <div style="font-size: 14px; font-weight: 600; color: #111C36; margin-top: 12px;">Avatar fallback</div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div style="width: 36px; height: 36px; border-radius: 999px; background: #EDF2FB; border: 1px solid #C9D5EA; color: #234B94; font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: center;">KS</div>
+          <div style="width: 36px; height: 36px; border-radius: 999px; background: #EDF2FB; border: 1px solid #C9D5EA; color: #234B94; font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: center;">M</div>
+          <div style="font-size: 13px; color: #63708C;">Tint fill, navy initials — never a hashed hue.</div>
+        </div>
+      </div>
+
+    </div>
+    <div style="height: 1px; background: #E3E8F0; margin: 28px 0 24px;"></div>
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px;">
+      <div>
+        <div style="font-size: 14px; font-weight: 600; color: #111C36; margin-bottom: 8px;">Mixed-script rhythm</div>
+        <p style="margin: 0; font-size: 13px; line-height: 1.6; color: #63708C;">Noto Sans JP sits visually taller than Schibsted Grotesk, so one line-height scale is enforced globally: 1.5 body, 1.25 headings.</p>
+      </div>
+      <div>
+        <div style="font-size: 14px; font-weight: 600; color: #111C36; margin-bottom: 8px;">Proportional kana</div>
+        <p style="margin: 0 0 10px; font-size: 13px; line-height: 1.6; color: #63708C;"><span style="color: #234B94;">palt</span> on, plus 0.02em tracking for JP-heavy blocks. Without it, punctuation leaves holes that look like broken markup.</p>
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+          <div style="font-size: 22px; color: #111C36; font-feature-settings: normal; letter-spacing: 0;">「これ、どう思う？」<span style="font-size: 13px; color: #7684A0;"> off</span></div>
+          <div class="jp" style="font-size: 22px; color: #111C36;">「これ、どう思う？」<span style="font-size: 13px; color: #7684A0;"> on</span></div>
+        </div>
+      </div>
+      <div>
+        <div style="font-size: 14px; font-weight: 600; color: #111C36; margin-bottom: 8px;">Chrome details</div>
+        <p style="margin: 0; font-size: 13px; line-height: 1.6; color: #63708C;">Scrollbars are 10px Tint thumbs on transparent track. Selection is <span style="background: #C9D5EA; color: #10224A;">Tint deep on navy ink</span>, so highlighted Japanese stays legible.</p>
+      </div>
+    </div>
+  </div>
+
+  <div style="display: flex; gap: 32px; align-items: flex-start; flex-wrap: wrap;">
+
+    <div data-screen-label="404" style="width: 560px; background: #F7F9FC; border: 1px solid #E3E8F0; border-radius: 14px; padding: 56px 40px; text-align: center; box-shadow: 0 18px 40px -28px rgba(16,34,74,0.35);">
+      <div style="width: 148px; height: 148px; margin: 0 auto; border-radius: 12px; border: 1px dashed #A9B9D6; background: #EDF2FB; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;">
+        <div style="font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: #63708C;">mascot</div>
+        <div style="font-size: 11px; color: #7684A0;">empty-handed · 148px</div>
+      </div>
+      <div style="font-size: 26px; font-weight: 600; letter-spacing: -0.02em; color: #111C36; margin-top: 20px;">404 — not found</div>
+      <p style="margin: 8px auto 24px; max-width: 300px; font-size: 14px; line-height: 1.55; color: #63708C;">That page doesn't exist. The link may be old, or the handle may have changed.</p>
+      <div style="display: flex; gap: 8px; justify-content: center;">
+        <div style="height: 42px; padding: 0 20px; border-radius: 10px; background: #10224A; color: #FFFFFF; font-size: 14px; font-weight: 600; display: flex; align-items: center;">Go home</div>
+        <div style="height: 42px; padding: 0 20px; border-radius: 10px; border: 1px solid #C9D5EA; color: #10224A; font-size: 14px; font-weight: 500; display: flex; align-items: center;">Your messages</div>
+      </div>
+    </div>
+
+    <div data-screen-label="Toasts" style="width: 420px; background: #F7F9FC; border: 1px solid #E3E8F0; border-radius: 14px; padding: 24px; box-shadow: 0 18px 40px -28px rgba(16,34,74,0.35); display: flex; flex-direction: column; gap: 12px;">
+      <div style="font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #7684A0; margin-bottom: 4px;">Notifications</div>
+      <div style="background: #FFFFFF; border: 1px solid #E3E8F0; border-left: 3px solid #10224A; border-radius: 10px; padding: 13px 14px; display: flex; gap: 10px; box-shadow: 0 10px 24px -18px rgba(16,34,74,0.5);">
+        <span class="ms" style="font-size: 18px; color: #10224A;">check_circle</span>
+        <div style="flex: 1;"><div style="font-size: 13px; font-weight: 600; color: #111C36;">Response sent</div><div style="font-size: 12px; line-height: 1.5; color: #63708C;">Your answer has been posted. <a href="#">bsky.app/profile/karan/post/3kl9</a></div></div>
+        <span class="ms" style="font-size: 16px; color: #A3AEC4;">close</span>
+      </div>
+      <div style="background: #FFFFFF; border: 1px solid #E3E8F0; border-left: 3px solid #234B94; border-radius: 10px; padding: 13px 14px; display: flex; gap: 10px; box-shadow: 0 10px 24px -18px rgba(16,34,74,0.5);">
+        <span class="ms" style="font-size: 18px; color: #234B94;">waving_hand</span>
+        <div style="flex: 1;"><div style="font-size: 13px; font-weight: 600; color: #111C36;">Welcome back</div><div style="font-size: 12px; color: #63708C;">You are logged in as @karan.bsky.social.</div></div>
+        <span class="ms" style="font-size: 16px; color: #A3AEC4;">close</span>
+      </div>
+      <div style="background: #FFFFFF; border: 1px solid #E1C9C9; border-left: 3px solid #A93636; border-radius: 10px; padding: 13px 14px; display: flex; gap: 10px; box-shadow: 0 10px 24px -18px rgba(16,34,74,0.5);">
+        <span class="ms" style="font-size: 18px; color: #A93636;">error</span>
+        <div style="flex: 1;"><div style="font-size: 13px; font-weight: 600; color: #7A2727;">Response error</div><div style="font-size: 12px; color: #63708C;">Failed to send response. Please try again.</div></div>
+        <span class="ms" style="font-size: 16px; color: #A3AEC4;">close</span>
+      </div>
+      <div style="background: #FFFFFF; border: 1px solid #E3E8F0; border-left: 3px solid #7684A0; border-radius: 10px; padding: 13px 14px; display: flex; gap: 10px; box-shadow: 0 10px 24px -18px rgba(16,34,74,0.5);">
+        <span class="ms" style="font-size: 18px; color: #7684A0;">image</span>
+        <div style="flex: 1;"><div style="font-size: 13px; font-weight: 600; color: #111C36;">Rendering your question image…</div><div style="font-size: 12px; color: #63708C;">Still going, waking the image renderer.</div></div>
+      </div>
+    </div>
+
+    <div data-screen-label="Account menu" style="width: 360px; background: #F7F9FC; border: 1px solid #E3E8F0; border-radius: 14px; padding: 24px; box-shadow: 0 18px 40px -28px rgba(16,34,74,0.35);">
+      <div style="font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #7684A0; margin-bottom: 14px;">Account menu</div>
+      <div style="background: #FFFFFF; border: 1px solid #E3E8F0; border-radius: 12px; padding: 6px; box-shadow: 0 16px 34px -22px rgba(16,34,74,0.5);">
+        <div style="font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #94A1B8; padding: 8px 12px 6px;">Accounts</div>
+        <div style="display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 9px; background: #EDF2FB;">
+          <div style="width: 22px; height: 22px; border-radius: 999px; background: #EDF2FB; flex-shrink: 0;"></div>
+          <div style="flex: 1; min-width: 0;"><div style="font-size: 13px; font-weight: 600; color: #111C36;">Karan Shukla</div><div style="font-size: 11px; color: #7684A0;">@karan.bsky.social</div></div>
+          <span class="ms" style="font-size: 16px; color: #10224A;">check</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 9px;">
+          <div style="width: 22px; height: 22px; border-radius: 999px; background: #EDF2FB; flex-shrink: 0;"></div>
+          <div style="flex: 1; min-width: 0;"><div style="font-size: 13px; font-weight: 500; color: #111C36;">mio</div><div style="font-size: 11px; color: #7684A0;">@mio.bsky.social</div></div>
+        </div>
+        <div style="height: 1px; background: #EEF1F6; margin: 6px 4px;"></div>
+        <div style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 9px; font-size: 13px; color: #46536E;"><span class="ms" style="font-size: 18px; color: #7684A0;">add</span>Add account</div>
+        <div style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 9px; font-size: 13px; color: #46536E;"><span class="ms" style="font-size: 18px; color: #7684A0;">person</span>View profile</div>
+        <div style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 9px; font-size: 13px; color: #46536E;"><span class="ms" style="font-size: 18px; color: #7684A0;">logout</span>Log out @karan.bsky.social</div>
+      </div>
+    </div>
+
+    <div data-screen-label="Buttons &amp; controls" style="width: 480px; background: #FFFFFF; border: 1px solid #E3E8F0; border-radius: 14px; padding: 28px; box-shadow: 0 18px 40px -28px rgba(16,34,74,0.35);">
+      <div style="font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #7684A0; margin-bottom: 18px;">Buttons &amp; controls</div>
+      <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center;">
+        <div style="height: 42px; padding: 0 20px; border-radius: 10px; background: #10224A; color: #FFFFFF; font-size: 14px; font-weight: 600; display: flex; align-items: center;">Primary</div>
+        <div style="height: 42px; padding: 0 20px; border-radius: 10px; border: 1px solid #C9D5EA; color: #10224A; font-size: 14px; font-weight: 500; display: flex; align-items: center;">Secondary</div>
+        <div style="height: 42px; padding: 0 20px; border-radius: 10px; color: #234B94; font-size: 14px; font-weight: 500; display: flex; align-items: center;">Ghost</div>
+        <div style="height: 42px; padding: 0 20px; border-radius: 10px; background: #A93636; color: #FFFFFF; font-size: 14px; font-weight: 600; display: flex; align-items: center;">Destructive</div>
+        <div style="height: 42px; padding: 0 20px; border-radius: 10px; background: #10224A; opacity: 0.45; color: #FFFFFF; font-size: 14px; font-weight: 600; display: flex; align-items: center;">Disabled</div>
+      </div>
+      <div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: center; margin-top: 20px;">
+        <div style="width: 40px; height: 22px; border-radius: 999px; background: #10224A; padding: 2px; display: flex; justify-content: flex-end;"><div style="width: 18px; height: 18px; border-radius: 999px; background: #FFFFFF;"></div></div>
+        <div style="width: 40px; height: 22px; border-radius: 999px; background: #DDE3ED; padding: 2px; display: flex;"><div style="width: 18px; height: 18px; border-radius: 999px; background: #FFFFFF;"></div></div>
+        <div style="height: 34px; padding: 0 14px; border-radius: 999px; background: #EDF2FB; border: 1px solid #C9D5EA; color: #234B94; font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 6px;"><span class="ms" style="font-size: 15px;">refresh</span>Update</div>
+        <div style="min-width: 22px; height: 22px; padding: 0 7px; border-radius: 999px; background: #10224A; color: #FFFFFF; font-size: 11px; font-weight: 600; display: flex; align-items: center; justify-content: center;">3</div>
+        <div style="height: 22px; padding: 0 9px; border-radius: 6px; background: #EDF2FB; border: 1px solid #C9D5EA; color: #234B94; font-size: 11px; font-weight: 600; display: flex; align-items: center;">Beta</div>
+      </div>
+      <div style="margin-top: 20px; display: flex; flex-direction: column; gap: 10px;">
+        <div style="height: 44px; background: #F7F9FC; border: 1px solid #E3E8F0; border-radius: 10px; display: flex; align-items: center; padding: 0 14px; font-size: 14px; color: #9AA6BC;">Placeholder input</div>
+        <div style="height: 44px; background: #FFFFFF; border: 1.5px solid #10224A; border-radius: 10px; display: flex; align-items: center; padding: 0 14px; font-size: 14px; color: #111C36;">Focused input</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</x-dc>
+</body>
+</html>

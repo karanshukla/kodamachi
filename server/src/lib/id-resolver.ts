@@ -19,12 +19,9 @@ export interface BidirectionalResolver {
   resolveHandleToDid(handle: string): Promise<string | undefined>;
 }
 
-// Covers an active account's working set of correspondents.
 const CACHE_MAX = 1000;
 
 export function createBidirectionalResolver(resolver: IdResolver) {
-  // Both directions hit DNS/HTTPS, and the same correspondent is re-resolved on
-  // every message reply and push notification.
   const handleCache = createTtlCache<string | undefined>(CACHE_MAX);
   const didToHandleCache = createTtlCache<string>(CACHE_MAX);
 
@@ -40,10 +37,8 @@ export function createBidirectionalResolver(resolver: IdResolver) {
           const resolvedHandle = await resolver.handle.resolve(did);
           resolved = resolvedHandle || did;
         } else {
-          // Confirm the handle points back at this DID. @atproto's MemoryCache
-          // exposes no freshness signal, so this verification round-trip can't
-          // be skipped on a warm didCache entry; it stays on the slow path only
-          // because the result below is cached.
+          // Handle must point back at this DID; MemoryCache exposes no freshness
+          // signal, so this can't be skipped on a warm didCache entry.
           const resolvedHandleFromDoc = await resolver.handle.resolve(didDoc.handle);
           resolved =
             resolvedHandleFromDoc === did ? didDoc.handle : resolvedHandleFromDoc || didDoc.handle;
@@ -52,8 +47,7 @@ export function createBidirectionalResolver(resolver: IdResolver) {
         resolved = did;
       }
 
-      // The DID-as-handle fallback is cached too, so a lookup that already
-      // failed is not repeated every call.
+      // The DID-as-handle fallback is cached too, so failures are not retried per call.
       didToHandleCache.set(did, resolved, HOUR);
       return resolved;
     },
