@@ -429,7 +429,6 @@ export const es = {
         "Esta bandeja de entrada está cerrada y no acepta mensajes nuevos en este momento.",
       MESSAGE_SEND_FAILED: "No pudimos enviar tu mensaje. Inténtalo de nuevo.",
       MESSAGE_NOT_FOUND: "No pudimos encontrar ese mensaje.",
-      MESSAGE_DELETE_NOT_AUTHORIZED: "Ese mensaje no es tuyo, no puedes eliminarlo.",
       MESSAGE_DELETE_FAILED: "No pudimos eliminar ese mensaje. Inténtalo de nuevo.",
       BLUESKY_POST_FAILED: "No pudimos publicar tu respuesta en Bluesky. Inténtalo de nuevo.",
       ACCOUNT_DELETE_FAILED: "No pudimos eliminar los datos de tu cuenta. Inténtalo de nuevo.",

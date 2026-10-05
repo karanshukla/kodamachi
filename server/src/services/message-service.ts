@@ -7,6 +7,7 @@ import { errorMessage } from "../lib/errors";
 import { getServerMessages } from "../lib/i18n";
 import { findProfanity } from "../lib/profanity";
 import type { ProfanityMatch } from "../lib/profanity";
+import { listLegacyRecords } from "../lib/legacy-records";
 import { withRetry } from "../lib/retry";
 import { ids } from "../lexicon/lexicons";
 import { type Record as MessageSchemaRecord } from "../lexicon/types/app/navyfragen/message";
@@ -20,9 +21,6 @@ export type { Message } from "./inbox-store";
 export interface ProfileResolver {
   resolveDidToHandle(did: string): Promise<string | undefined>;
 }
-
-/** `com.atproto.repo.listRecords` per-page maximum. */
-const PDS_PAGE_SIZE = 100;
 
 interface SyncOutcome {
   count: number;
@@ -39,7 +37,6 @@ interface SyncOutcome {
 export const RECIPIENT_NOT_FOUND = "Recipient not found (user profile does not exist)";
 export const INBOX_CLOSED = "This inbox is closed and not accepting new messages";
 export const MESSAGE_NOT_FOUND = "Message not found";
-export const NOT_AUTHORIZED_TO_DELETE = "Not authorized to delete this message";
 
 export class MessageService {
   constructor(
@@ -93,10 +90,9 @@ export class MessageService {
         tid: `example-${i + 1}-${Date.now()}`,
         message,
         createdAt: new Date(now.getTime() + i * 1000).toISOString(),
-        recipient,
       }));
 
-      await this.inbox.putIgnoringDuplicates(examples);
+      await this.inbox.putIgnoringDuplicates(recipient, examples);
 
       return await this.getMessages(recipient);
     } catch (err) {
@@ -123,8 +119,8 @@ export class MessageService {
       }
 
       const tid = `anon-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
-      await this.inbox.putIgnoringDuplicates([
-        { tid, message, createdAt: new Date().toISOString(), recipient },
+      await this.inbox.putIgnoringDuplicates(recipient, [
+        { tid, message, createdAt: new Date().toISOString() },
       ]);
 
       this.logger.debug({ recipient, tid }, "Message saved to DB");
@@ -151,19 +147,20 @@ export class MessageService {
     return { success: true };
   }
 
+  /**
+   * Looks only in the caller's own inbox, so another user's question reads as
+   * not found rather than revealing that it exists.
+   * @see [message-service.test.ts](../tests/message-service.test.ts) — "deleteMessage
+   * deletes a question from the caller's own inbox" and "deleteMessage reports
+   * another user's question as not found and leaves it".
+   */
   async deleteMessage(tid: string, userDid: string, agent: Agent): Promise<{ success: boolean }> {
     try {
-      const message = await this.inbox.find(tid);
-
-      if (!message) {
+      if (!(await this.inbox.find(userDid, tid))) {
         throw new Error(MESSAGE_NOT_FOUND);
       }
 
-      if (message.recipient !== userDid) {
-        throw new Error(NOT_AUTHORIZED_TO_DELETE);
-      }
-
-      await this.inbox.remove(tid);
+      await this.inbox.remove(userDid, tid);
       this.deletePdsRecordInBackground(tid, userDid, agent);
 
       return { success: true };
@@ -364,34 +361,6 @@ export class MessageService {
     }
   }
 
-  private async listAllPdsMessages(
-    userDid: string,
-    agent: Agent
-  ): Promise<{ rkey: string; value: MessageSchemaRecord }[]> {
-    const pdsRecords: { rkey: string; value: MessageSchemaRecord }[] = [];
-    let cursor: string | undefined;
-    do {
-      const page = await withRetry(
-        () =>
-          agent.com.atproto.repo.listRecords({
-            repo: userDid,
-            collection: ids.AppNavyfragenMessage,
-            limit: PDS_PAGE_SIZE,
-            cursor,
-          }),
-        this.logger,
-        { did: userDid, op: "listRecords" }
-      );
-      if (!page.success) break;
-      for (const record of page.data.records) {
-        const rkey = record.uri.split("/").pop()!;
-        pdsRecords.push({ rkey, value: record.value as MessageSchemaRecord });
-      }
-      cursor = page.data.cursor;
-    } while (cursor);
-    return pdsRecords;
-  }
-
   private async pushMissingToPds(
     localMessages: Message[],
     pdsRecords: { rkey: string }[],
@@ -443,12 +412,11 @@ export class MessageService {
       if (localTids.has(pdsRecord.rkey)) continue;
 
       try {
-        await this.inbox.putIgnoringDuplicates([
+        await this.inbox.putIgnoringDuplicates(userDid, [
           {
             tid: pdsRecord.rkey,
             message: pdsRecord.value.message,
             createdAt: pdsRecord.value.createdAt,
-            recipient: userDid,
           },
         ]);
         outcome.count++;
@@ -474,7 +442,7 @@ export class MessageService {
     errors?: { tid: string; error: string }[];
   }> {
     try {
-      const pdsRecords = await this.listAllPdsMessages(userDid, agent);
+      const pdsRecords = await listLegacyRecords(userDid, agent, this.logger);
       const localMessages = await this.inbox.list(userDid);
 
       const pushOutcome = await this.pushMissingToPds(localMessages, pdsRecords, agent);

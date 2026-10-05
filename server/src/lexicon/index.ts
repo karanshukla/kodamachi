@@ -29,13 +29,33 @@ export class Server {
 
 export class AppNS {
   _server: Server;
+  kodamachi: AppKodamachiNS;
   navyfragen: AppNavyfragenNS;
   bsky: AppBskyNS;
 
   constructor(server: Server) {
     this._server = server;
+    this.kodamachi = new AppKodamachiNS(server);
     this.navyfragen = new AppNavyfragenNS(server);
     this.bsky = new AppBskyNS(server);
+  }
+}
+
+export class AppKodamachiNS {
+  _server: Server;
+  inbox: AppKodamachiInboxNS;
+
+  constructor(server: Server) {
+    this._server = server;
+    this.inbox = new AppKodamachiInboxNS(server);
+  }
+}
+
+export class AppKodamachiInboxNS {
+  _server: Server;
+
+  constructor(server: Server) {
+    this._server = server;
   }
 }
 

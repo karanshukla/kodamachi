@@ -428,7 +428,6 @@ export const pt = {
         "Esta caixa de entrada está fechada e não está aceitando novas mensagens no momento.",
       MESSAGE_SEND_FAILED: "Não conseguimos enviar sua mensagem. Tente novamente.",
       MESSAGE_NOT_FOUND: "Não encontramos essa mensagem.",
-      MESSAGE_DELETE_NOT_AUTHORIZED: "Você não tem permissão para excluir essa mensagem.",
       MESSAGE_DELETE_FAILED: "Não conseguimos excluir essa mensagem. Tente novamente.",
       BLUESKY_POST_FAILED: "Não conseguimos publicar sua resposta no Bluesky. Tente novamente.",
       ACCOUNT_DELETE_FAILED: "Não conseguimos excluir os dados da sua conta. Tente novamente.",

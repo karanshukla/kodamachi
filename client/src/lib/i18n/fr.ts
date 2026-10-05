@@ -431,7 +431,6 @@ export const fr = {
         "Cette boîte de réception est fermée et n'accepte pas de nouveaux messages pour le moment.",
       MESSAGE_SEND_FAILED: "Nous n'avons pas pu envoyer ton message. Réessaie.",
       MESSAGE_NOT_FOUND: "Nous n'avons pas trouvé ce message.",
-      MESSAGE_DELETE_NOT_AUTHORIZED: "Ce message ne t'appartient pas, tu ne peux pas le supprimer.",
       MESSAGE_DELETE_FAILED: "Nous n'avons pas pu supprimer ce message. Réessaie.",
       BLUESKY_POST_FAILED: "Nous n'avons pas pu publier ta réponse sur Bluesky. Réessaie.",
       ACCOUNT_DELETE_FAILED: "Nous n'avons pas pu supprimer les données de ton compte. Réessaie.",
