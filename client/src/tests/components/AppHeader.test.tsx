@@ -22,6 +22,7 @@ vi.mock("../../api/authService", async (importOriginal) => {
     ...actual,
     useSession: vi.fn(),
     useLogout: vi.fn(),
+    useLogin: vi.fn(),
     useSwitchAccount: vi.fn(),
   };
 });
@@ -47,6 +48,7 @@ import { AppHeader } from "../../components/AppHeader";
 const mockUseSession = vi.mocked(authService.useSession);
 const mockUseLogout = vi.mocked(authService.useLogout);
 const mockUseSwitchAccount = vi.mocked(authService.useSwitchAccount);
+const mockUseLogin = vi.mocked(authService.useLogin);
 const mockUseComputedColorScheme = vi.mocked(mantineCore.useComputedColorScheme);
 const mockBuildAccountSwitchUrl = vi.mocked(accountSwitchToast.buildAccountSwitchUrl);
 
@@ -66,6 +68,7 @@ describe("AppHeader", () => {
     window.localStorage.removeItem("nf-bounce-logos-enabled");
     mockUseLogout.mockReturnValue({ mutate: vi.fn() } as any);
     mockUseSwitchAccount.mockReturnValue({ mutate: vi.fn(), isPending: false } as any);
+    mockUseLogin.mockReturnValue({ mutate: vi.fn() } as any);
     mockUseComputedColorScheme.mockReturnValue("light" as any);
   });
 
@@ -353,6 +356,65 @@ describe("AppHeader", () => {
         expect.objectContaining({
           title: en.userMenu.switchAccountErrorTitle,
           message: en.errors.codes.ACCOUNT_SWITCH_FAILED,
+        })
+      );
+    });
+
+    async function failSwitchWith(error: { error: string }) {
+      let capturedCallbacks: any;
+      mockUseSwitchAccount.mockReturnValue({
+        mutate: vi.fn((_data, callbacks) => {
+          capturedCallbacks = callbacks;
+        }),
+        isPending: false,
+      } as any);
+      renderWithProviders(<AppHeader {...defaultProps} />);
+      await openMenu();
+      fireEvent.click(screen.getByText("@other.bsky.social").closest("button")!);
+      expect(document.body.style.pointerEvents).toBe("none");
+      act(() => {
+        capturedCallbacks.onError(error);
+      });
+    }
+
+    it("unfreezes the page when a switch fails", async () => {
+      await failSwitchWith({ error: "ACCOUNT_SWITCH_FAILED" });
+      expect(document.body.style.pointerEvents).toBe("");
+      expect(document.body.style.opacity).toBe("");
+    });
+
+    it("sends an expired account back through OAuth", async () => {
+      const mockLogin = vi.fn((_data, callbacks) =>
+        callbacks.onSuccess({ redirectUrl: "https://bsky.social/oauth/authorize" })
+      );
+      mockUseLogin.mockReturnValue({ mutate: mockLogin } as any);
+
+      await failSwitchWith({ error: "ACCOUNT_SESSION_EXPIRED" });
+
+      expect(mockLogin).toHaveBeenCalledWith({ handle: "other.bsky.social" }, expect.any(Object));
+      expect(window.location.href).toBe("https://bsky.social/oauth/authorize");
+      expect(sessionStorage.getItem("newLogin")).toBe("true");
+      expect(vi.mocked(showNotification)).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: en.userMenu.sessionExpiredTitle,
+          message: en.userMenu.reauthenticating("other.bsky.social"),
+        })
+      );
+      sessionStorage.removeItem("newLogin");
+    });
+
+    it("shows the expiry error when OAuth for an expired account can't start", async () => {
+      mockUseLogin.mockReturnValue({
+        mutate: vi.fn((_data, callbacks) => callbacks.onError({ error: "LOGIN_INIT_FAILED" })),
+      } as any);
+
+      await failSwitchWith({ error: "ACCOUNT_SESSION_EXPIRED" });
+
+      expect(window.location.href).toBe("");
+      expect(vi.mocked(showNotification)).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: en.userMenu.switchAccountErrorTitle,
+          message: en.errors.codes.ACCOUNT_SESSION_EXPIRED,
         })
       );
     });

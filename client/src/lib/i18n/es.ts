@@ -321,6 +321,8 @@ export const es = {
   },
   userMenu: {
     switchAccountErrorTitle: "No se pudo cambiar de cuenta",
+    sessionExpiredTitle: "Sesión expirada",
+    reauthenticating: (handle: string) => `Volviendo a iniciar sesión como @${handle}…`,
     userAvatarAltFallback: "Avatar de usuario",
     accountsLabel: "Cuentas",
     addAccount: "Añadir cuenta",

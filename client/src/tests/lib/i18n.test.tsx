@@ -213,6 +213,9 @@ describe("es catalog interpolations", () => {
     );
     expect(es.publicProfilePage.notOnAppTitle("kodamachi")).toBe("No está en kodamachi");
     expect(es.userMenu.logOut("alice.bsky.social")).toBe("Cerrar sesión @alice.bsky.social");
+    expect(es.userMenu.reauthenticating("alice.bsky.social")).toBe(
+      "Volviendo a iniciar sesión como @alice.bsky.social…"
+    );
     expect(es.home.shareTitle("kodamachi")).toBe("¡Envíame mensajes anónimos en kodamachi!");
     expect(es.settingsPage.pdsSyncDescription("kodamachi")).toContain("kodamachi");
     expect(es.settingsPage.feedTitle("kodamachi")).toBe("Feed de kodamachi");
@@ -244,6 +247,9 @@ describe("pt/de/fr catalog interpolations", () => {
     );
     expect(pt.publicProfilePage.notOnAppTitle("kodamachi")).toBe("Não está no kodamachi");
     expect(pt.userMenu.logOut("alice.bsky.social")).toBe("Sair @alice.bsky.social");
+    expect(pt.userMenu.reauthenticating("alice.bsky.social")).toBe(
+      "Entrando novamente como @alice.bsky.social…"
+    );
     expect(pt.home.shareTitle("kodamachi")).toBe("Envie mensagens anônimas para mim no kodamachi!");
     expect(pt.settingsPage.pdsSyncDescription("kodamachi")).toContain("kodamachi");
     expect(pt.settingsPage.feedTitle("kodamachi")).toBe("Feed do kodamachi");
@@ -273,6 +279,9 @@ describe("pt/de/fr catalog interpolations", () => {
     );
     expect(de.publicProfilePage.notOnAppTitle("kodamachi")).toBe("Nicht auf kodamachi");
     expect(de.userMenu.logOut("alice.bsky.social")).toBe("@alice.bsky.social abmelden");
+    expect(de.userMenu.reauthenticating("alice.bsky.social")).toBe(
+      "Du wirst erneut als @alice.bsky.social angemeldet…"
+    );
     expect(de.home.shareTitle("kodamachi")).toBe("Sende mir anonyme Nachrichten auf kodamachi!");
     expect(de.settingsPage.pdsSyncDescription("kodamachi")).toContain("kodamachi");
     expect(de.settingsPage.feedTitle("kodamachi")).toBe("kodamachi-Feed");
@@ -300,6 +309,9 @@ describe("pt/de/fr catalog interpolations", () => {
     );
     expect(fr.publicProfilePage.notOnAppTitle("kodamachi")).toBe("Pas sur kodamachi");
     expect(fr.userMenu.logOut("alice.bsky.social")).toBe("Se déconnecter @alice.bsky.social");
+    expect(fr.userMenu.reauthenticating("alice.bsky.social")).toBe(
+      "Reconnexion en tant que @alice.bsky.social…"
+    );
     expect(fr.home.shareTitle("kodamachi")).toBe(
       "Envoie-moi des messages anonymes sur kodamachi !"
     );

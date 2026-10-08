@@ -1,5 +1,10 @@
 /* v8 ignore start */
-import { OAuthResolverError } from "@atproto/oauth-client-node";
+import {
+  OAuthResolverError,
+  TokenInvalidError,
+  TokenRefreshError,
+  TokenRevokedError,
+} from "@atproto/oauth-client-node";
 import { isValidHandle } from "@atproto/syntax";
 import Cryptr from "cryptr";
 
@@ -20,6 +25,28 @@ import type { AppBskyActorDefs } from "@atproto/api";
  * token inside its lifetime" and "rejects an oauth token past its lifetime".
  */
 export const OAUTH_TOKEN_TTL_MS = 5 * 60 * 1000;
+
+/**
+ * True when the error, or anything in its `cause` chain, says the account's OAuth
+ * grant is gone for good (revoked, refresh refused, token rejected), as opposed to a
+ * transient failure worth surfacing.
+ *
+ * @see [auth-service.test.ts](../tests/auth-service.test.ts): "treats a grant the
+ * OAuth server %s as an expired session" and "gives up with the attempt count once
+ * every getProfile retry fails".
+ */
+export function isDeadOAuthGrant(err: unknown): boolean {
+  for (let e = err; e instanceof Error; e = e.cause) {
+    if (
+      e instanceof TokenRefreshError ||
+      e instanceof TokenRevokedError ||
+      e instanceof TokenInvalidError
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
 
 export class AuthService {
   constructor(private ctx: AppContext) {}
@@ -81,10 +108,16 @@ export class AuthService {
 
     const agent = await initializeAgentForDid(this.ctx, did);
     if (!agent) return null;
-    const response = await withRetry(() => agent.getProfile({ actor: did }), this.ctx.logger, {
-      did,
-      op: "getProfile",
-    });
+    let response;
+    try {
+      response = await withRetry(() => agent.getProfile({ actor: did }), this.ctx.logger, {
+        did,
+        op: "getProfile",
+      });
+    } catch (err) {
+      if (isDeadOAuthGrant(err)) return null;
+      throw err;
+    }
     const data = response?.data as AppBskyActorDefs.ProfileViewDetailed;
     if (!data) return null;
     return {

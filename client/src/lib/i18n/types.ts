@@ -366,6 +366,8 @@ export interface UpdateAvailableButtonMessages {
 
 export interface UserMenuMessages {
   switchAccountErrorTitle: string;
+  sessionExpiredTitle: string;
+  reauthenticating: (handle: string) => string;
   userAvatarAltFallback: string;
   accountsLabel: string;
   addAccount: string;

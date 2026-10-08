@@ -323,6 +323,8 @@ export const fr = {
   },
   userMenu: {
     switchAccountErrorTitle: "Impossible de changer de compte",
+    sessionExpiredTitle: "Session expirée",
+    reauthenticating: (handle: string) => `Reconnexion en tant que @${handle}…`,
     userAvatarAltFallback: "Avatar de l'utilisateur",
     accountsLabel: "Comptes",
     addAccount: "Ajouter un compte",

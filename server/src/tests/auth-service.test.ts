@@ -2,7 +2,11 @@ import assert from "node:assert";
 import { test, describe, beforeAll, afterAll, beforeEach, afterEach, mock } from "bun:test";
 import type { Mock } from "bun:test";
 
-import { OAuthResolverError } from "@atproto/oauth-client-node";
+import {
+  OAuthResolverError,
+  TokenRefreshError,
+  TokenRevokedError,
+} from "@atproto/oauth-client-node";
 
 import { deleteE2EAgent, setE2EAgent } from "../auth/e2e-agent-store";
 
@@ -300,6 +304,29 @@ describe("AuthService", () => {
       assert.match(err!.message, /Call failed after 3 attempts/);
       assert.match((err!.cause as Error).message, /network down/);
       assert.strictEqual(getProfile.mock.calls.length, 3);
+    });
+
+    test.each([
+      ["revoked", new TokenRevokedError("did:foo")],
+      ["refused a refresh", new TokenRefreshError("did:foo", "refresh failed")],
+    ])("treats a grant the OAuth server %s as an expired session", async (_label, grantErr) => {
+      ctx.db.selectFrom = mock(() => ({
+        selectAll: mock(function (this: any) {
+          return this as any;
+        }),
+        where: mock(function (this: any) {
+          return this as any;
+        }),
+        executeTakeFirst: mock(async () => ({ key: "did:foo" })),
+      }));
+      ctx.oauthClient.restore = mock(async () => ({ sub: "did:foo" }));
+      mockAgent.getProfile = mock(async () => {
+        throw grantErr;
+      });
+
+      const result = await service.checkSession("did:foo");
+
+      assert.strictEqual(result, null);
     });
 
     test("returns the profile once getProfile recovers within the retry budget", async () => {
