@@ -110,6 +110,10 @@ export function useSwitchAccount() {
     onSuccess: (response) => {
       clearFriendsCache(response.did);
     },
+    // The server drops an expired account from the session cookie, so refetch the list.
+    onError: () => {
+      queryClient.invalidateQueries({ queryKey: authKeys.session });
+    },
   });
 }
 

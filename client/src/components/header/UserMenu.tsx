@@ -5,7 +5,7 @@ import { Link } from "react-router";
 import { useHaptic } from "use-haptic";
 
 import { ApiError } from "../../api/apiClient";
-import { type AccountEntry, useSwitchAccount } from "../../api/authService";
+import { type AccountEntry, useLogin, useSwitchAccount } from "../../api/authService";
 import { buildAccountSwitchUrl } from "../../lib/accountSwitchToast";
 import { useTranslations } from "../../lib/i18n";
 import { initialsOf } from "../../lib/initials";
@@ -27,6 +27,19 @@ interface UserMenuProps {
   onNavigate: () => void;
 }
 
+const SESSION_EXPIRED = "ACCOUNT_SESSION_EXPIRED";
+
+/** Freezes the page while a switch is in flight; every outcome must call `undimPage`. */
+function dimPage() {
+  document.body.style.pointerEvents = "none";
+  document.body.style.opacity = "0.5";
+}
+
+function undimPage() {
+  document.body.style.pointerEvents = "";
+  document.body.style.opacity = "";
+}
+
 export function UserMenu({
   userProfile,
   accounts,
@@ -39,19 +52,47 @@ export function UserMenu({
   const { mutate: switchAccount, isPending: isSwitching } = useSwitchAccount();
   const showsAccountsLabel = accounts.length > 1;
 
+  const { mutate: login } = useLogin();
+
+  const showSwitchError = (err: ApiError) => {
+    showNotification({
+      title: messages.userMenu.switchAccountErrorTitle,
+      message: resolveApiErrorMessage(err, messages),
+      color: "red",
+    });
+  };
+
+  /**
+   * A remembered account whose OAuth grant has died goes straight back through
+   * Bluesky's sign-in for that handle, rather than leaving the user to find it again.
+   *
+   * @see [AppHeader.test.tsx](../../tests/components/AppHeader.test.tsx) — "sends an
+   * expired account back through OAuth" and "shows an error notification when
+   * switching accounts fails".
+   */
+  const reauthenticate = (handle: string, expiredErr: ApiError) => {
+    showNotification({
+      title: messages.userMenu.sessionExpiredTitle,
+      message: messages.userMenu.reauthenticating(handle),
+      color: "blue",
+    });
+    login(
+      { handle },
+      {
+        onSuccess: ({ redirectUrl }) => {
+          sessionStorage.setItem("newLogin", "true");
+          window.location.href = redirectUrl;
+        },
+        onError: () => showSwitchError(expiredErr),
+      }
+    );
+  };
+
   const handleSwitch = (did: string, handle: string) => {
     /* istanbul ignore if */
     if (did === activeDid || isSwitching) return;
     triggerHaptic();
-
-    /* istanbul ignore next */
-    try {
-      document.body.style.pointerEvents = "none";
-      document.body.style.opacity = "0.5";
-    } catch {
-      document.body.style.pointerEvents = "";
-      document.body.style.opacity = "";
-    }
+    dimPage();
 
     switchAccount(
       { did },
@@ -60,11 +101,12 @@ export function UserMenu({
           window.location.href = buildAccountSwitchUrl(handle);
         },
         onError: (err: ApiError) => {
-          showNotification({
-            title: messages.userMenu.switchAccountErrorTitle,
-            message: resolveApiErrorMessage(err, messages),
-            color: "red",
-          });
+          undimPage();
+          if (err.error === SESSION_EXPIRED) {
+            reauthenticate(handle, err);
+            return;
+          }
+          showSwitchError(err);
         },
       }
     );

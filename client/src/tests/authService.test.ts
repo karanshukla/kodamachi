@@ -228,6 +228,19 @@ describe("auth hooks", () => {
     expect(vi.mocked(clearFriendsCache)).toHaveBeenCalledWith("did:example:789");
   });
 
+  it("useSwitchAccount.onError refetches the session so a dropped account leaves the list", async () => {
+    vi.mocked(apiClient.post).mockRejectedValueOnce({ error: "ACCOUNT_SESSION_EXPIRED" });
+    const { result } = renderHook(() => useSwitchAccount(), {
+      wrapper: makeWrapper(),
+    });
+    await act(async () => {
+      await result.current.mutateAsync({ did: "did:example:789" }).catch(() => {});
+    });
+    expect(vi.mocked(queryClient.invalidateQueries)).toHaveBeenCalledWith({
+      queryKey: authKeys.session,
+    });
+  });
+
   it("useE2ELogin returns a mutation object", () => {
     const { result } = renderHook(() => useE2ELogin(), {
       wrapper: makeWrapper(),

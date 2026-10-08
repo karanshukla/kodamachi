@@ -307,6 +307,8 @@ export const en = {
   },
   userMenu: {
     switchAccountErrorTitle: "Couldn't switch account",
+    sessionExpiredTitle: "Session expired",
+    reauthenticating: (handle: string) => `Signing you back in as @${handle}…`,
     userAvatarAltFallback: "User avatar",
     accountsLabel: "Accounts",
     addAccount: "Add account",
