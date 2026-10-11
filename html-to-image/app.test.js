@@ -23,7 +23,10 @@ async function waitFor(predicate, { timeoutMs = 2000, intervalMs = 5 } = {}) {
 }
 
 function stopServer(server) {
-  return new Promise((resolve) => server.close(resolve));
+  return new Promise((resolve) => {
+    server.close(resolve);
+    server.closeAllConnections();
+  });
 }
 
 // Mock page writes dummy bytes so createReadStream succeeds.
