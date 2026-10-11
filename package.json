@@ -23,7 +23,7 @@
     "@playwright/test": "^1.63.0",
     "@types/bun": "1.4.2",
     "@types/node": "^26.6.4",
-    "concurrently": "^10.0.5",
+    "concurrently": "^10.0.6",
     "dotenv": "^17.4.2",
     "happy-dom": "^20.14.5",
     "husky": "^9.1.7",
