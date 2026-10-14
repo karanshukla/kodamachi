@@ -36,7 +36,7 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Check formatting
-        run: bun fmt --check client/src server/src
+        run: bun fmt --check client/src server/src html-to-image
 
       - name: Verify generated brand static assets are current
         working-directory: client

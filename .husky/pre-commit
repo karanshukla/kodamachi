@@ -3,6 +3,7 @@
 # Per-workspace so each picks up its own .oxlintrc.json.
 (cd client && bunx lint-staged --allow-empty)
 (cd server && bunx lint-staged --allow-empty)
+bun fmt --staged html-to-image
 
 echo "TypeScript: client..."
 bun run --cwd client typecheck
