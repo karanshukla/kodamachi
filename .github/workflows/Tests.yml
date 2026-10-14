@@ -25,11 +25,12 @@ jobs:
       - uses: actions/checkout@v4
 
       # No setup-node: with Node on PATH, `bun run` hands node-shebang binaries (vite,
-      # vitest, tsc) to it, hence `bunx --bun` everywhere. The probe below asserts the runtime.
+      # vitest, oxlint) to it, hence `bunx --bun` everywhere. The probe below asserts the runtime.
+      # Canary until `bun fmt` (used by render:brand-assets) ships in a stable release (1.4.4).
       - name: Set up Bun
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: latest
+          bun-version: canary
 
       - name: Install dependencies
         run: bun install --frozen-lockfile

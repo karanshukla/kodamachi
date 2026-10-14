@@ -1,4 +1,4 @@
-// Lives beside index.html rather than under src/ so the `include: ["src"]` tsc gate skips it.
+// Lives beside index.html rather than under src/ so the `include: ["src"]` bun check gate skips it.
 // The opengraph-service shim fetches index.html from here: serve it as plain text/html, uncompressed.
 // Run: bun serve.ts (PORT env, default 3000)
 

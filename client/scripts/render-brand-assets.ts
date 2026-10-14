@@ -44,5 +44,5 @@ const clientMetadataPath = Bun.fileURLToPath(new URL("client-metadata.json", pub
 await Bun.write(sitemapPath, sitemapXml);
 await Bun.write(clientMetadataPath, clientMetadataJson);
 
-// JSON.stringify breaks every array onto multiple lines; prettier restores the house style.
-await Bun.$`bunx --bun prettier --write ${clientMetadataPath}`.quiet();
+// JSON.stringify breaks every array onto multiple lines; bun fmt restores the house style.
+await Bun.$`bun fmt ${clientMetadataPath}`.quiet();

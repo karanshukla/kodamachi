@@ -5,12 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "bunx --bun vite --host",
-    "build": "bunx --bun tsc && bunx --bun vite build",
+    "build": "bun check && bunx --bun vite build",
     "preview": "bunx --bun vite preview",
     "start": "bun serve.ts",
     "lint": "bunx --bun oxlint .",
     "lint:fix": "bunx --bun oxlint . --fix",
-    "typecheck": "bunx --bun tsc --noEmit && bunx --bun tsc -p tsconfig.test.json --noEmit",
+    "typecheck": "bun check && bun check -p tsconfig.test.json",
     "test": "bunx --bun vitest run",
     "test:watch": "bunx --bun vitest",
     "test:coverage": "bunx --bun vitest run --coverage",
@@ -21,7 +21,7 @@
   },
   "lint-staged": {
     "src/**/*.{ts,tsx}": [
-      "prettier --write",
+      "bun fmt",
       "oxlint --fix"
     ]
   },
