@@ -25,8 +25,8 @@ node:dns/crypto) runs under Bun natively.
 ## Why the `--bun` flag is load-bearing
 
 `bun run <script>` hands a node-shebang binary to Node whenever Node is on PATH,
-and `vite`, `vitest`, `tsc`, `pino-pretty`, `rimraf`, `lex`, `husky`, and
-`concurrently` all have one. So a bare `bun run build` silently ran on Node locally
+and `vite`, `vitest`, `tsc`, `pino-pretty`, `rimraf`, `lex`, and `husky`
+all have one. So a bare `bun run build` silently ran on Node locally
 while running on Bun inside `docker/Dockerfile.client` (which is `FROM oven/bun` and
 ships no Node) — that production build path was the only place Vite ran under Bun,
 and nothing tested it.

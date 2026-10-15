@@ -7,7 +7,10 @@
     "html-to-image"
   ],
   "scripts": {
-    "dev": "bunx --bun concurrently \"bun run --cwd client dev\" \"bun run --cwd server dev\" \"bun run --cwd html-to-image start\"",
+    "dev": "bun run --parallel dev:client dev:server dev:html-to-image",
+    "dev:client": "bun run --cwd client dev",
+    "dev:server": "bun run --cwd server dev",
+    "dev:html-to-image": "bun run --cwd html-to-image start",
     "html-to-image": "docker compose -f docker/docker-compose.yml up html-to-image --build",
     "prepare": "bunx --bun husky || true",
     "test:e2e": "playwright test",
@@ -23,7 +26,6 @@
     "@playwright/test": "^1.64.0",
     "@types/bun": "1.4.2",
     "@types/node": "^26.6.5",
-    "concurrently": "^10.0.6",
     "dotenv": "^17.4.2",
     "happy-dom": "^20.14.6",
     "husky": "^9.1.7",
