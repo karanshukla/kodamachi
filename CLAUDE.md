@@ -64,7 +64,7 @@ service; all five Dockerfiles are `FROM oven/bun`. The server HTTP layer is
 footguns: `docs/runtime-notes.md`.
 
 - **Route any script that shells out to a node-shebang binary through `bunx --bun`**
-  (`vite`, `vitest`, `tsc`, `pino-pretty`, `rimraf`, `lex`, `husky`
+  (`vite`, `vitest`, `tsc`, `pino-pretty`, `lex`, `husky`
   all have one) or it silently runs on Node wherever Node is installed.
   `client/bunfig.toml` and `server/bunfig.toml` set `[run] bun = true` as a backstop;
   the repo root deliberately does not, so `test:e2e` keeps reaching Node.
