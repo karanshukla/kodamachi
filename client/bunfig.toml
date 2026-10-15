@@ -4,7 +4,7 @@
 # Belt-and-braces against silent Node drift.
 #
 # `bun run <script>` hands a node-shebang binary to Node whenever Node is on
-# PATH, and vite, vitest, tsc, and oxlint all have one. Every script in
+# PATH, and vite, vitest, and tsc all have one. Every script in
 # package.json already spells out `bunx --bun` for that reason, but a single
 # new script added without the flag would silently run on Node locally while
 # running on Bun inside docker/Dockerfile.client (FROM oven/bun, no Node in

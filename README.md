@@ -212,7 +212,7 @@ The repo uses [Husky](https://typicode.github.io/husky/) to run checks automatic
 | Step                | Tool           | Effect                                                       |
 | ------------------- | -------------- | ------------------------------------------------------------ |
 | Format staged files | `bun fmt`      | Auto-fixes formatting (quotes, indentation, trailing commas) |
-| Lint staged files   | oxlint         | Auto-fixes import order, unused vars, etc.                   |
+| Lint staged files   | `bun lint`     | Auto-fixes import order, unused vars, etc.                   |
 | Type check client   | `bun check`    | Blocks commit if there are TypeScript errors                 |
 | Type check server   | `bun check`    | Blocks commit if there are TypeScript errors                 |
 

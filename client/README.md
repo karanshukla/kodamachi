@@ -23,7 +23,7 @@ bun run test       # Vitest
 bun run probe:bun  # canary: asserts the runtime is Bun and the dev server transforms TSX
 ```
 
-The scripts spell the runtime out with `bunx --bun` rather than relying on `bun run`, which hands node-shebang binaries (`vite`, `vitest`, `tsc`, `oxlint` all have one) back to Node whenever Node happens to be installed. Without the flag you get Node locally and Bun in Docker, silently.
+The scripts spell the runtime out with `bunx --bun` rather than relying on `bun run`, which hands node-shebang binaries (`vite`, `vitest`, `tsc` all have one) back to Node whenever Node happens to be installed. Without the flag you get Node locally and Bun in Docker, silently.
 
 ## Testing
 

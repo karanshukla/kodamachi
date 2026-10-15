@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Per-workspace so each picks up its own .oxlintrc.json.
+# Per-workspace so each picks up its own .oxlintrc.json (read by `bun lint`).
 (cd client && bunx lint-staged --allow-empty)
 (cd server && bunx lint-staged --allow-empty)
 bun fmt --staged html-to-image
