@@ -5,12 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "bunx --bun vite --host",
-    "build": "bunx --bun tsc && bunx --bun vite build",
+    "build": "bun check && bunx --bun vite build",
     "preview": "bunx --bun vite preview",
     "start": "bun serve.ts",
-    "lint": "bunx --bun oxlint .",
-    "lint:fix": "bunx --bun oxlint . --fix",
-    "typecheck": "bunx --bun tsc --noEmit && bunx --bun tsc -p tsconfig.test.json --noEmit",
+    "lint": "bun lint",
+    "lint:fix": "bun lint --fix",
+    "typecheck": "bun check && bun check -p tsconfig.test.json",
     "test": "bunx --bun vitest run",
     "test:watch": "bunx --bun vitest",
     "test:coverage": "bunx --bun vitest run --coverage",
@@ -21,8 +21,8 @@
   },
   "lint-staged": {
     "src/**/*.{ts,tsx}": [
-      "prettier --write",
-      "oxlint --fix"
+      "bun fmt",
+      "bun lint --fix"
     ]
   },
   "devDependencies": {
@@ -37,7 +37,6 @@
     "@vitest/coverage-istanbul": "^5.0.4",
     "happy-dom": "^20.14.6",
     "msw": "^2.15.0",
-    "oxlint": "^1.87.0",
     "postcss": "^8.5.29",
     "postcss-preset-mantine": "^1.18.0",
     "postcss-simple-vars": "^7.0.1",
