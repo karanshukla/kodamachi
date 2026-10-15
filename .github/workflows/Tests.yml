@@ -38,6 +38,11 @@ jobs:
       - name: Check formatting
         run: bun fmt --check client/src server/src html-to-image
 
+      - name: Lint client and server
+        run: |
+          cd client && bun run lint
+          cd ../server && bun run lint
+
       - name: Verify generated brand static assets are current
         working-directory: client
         run: |
