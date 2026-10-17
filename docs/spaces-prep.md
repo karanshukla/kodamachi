@@ -15,6 +15,21 @@ Both are drafts; recheck before building on any name below.
   `MessageService.syncMessages` skips a drained user, so sync cannot recreate the
   legacy PDS records the drain deleted.
 
+## Table-to-space migration
+
+`InboxDrain` is that migration (write to target, then delete, `tid` as the key, so a
+failed run repeats safely), but it has no real target yet and nothing runs it. To
+finish it:
+
+- Point it at `SpaceInboxStore` once that exists (item 3 below).
+- Run it for every user with table rows, not only at that user's login, if the bake
+  is to end on a cutoff date rather than on who happens to log in.
+- Decide whose credentials write the target: a bot-owned space is written by the bot,
+  so the drain would need the bot's agent for the space and the user's agent only
+  for deleting legacy PDS records.
+- Add a migration-completeness check (rows left in `message` with no `inbox_drain`
+  marker) so the cutoff announcement has a number behind it.
+
 ## Not built, in order
 
 1. **Space-type lexicon.** Sketch in `docs/spaces/app.kodamachi.inbox.draft.json`.
