@@ -5,6 +5,7 @@ import { errorMessage } from "../lib/errors";
 import { listLegacyRecords, type LegacyRecordEntry } from "../lib/legacy-records";
 import { ids } from "../lexicon/lexicons";
 import { validateRecord } from "../lexicon/types/app/navyfragen/message";
+import type { DrainMarker } from "./inbox-drain-marker";
 import type { InboxStore, Question } from "./inbox-store";
 
 /**
@@ -39,13 +40,16 @@ function firstPerTid(questions: Question[]): Question[] {
  * Moves a user's inbox into `target` at login: their table rows, plus the
  * legacy records sync left in their PDS. Originals are deleted only after every
  * write has landed, and `tid` is the key throughout, so a failed run is safe to
- * repeat on the next login.
- * @see [inbox-drain.test.ts](../tests/inbox-drain.test.ts)
+ * repeat on the next login. The user is marked drained once every write has
+ * landed, which is what lets reads switch to the space.
+ * @see [inbox-drain.test.ts](../tests/inbox-drain.test.ts) — "marks the user
+ * drained once the writes land" and "does not mark the user drained when a write fails".
  */
 export class InboxDrain {
   constructor(
     private target: InboxStore,
     private table: InboxStore,
+    private marker: DrainMarker,
     private logger: Logger
   ) {}
 
@@ -56,6 +60,7 @@ export class InboxDrain {
     const fromTable = await this.table.list(userDid);
 
     await this.writeInBatches(userDid, firstPerTid([...fromTable, ...valid.map(asQuestion)]));
+    await this.marker.markDrained(userDid);
     const deleteErrors = await this.deleteOriginals(valid, userDid, agent);
 
     this.logger.info(

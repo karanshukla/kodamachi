@@ -10,6 +10,8 @@ Both are drafts; recheck before building on any name below.
 - `InboxStore` seam, every call scoped to a recipient (`server/src/services/inbox-store.ts`).
 - `DualWriteInboxStore` and `InboxDrain` for the table-to-space move.
 - `app.kodamachi.inbox.question` record lexicon.
+- A drained marker (`inbox_drain` table, migration 015): `DualWriteInboxStore` reads
+  the space only for a drained recipient, and `InboxDrain` marks one once its writes land.
 
 ## Not built, in order
 

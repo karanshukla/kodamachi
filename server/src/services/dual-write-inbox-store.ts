@@ -1,5 +1,6 @@
 import type { Logger } from "pino";
 
+import type { DrainMarker } from "./inbox-drain-marker";
 import type { InboxStore, Message, Question } from "./inbox-store";
 
 /**
@@ -9,11 +10,19 @@ import type { InboxStore, Message, Question } from "./inbox-store";
  * That is what keeps a rollback to the table safe during the bake.
  * @see [dual-write-inbox-store.test.ts](../tests/dual-write-inbox-store.test.ts) —
  * one test per half failing, for writes, removes and clears.
+ *
+ * Reads come from the space only once the recipient is drained: before that the
+ * space holds a partial inbox and answers successfully, so a throw-only fallback
+ * would show them an empty one.
+ * @see [dual-write-inbox-store.test.ts](../tests/dual-write-inbox-store.test.ts) —
+ * "reads the table for a recipient who is not drained" and "reads the space for
+ * a drained recipient".
  */
 export class DualWriteInboxStore implements InboxStore {
   constructor(
     private table: InboxStore,
     private space: InboxStore,
+    private drained: DrainMarker,
     private logger: Logger
   ) {}
 
@@ -53,6 +62,7 @@ export class DualWriteInboxStore implements InboxStore {
     fromTable: () => Promise<T>,
     context: Record<string, string>
   ): Promise<T> {
+    if (!(await this.drained.isDrained(context.recipient))) return await fromTable();
     try {
       return await fromSpace();
     } catch (err) {

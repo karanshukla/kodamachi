@@ -5,6 +5,7 @@ import { type Logger } from "pino";
 
 import { DualWriteInboxStore } from "../services/dual-write-inbox-store";
 import type { Question } from "../services/inbox-store";
+import { MemoryDrainMarker } from "./helpers/memory-drain-marker";
 import { MemoryInboxStore } from "./helpers/memory-inbox-store";
 
 const ALICE = "did:plc:alice";
@@ -19,13 +20,16 @@ describe("DualWriteInboxStore", () => {
   let table: MemoryInboxStore;
   let space: MemoryInboxStore;
   let logger: Logger;
+  let marker: MemoryDrainMarker;
   let store: DualWriteInboxStore;
 
   beforeEach(() => {
     table = new MemoryInboxStore();
     space = new MemoryInboxStore();
     logger = { warn: mock(() => {}) } as unknown as Logger;
-    store = new DualWriteInboxStore(table, space, logger);
+    marker = new MemoryDrainMarker();
+    marker.drained.add(ALICE);
+    store = new DualWriteInboxStore(table, space, marker, logger);
   });
 
   describe("writes", () => {
@@ -61,6 +65,29 @@ describe("DualWriteInboxStore", () => {
       const tids = (await store.list(ALICE)).map((m) => m.tid);
 
       assert.deepStrictEqual(tids, ["q1"]);
+    });
+
+    test("reads the space for a drained recipient", async () => {
+      space.seed(ALICE, question("q1"));
+      table.seed(ALICE, question("q2"));
+
+      assert.deepStrictEqual(
+        (await store.list(ALICE)).map((m) => m.tid),
+        ["q1"]
+      );
+    });
+
+    test("reads the table for a recipient who is not drained", async () => {
+      marker.drained.delete(ALICE);
+      space.seed(ALICE, question("q1"));
+      table.seed(ALICE, question("q2"));
+
+      assert.deepStrictEqual(
+        (await store.list(ALICE)).map((m) => m.tid),
+        ["q2"]
+      );
+      assert.strictEqual((await store.find(ALICE, "q2"))?.tid, "q2");
+      assert.strictEqual(await store.find(ALICE, "q1"), undefined);
     });
 
     test("lists from the table when the space read fails, and logs the fallback", async () => {

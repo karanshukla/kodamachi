@@ -5,6 +5,7 @@ import { type Agent } from "@atproto/api";
 import { type Logger } from "pino";
 
 import { DRAIN_BATCH_SIZE, InboxDrain } from "../services/inbox-drain";
+import { MemoryDrainMarker } from "./helpers/memory-drain-marker";
 import { MemoryInboxStore } from "./helpers/memory-inbox-store";
 
 const ALICE = "did:plc:alice";
@@ -57,6 +58,7 @@ describe("InboxDrain", () => {
   let target: MemoryInboxStore;
   let table: MemoryInboxStore;
   let drain: InboxDrain;
+  let marker: MemoryDrainMarker;
 
   beforeEach(() => {
     target = new MemoryInboxStore();
@@ -67,7 +69,8 @@ describe("InboxDrain", () => {
       error: mock(() => {}),
       debug: mock(() => {}),
     } as unknown as Logger;
-    drain = new InboxDrain(target, table, logger);
+    marker = new MemoryDrainMarker();
+    drain = new InboxDrain(target, table, marker, logger);
   });
 
   test("moves legacy records into the target and deletes the originals", async () => {
@@ -131,6 +134,23 @@ describe("InboxDrain", () => {
       written.map((m) => [m.tid, m.message]),
       [["anon-1", "table copy"]]
     );
+  });
+
+  test("marks the user drained once the writes land", async () => {
+    const { agent } = fakeAgent([legacy("anon-1")]);
+
+    await drain.run(ALICE, agent);
+
+    assert.ok(await marker.isDrained(ALICE));
+  });
+
+  test("does not mark the user drained when a write fails", async () => {
+    target.failing = true;
+    const { agent } = fakeAgent([legacy("anon-1")]);
+
+    await assert.rejects(() => drain.run(ALICE, agent));
+
+    assert.ok(!(await marker.isDrained(ALICE)));
   });
 
   test("deletes nothing when a write to the target fails", async () => {
