@@ -22,30 +22,34 @@ Both are drafts; recheck before building on any name below.
    outside `server/lexicons/` on purpose: the installed `@atproto/lexicon` has no
    `space` type, so `bun run lexgen` and `publish-lexicons` would reject it. Move it
    once the tooling accepts it.
-2. **Anonymous-send write path** (below).
+2. **Bot DID**, provisioned, with the write grant on its own account and only the
+   manage grant requested of recipients at sign-in (#228 acceptance criteria).
 3. **`SpaceInboxStore`** implementing `InboxStore` over `com.atproto.space.*`.
    `putIgnoringDuplicates` keys on `tid`; pin "ignores a duplicate tid" and
    "writes a new tid" as a test pair.
-4. **Space creation** on first login or first drain, via `com.atproto.simplespace`
-   (`createSpace`; recipient as authority, read and write policy `member-list`
-   with the recipient as the only member).
+4. **Space creation** via `com.atproto.simplespace` (`createSpace`), owner per the
+   open question above, `member-list` policy with the bot as sole member.
 5. **OAuth scope** `space:app.kodamachi.inbox?...` in the client metadata. Permission
    sets need the concrete type; wildcards are standalone-scope only.
 
-## Open: who writes an anonymous question into the space
+## Settled in #228
 
-Space writes are OAuth-only and attributed to the repo owner. A sender has no
-account, and the recipient is usually offline.
+The bot DID is the sole writer into a per-recipient space (the queue), because a
+signed commit carries the author's key and askers have no identity. The queue drains
+into the recipient's own PDS at login. The `message` table is kept only as the
+rollback path during the bake (dual-writes), then dropped on an announced cutoff.
+Access policy is `#memberListPolicy` with the bot as sole member.
 
-- **A. Table first, space at login.** Sends land in the table; `InboxDrain` moves
-  them with the recipient's agent. No new trust, but the space lags until login.
-- **B. Server writes with the recipient's stored OAuth session**, when it holds one
-  with the space scope. Space is current, but the server now writes into user
-  repos unattended, and a revoked or expired session has to fall back.
+## Open, per #228
 
-Recommendation: A now, B as an upgrade that reuses the same `InboxStore` contract.
-Under B, `DualWriteInboxStore` keeps its order (table before space on write), and
-the drain stays as the reconciler for sessions that lapsed.
+- **Who owns the space**, recipient or bot. It decides whether the member list
+  survives kodamachi going away, and a recipient-owned space cannot exist before
+  that recipient's first post-cutover login.
+- **`appAccess`**: `#open` or an `#allowList` of client ids.
+- **Bot write ceiling**: one writer shares one rate-limit bucket, roughly 1,666
+  questions an hour across all users, unless the bot's PDS is self-hosted.
+- **Drained marker meaning**: `inbox_drain` currently marks "table backfilled into the
+  space". Recheck it against the login-time queue-to-PDS drain before wiring either.
 
 ## Upstream churn to watch
 

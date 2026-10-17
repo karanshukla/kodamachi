@@ -5,7 +5,7 @@
   "defs": {
     "main": {
       "type": "space",
-      "description": "One space per recipient. The recipient is the space authority and its only member.",
+      "description": "One space per recipient, written only by the kodamachi bot.",
       "key": "literal:inbox",
       "collections": ["app.kodamachi.inbox.question"]
     }
