@@ -24,9 +24,9 @@ finish it:
 - Point it at `SpaceInboxStore` once that exists (item 3 below).
 - Run it for every user with table rows, not only at that user's login, if the bake
   is to end on a cutoff date rather than on who happens to log in.
-- Decide whose credentials write the target: a bot-owned space is written by the bot,
-  so the drain would need the bot's agent for the space and the user's agent only
-  for deleting legacy PDS records.
+- Write the target with the recipient's own agent: the space is theirs, and the drain
+  runs at their login with the session that just provisioned it. Users who never log
+  in after cutover keep their rows in the table until the cutoff.
 - Add a migration-completeness check (rows left in `message` with no `inbox_drain`
   marker) so the cutoff announcement has a number behind it.
 
@@ -55,11 +55,19 @@ into the recipient's own PDS at login. The `message` table is kept only as the
 rollback path during the bake (dual-writes), then dropped on an announced cutoff.
 Access policy is `#memberListPolicy` with the bot as sole member.
 
+**The recipient owns the space**; the bot is a temporary passthrough. The recipient
+provisions it at sign-in (`manage=create`) and adds the bot as the one member
+(`manage=update`). Consequences:
+
+- No space exists before a recipient's first post-cutover login, so until then their
+  questions can only land in the `message` table. The table is the landing zone for
+  unprovisioned recipients, not just a rollback path.
+- Writes go to the bot's own repo inside the recipient's space (the queue); the login
+  drain moves them into the recipient's repo and deletes them from the bot's.
+- The member list and the data outlive kodamachi.
+
 ## Open, per #228
 
-- **Who owns the space**, recipient or bot. It decides whether the member list
-  survives kodamachi going away, and a recipient-owned space cannot exist before
-  that recipient's first post-cutover login.
 - **`appAccess`**: `#open` or an `#allowList` of client ids.
 - **Bot write ceiling**: one writer shares one rate-limit bucket, roughly 1,666
   questions an hour across all users, unless the bot's PDS is self-hosted.
