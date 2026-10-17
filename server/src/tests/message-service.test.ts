@@ -10,6 +10,7 @@ import type { ImageGenerationResult } from "../lib/image-generator";
 import { getServerMessages } from "../lib/i18n";
 import type { InboxStore } from "../services/inbox-store";
 import { MessageService, type Message, type ProfileResolver } from "../services/message-service";
+import { MemoryDrainMarker } from "./helpers/memory-drain-marker";
 import { MemoryInboxStore } from "./helpers/memory-inbox-store";
 
 describe("MessageService", () => {
@@ -818,6 +819,41 @@ describe("MessageService", () => {
 
       assert.deepStrictEqual(store.tids("did:other"), ["tid"]);
       assert.strictEqual(mockAgent.com.atproto.repo.deleteRecord.mock.calls.length, 0);
+    });
+  });
+
+  describe("syncMessages and the drain", () => {
+    const question = { tid: "tid", message: "hi", createdAt: "2026-09-01T00:00:00.000Z" };
+    let store: MemoryInboxStore;
+    let marker: MemoryDrainMarker;
+    let service: MessageService;
+
+    beforeEach(() => {
+      store = new MemoryInboxStore();
+      marker = new MemoryDrainMarker();
+      service = new MessageService(mockDb, mockResolver, mockLogger, store, marker);
+      mockAgent.com.atproto.repo.listRecords.mockClear();
+      mockAgent.com.atproto.repo.createRecord.mockClear();
+    });
+
+    test("syncMessages leaves the PDS alone for a drained user", async () => {
+      store.seed("did:foo", question);
+      marker.drained.add("did:foo");
+
+      const result = await service.syncMessages("did:foo", mockAgent);
+
+      assert.strictEqual(result.syncedCount, 0);
+      assert.strictEqual(mockAgent.com.atproto.repo.listRecords.mock.calls.length, 0);
+      assert.strictEqual(mockAgent.com.atproto.repo.createRecord.mock.calls.length, 0);
+    });
+
+    test("syncMessages still syncs a user who is not drained", async () => {
+      store.seed("did:foo", question);
+
+      const result = await service.syncMessages("did:foo", mockAgent);
+
+      assert.strictEqual(result.syncedCount, 1);
+      assert.strictEqual(mockAgent.com.atproto.repo.createRecord.mock.calls.length, 1);
     });
   });
 

@@ -12,6 +12,8 @@ Both are drafts; recheck before building on any name below.
 - `app.kodamachi.inbox.question` record lexicon.
 - A drained marker (`inbox_drain` table, migration 015): `DualWriteInboxStore` reads
   the space only for a drained recipient, and `InboxDrain` marks one once its writes land.
+  `MessageService.syncMessages` skips a drained user, so sync cannot recreate the
+  legacy PDS records the drain deleted.
 
 ## Not built, in order
 

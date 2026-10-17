@@ -8,6 +8,7 @@ import { getServerMessages } from "../lib/i18n";
 import { findProfanity } from "../lib/profanity";
 import type { ProfanityMatch } from "../lib/profanity";
 import { listLegacyRecords } from "../lib/legacy-records";
+import { KyselyDrainMarker, type DrainMarker } from "./inbox-drain-marker";
 import { withRetry } from "../lib/retry";
 import { ids } from "../lexicon/lexicons";
 import { type Record as MessageSchemaRecord } from "../lexicon/types/app/navyfragen/message";
@@ -43,7 +44,8 @@ export class MessageService {
     private db: Database,
     private resolver: ProfileResolver,
     private logger: Logger,
-    private inbox: InboxStore = new KyselyInboxStore(db)
+    private inbox: InboxStore = new KyselyInboxStore(db),
+    private drained: DrainMarker = new KyselyDrainMarker(db)
   ) {}
   /* v8 ignore stop */
 
@@ -430,6 +432,13 @@ export class MessageService {
     return outcome;
   }
 
+  /**
+   * A drained user's inbox lives in their space, so sync would only recreate the
+   * legacy PDS records the drain deleted.
+   * @see [message-service.test.ts](../tests/message-service.test.ts) — "syncMessages
+   * leaves the PDS alone for a drained user" and "syncMessages still syncs a user
+   * who is not drained".
+   */
   async syncMessages(
     userDid: string,
     agent: Agent
@@ -442,6 +451,9 @@ export class MessageService {
     errors?: { tid: string; error: string }[];
   }> {
     try {
+      if (await this.drained.isDrained(userDid)) {
+        return { success: true, syncedCount: 0, importedCount: 0, errorCount: 0, errors: [] };
+      }
       const pdsRecords = await listLegacyRecords(userDid, agent, this.logger);
       const localMessages = await this.inbox.list(userDid);
 
