@@ -11,8 +11,8 @@
     "start": "bun src/index.ts",
     "lexgen": "bunx --bun lex gen-server ./src/lexicon ./lexicons/*",
     "clean": "rm -rf coverage",
-    "lint": "bun lint",
-    "lint:fix": "bun lint --fix",
+    "lint": "bunx --bun oxlint .",
+    "lint:fix": "bunx --bun oxlint . --fix",
     "typecheck": "bun check",
     "test": "bun test --isolate --no-env-file --preload ./src/tests/test-bootstrap.js src/tests/",
     "test:watch": "bun test --isolate --no-env-file --watch --preload ./src/tests/test-bootstrap.js src/tests/",
@@ -22,7 +22,7 @@
   "lint-staged": {
     "src/**/*.ts": [
       "bun fmt",
-      "bun lint --fix"
+      "oxlint --fix --no-error-on-unmatched-pattern"
     ]
   },
   "dependencies": {
@@ -58,6 +58,7 @@
     "@types/bun": "1.4.2",
     "@types/node": "^26.6.5",
     "@types/pg": "^8.23.1",
+    "oxlint": "^1.88.0",
     "pino-pretty": "^13.2.0",
     "typescript": "^7.0.2"
   }
