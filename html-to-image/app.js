@@ -1,16 +1,16 @@
-import puppeteer from 'puppeteer';
-import express from 'express';
-import rateLimit from 'express-rate-limit';
-import cors from 'cors';
-import fs from 'fs';
-import tmp from 'tmp';
-import { fileURLToPath } from 'url';
+import puppeteer from "puppeteer";
+import express from "express";
+import rateLimit from "express-rate-limit";
+import cors from "cors";
+import fs from "fs";
+import tmp from "tmp";
+import { fileURLToPath } from "url";
 
 const FORMATS = {
-  png:  { contentType: 'image/png',  args: { type: 'png'  } },
-  jpg:  { contentType: 'image/jpeg', args: { type: 'jpeg' } },
-  jpeg: { contentType: 'image/jpeg', args: { type: 'jpeg' } },
-  webp: { contentType: 'image/webp', args: { type: 'webp' } },
+  png: { contentType: "image/png", args: { type: "png" } },
+  jpg: { contentType: "image/jpeg", args: { type: "jpeg" } },
+  jpeg: { contentType: "image/jpeg", args: { type: "jpeg" } },
+  webp: { contentType: "image/webp", args: { type: "webp" } },
 };
 
 // Cap concurrent pages: uncapped bursts spawn one renderer per request and multiply RSS; excess requests queue.
@@ -77,12 +77,12 @@ async function waitForVisualReadiness(page) {
  * and 'aborts file:, http: and other requests'.
  */
 export function isAllowedRequest(url) {
-  return url.startsWith('data:') || url.startsWith('https://');
+  return url.startsWith("data:") || url.startsWith("https://");
 }
 
 async function blockDisallowedRequests(page) {
   await page.setRequestInterception(true);
-  page.on('request', (request) => {
+  page.on("request", (request) => {
     if (isAllowedRequest(request.url())) request.continue();
     else request.abort();
   });
@@ -91,27 +91,27 @@ async function blockDisallowedRequests(page) {
 // Railway sleeps apps on outbound-packet inactivity; these flags silence Chromium's timer-driven
 // background traffic (updater, safe-browsing, field trials, mDNS). The rest trim RSS.
 export const CHROMIUM_LAUNCH_ARGS = [
-  '--no-sandbox',
-  '--no-zygote',
-  '--headless',
-  '--disable-gpu',
-  '--disable-background-networking',
-  '--disable-component-update',
-  '--disable-domain-reliability',
-  '--disable-client-side-phishing-detection',
-  '--disable-sync',
-  '--safebrowsing-disable-auto-update',
-  '--no-pings',
-  '--no-first-run',
-  '--no-default-browser-check',
-  '--disable-default-apps',
-  '--disable-breakpad',
-  '--metrics-recording-only',
-  '--disable-features=Translate,BackForwardCache,MediaRouter,DialMediaRouteProvider,OptimizationHints,InterestFeedContentSuggestions,AcceptCHFrame',
-  '--disable-dev-shm-usage',
-  '--disable-extensions',
-  '--disable-software-rasterizer',
-  '--mute-audio',
+  "--no-sandbox",
+  "--no-zygote",
+  "--headless",
+  "--disable-gpu",
+  "--disable-background-networking",
+  "--disable-component-update",
+  "--disable-domain-reliability",
+  "--disable-client-side-phishing-detection",
+  "--disable-sync",
+  "--safebrowsing-disable-auto-update",
+  "--no-pings",
+  "--no-first-run",
+  "--no-default-browser-check",
+  "--disable-default-apps",
+  "--disable-breakpad",
+  "--metrics-recording-only",
+  "--disable-features=Translate,BackForwardCache,MediaRouter,DialMediaRouteProvider,OptimizationHints,InterestFeedContentSuggestions,AcceptCHFrame",
+  "--disable-dev-shm-usage",
+  "--disable-extensions",
+  "--disable-software-rasterizer",
+  "--mute-audio",
 ];
 
 // Under Railway's 10-minute inactivity window.
@@ -142,16 +142,16 @@ export function createBrowserPool({
     cancelIdleClose();
     idleTimer = setTimeout(() => {
       idleTimer = null;
-      closeBrowser('idle');
+      closeBrowser("idle");
     }, idleTimeoutMs);
     idleTimer.unref?.();
   }
 
   function startBrowser() {
     rendersSinceLaunch = 0;
-    log('Launching browser...');
+    log("Launching browser...");
     browserPromise = launch().then((browser) => {
-      log('Browser ready.');
+      log("Browser ready.");
       return browser;
     });
     return browserPromise;
@@ -217,7 +217,7 @@ export function createBrowserPool({
     getBrowser,
     warm,
     onRenderComplete,
-    shutdown: () => closeBrowser('shutdown'),
+    shutdown: () => closeBrowser("shutdown"),
   };
 }
 
@@ -226,58 +226,67 @@ export function createApp(getBrowser, { onRenderComplete = () => {}, warm = asyn
   const renderSemaphore = new Semaphore(MAX_CONCURRENT_RENDERS);
 
   app.use(cors());
-  app.use(express.json({ limit: '2mb' }));
+  app.use(express.json({ limit: "2mb" }));
   app.use(rateLimit({ windowMs: 60_000, limit: 60, standardHeaders: true, legacyHeaders: false }));
 
   // Answers before the browser launches so Railway can mark the instance ready.
-  app.get('/', (_req, res) => res.json({ status: 'ok' }));
+  app.get("/", (_req, res) => res.json({ status: "ok" }));
 
   // Must stay ahead of the render validation below, which rejects a POST
   // carrying no 'source'.
   // @see [app.test.js](./app.test.js): 'is not rejected by the render
   // validation that requires a source body'.
-  app.post('/warm', async (_req, res) => {
+  app.post("/warm", async (_req, res) => {
     try {
       await warm();
-      res.json({ status: 'warm' });
+      res.json({ status: "warm" });
     } catch (err) {
-      res.status(503).json({ error: 'Browser unavailable: ' + err.message });
+      res.status(503).json({ error: "Browser unavailable: " + err.message });
     }
   });
 
   app.use((req, res, next) => {
-    if (req.method !== 'POST') return next({ status: 405, message: 'Method not allowed' });
-    if (req.get('Content-Type') !== 'application/json') {
+    if (req.method !== "POST") return next({ status: 405, message: "Method not allowed" });
+    if (req.get("Content-Type") !== "application/json") {
       return next({ status: 415, message: "Only 'application/json' is supported" });
     }
-    if (typeof req.body.source !== 'string') {
-      return next({ status: 400, message: "Missing 'source' property in request body, or 'source' is not a string" });
+    if (typeof req.body.source !== "string") {
+      return next({
+        status: 400,
+        message: "Missing 'source' property in request body, or 'source' is not a string",
+      });
     }
-    if (req.body.source === '') {
+    if (req.body.source === "") {
       return next({ status: 400, message: "'source' must not be empty" });
     }
     if (!FORMATS[req.body.format]) {
-      return next({ status: 400, message: `'format' must be one of: ${Object.keys(FORMATS).join(', ')}` });
+      return next({
+        status: 400,
+        message: `'format' must be one of: ${Object.keys(FORMATS).join(", ")}`,
+      });
     }
-    if (req.body.options !== undefined && (typeof req.body.options !== 'object' || Array.isArray(req.body.options))) {
+    if (
+      req.body.options !== undefined &&
+      (typeof req.body.options !== "object" || Array.isArray(req.body.options))
+    ) {
       return next({ status: 400, message: "'options' must be an object if provided" });
     }
     next();
   });
 
-  app.post('/', async (req, res) => {
+  app.post("/", async (req, res) => {
     await renderSemaphore.acquire();
     try {
       let browser;
       try {
         browser = await getBrowser();
       } catch (err) {
-        return res.status(503).json({ error: 'Browser unavailable: ' + err.message });
+        return res.status(503).json({ error: "Browser unavailable: " + err.message });
       }
 
       const { source, format: formatName, options = {} } = req.body;
       const format = FORMATS[formatName];
-      const tmpoutput = tmp.fileSync({ prefix: 'htmltoimage-' });
+      const tmpoutput = tmp.fileSync({ prefix: "htmltoimage-" });
 
       try {
         const page = await browser.newPage();
@@ -286,18 +295,22 @@ export function createApp(getBrowser, { onRenderComplete = () => {}, warm = asyn
           await page.setViewport({ width: options.width || 1920, height: options.height || 1080 });
           await page.setContent(source);
           await waitForVisualReadiness(page);
-          await page.screenshot(Object.assign({}, options.args, format.args, { path: tmpoutput.name }));
+          await page.screenshot(
+            Object.assign({}, options.args, format.args, { path: tmpoutput.name })
+          );
         } finally {
           await page.close();
         }
 
-        res.header('Content-Type', format.contentType);
-        fs.createReadStream(tmpoutput.name).pipe(res).on('close', () => {
-          tmpoutput.removeCallback();
-        });
+        res.header("Content-Type", format.contentType);
+        fs.createReadStream(tmpoutput.name)
+          .pipe(res)
+          .on("close", () => {
+            tmpoutput.removeCallback();
+          });
       } catch (err) {
         tmpoutput.removeCallback();
-        res.status(500).json({ error: err.message || 'Image generation failed' });
+        res.status(500).json({ error: err.message || "Image generation failed" });
       }
     } finally {
       renderSemaphore.release();
@@ -306,7 +319,7 @@ export function createApp(getBrowser, { onRenderComplete = () => {}, warm = asyn
   });
 
   app.use((err, _req, res, _next) => {
-    res.status(err.status || 500).json({ error: err.message || 'Internal server error' });
+    res.status(err.status || 500).json({ error: err.message || "Internal server error" });
   });
 
   return app;
@@ -333,13 +346,13 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     warm: pool.warm,
   });
   // Bind to :: so Railway's IPv6 internal network can reach this service.
-  app.listen(port, '::', () => console.log(`html-to-image listening on port ${port}`));
+  app.listen(port, "::", () => console.log(`html-to-image listening on port ${port}`));
 
   async function shutdown() {
     await pool.shutdown();
     process.exit(0);
   }
 
-  process.on('SIGINT', shutdown);
-  process.on('SIGTERM', shutdown);
+  process.on("SIGINT", shutdown);
+  process.on("SIGTERM", shutdown);
 }

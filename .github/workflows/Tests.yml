@@ -16,6 +16,28 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Canary until `bun lint` ships in a stable release; 1.4.4 shipped fmt and check only.
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: canary
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Lint client and server
+        run: |
+          cd client && bun run lint
+          cd ../server && bun run lint
+
   client-tests:
     name: Client Tests
     runs-on: ubuntu-latest
@@ -25,7 +47,7 @@ jobs:
       - uses: actions/checkout@v4
 
       # No setup-node: with Node on PATH, `bun run` hands node-shebang binaries (vite,
-      # vitest, tsc) to it, hence `bunx --bun` everywhere. The probe below asserts the runtime.
+      # vitest) to it, hence `bunx --bun` everywhere. The probe below asserts the runtime.
       - name: Set up Bun
         uses: oven-sh/setup-bun@v2
         with:
@@ -33,6 +55,12 @@ jobs:
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
+
+      - name: Check formatting
+        run: bun fmt --check client/src server/src html-to-image
+
+      - name: Audit dependencies
+        run: bun audit
 
       - name: Verify generated brand static assets are current
         working-directory: client

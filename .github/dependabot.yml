@@ -27,9 +27,6 @@ updates:
       mantine:
         patterns:
           - "@mantine/*"
-      oxlint:
-        patterns:
-          - "oxlint"
       # vitest and its @vitest/* plugins must share a version (#504).
       vitest:
         patterns:

@@ -440,7 +440,7 @@ Fixed by removing the threshold, which lets the exit code track test results, th
 
 The client has no Node dependency left. Every script (`dev`, `build`, `preview`, `typecheck`, `lint`, `test`, `test:watch`, `test:coverage`) routes through `bunx --bun`, and `start` was already `bun serve.ts`. Verified by shimming `node` on `PATH` to `exit 127` and running all of them; each passes. The `Client Tests` CI job sets up Bun and no Node, and runs probe -> build -> `test:coverage`. All 545 tests pass.
 
-The explicit `--bun` flag is the load-bearing part. `bun run <script>` hands a node-shebang binary to Node whenever Node is on `PATH`, and `vite`, `vitest`, `tsc`, and `oxlint` all have one:
+The explicit `--bun` flag is the load-bearing part. `bun run <script>` hands a node-shebang binary to Node whenever Node is on `PATH`, and `vite`, `vitest`, and `tsc` all have one:
 
 ```
 $ bun run rtprobe          -> runtime: node v22.22.2

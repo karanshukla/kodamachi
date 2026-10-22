@@ -18,12 +18,12 @@ Everything runs on **Bun**. You do not need Node installed to develop, build, li
 
 ```bash
 bun run dev        # Vite dev server
-bun run build      # tsc + vite build (the same pair the Docker image runs)
+bun run build      # bun check + vite build (the same pair the Docker image runs)
 bun run test       # Vitest
 bun run probe:bun  # canary: asserts the runtime is Bun and the dev server transforms TSX
 ```
 
-The scripts spell the runtime out with `bunx --bun` rather than relying on `bun run`, which hands node-shebang binaries (`vite`, `vitest`, `tsc`, `oxlint` all have one) back to Node whenever Node happens to be installed. Without the flag you get Node locally and Bun in Docker, silently.
+The scripts spell the runtime out with `bunx --bun` rather than relying on `bun run`, which hands node-shebang binaries (`vite`, `vitest`, `tsc` all have one) back to Node whenever Node happens to be installed. Without the flag you get Node locally and Bun in Docker, silently.
 
 ## Testing
 
