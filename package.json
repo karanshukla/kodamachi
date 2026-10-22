@@ -23,14 +23,14 @@
     "test:bot-policy": "bun test scripts/bot-policy.test.ts"
   },
   "devDependencies": {
-    "@playwright/test": "^1.64.0",
+    "@playwright/test": "^1.64.1",
     "@types/bun": "1.4.2",
     "@types/node": "^26.6.5",
     "dotenv": "^17.4.2",
     "happy-dom": "^20.14.6",
     "husky": "^9.1.7",
     "lint-staged": "^17.6.0",
-    "railway": "^3.14.0"
+    "railway": "^3.16.0"
   },
   "dependencies": {
     "@types/ws": "^8.18.2",
