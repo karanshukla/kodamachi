@@ -59,7 +59,9 @@ jobs:
         run: bun fmt --check client/src server/src html-to-image
 
       - name: Audit dependencies
-        run: bun audit
+        # GHSA-mrhx-c7xc-m3w5: zod 3.x has no patched release and @atproto/* still
+        # requires zod@^3. Our own zod is 4.6.6+. Drop once atproto moves to zod 4.
+        run: bun audit --ignore=GHSA-mrhx-c7xc-m3w5
 
       - name: Verify generated brand static assets are current
         working-directory: client
