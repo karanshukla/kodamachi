@@ -26,11 +26,11 @@
     ]
   },
   "dependencies": {
-    "@atproto/api": "^0.28.0",
+    "@atproto/api": "^0.29.1",
     "@atproto/common": "^0.8.5",
-    "@atproto/identity": "^0.5.17",
+    "@atproto/identity": "^0.5.20",
     "@atproto/lexicon": "^0.7.16",
-    "@atproto/oauth-client-node": "^0.5.10",
+    "@atproto/oauth-client-node": "^0.5.12",
     "@atproto/syntax": "^0.7.6",
     "@atproto/xrpc-server": "^0.13.5",
     "@aturi.to/waypoints": "0.1.4",

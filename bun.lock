@@ -81,11 +81,11 @@
       "name": "kodamachi-server",
       "version": "1.0.0",
       "dependencies": {
-        "@atproto/api": "^0.28.0",
+        "@atproto/api": "^0.29.1",
         "@atproto/common": "^0.8.5",
-        "@atproto/identity": "^0.5.17",
+        "@atproto/identity": "^0.5.20",
         "@atproto/lexicon": "^0.7.16",
-        "@atproto/oauth-client-node": "^0.5.10",
+        "@atproto/oauth-client-node": "^0.5.12",
         "@atproto/syntax": "^0.7.6",
         "@atproto/xrpc-server": "^0.13.5",
         "@aturi.to/waypoints": "0.1.4",
@@ -146,7 +146,7 @@
 
     "@atproto-labs/handle-resolver": ["@atproto-labs/handle-resolver@0.4.10", "", { "dependencies": { "@atproto-labs/simple-store": "^0.5.1", "@atproto-labs/simple-store-memory": "^0.2.6", "@atproto/did": "^0.5.6", "zod": "^3.23.8" } }, "sha512-hsYYvGhi6Tv6f4Fti//i/vllVIb/wrJaOcbT3Yh7oo10VxBKAyxzVaB7mIJcho2YJ5kHd2kbCYYPWLw8pvm/bg=="],
 
-    "@atproto-labs/handle-resolver-node": ["@atproto-labs/handle-resolver-node@0.2.12", "", { "dependencies": { "@atproto-labs/fetch-node": "^0.4.1", "@atproto-labs/handle-resolver": "^0.4.10", "@atproto/did": "^0.5.6" } }, "sha512-U4W8QlpvUq6vBYwUOJs7yS8TMIaMkArG3jcpZ+2Ql/7jwzDxKbHFiJAZ6lYEbEKscM42wRg4nE8SsAfJt3+Ykw=="],
+    "@atproto-labs/handle-resolver-node": ["@atproto-labs/handle-resolver-node@0.2.14", "", { "dependencies": { "@atproto-labs/fetch-node": "^0.4.3", "@atproto-labs/handle-resolver": "^0.4.10", "@atproto/did": "^0.5.6" } }, "sha512-O7vJyelVurDZfSbh57GgdRaMhGyLA1RPeFX8yVaeLDoGNhhexy6uoXqwPAylPUDjzCc29OPLhfv6Jozi3SqT3A=="],
 
     "@atproto-labs/identity-resolver": ["@atproto-labs/identity-resolver@0.4.11", "", { "dependencies": { "@atproto-labs/did-resolver": "^0.3.11", "@atproto-labs/handle-resolver": "^0.4.10" } }, "sha512-6k5hZ05D5HmFu6MDy2/z8z42UxZy6xw3JbvbKxDp5ChSZ/9L2Hv1MeTruruGKK2ATP6sYxx7xcsGaiTmTIHYFw=="],
 
@@ -156,7 +156,7 @@
 
     "@atproto-labs/simple-store-memory": ["@atproto-labs/simple-store-memory@0.2.6", "", { "dependencies": { "@atproto-labs/simple-store": "^0.5.1", "lru-cache": "^10.2.0" } }, "sha512-DD1v7MEfYF3BAcEpMTTpzfBLWLoI2HuyBhku2YpjHoqPrRrhCtE1alkxfPHjtjJVIjuU/XNU0cF/wB3+5FiKsA=="],
 
-    "@atproto/api": ["@atproto/api@0.28.0", "", { "dependencies": { "@atproto/common-web": "^0.5.15", "@atproto/lexicon": "^0.7.17", "@atproto/syntax": "^0.7.7", "@atproto/xrpc": "^0.8.16", "await-lock": "^3.0.0", "multiformats": "^13.0.0", "tlds": "^1.234.0", "zod": "^3.23.8" } }, "sha512-u2qjG4rLT1JazUKZ1MmaVZ+oEmUxc2l40RO/TGxHBhWoz8GKpzzHstOOBwpdcfPcSsndYFdMm22LCMPARHp2Rw=="],
+    "@atproto/api": ["@atproto/api@0.29.1", "", { "dependencies": { "@atproto/common-web": "^0.5.15", "@atproto/lexicon": "^0.7.17", "@atproto/syntax": "^0.7.7", "@atproto/xrpc": "^0.8.16", "await-lock": "^3.0.0", "multiformats": "^13.0.0", "tlds": "^1.234.0", "zod": "^3.23.8" } }, "sha512-8b9YEAP6YiUSknIKsEDvH8fKDMpVtITScbhh3N7LpoeWwijxqznTq/djK7Yxga9tjAYodNTqk67gILnBj4yXiA=="],
 
     "@atproto/common": ["@atproto/common@0.8.6", "", { "dependencies": { "@atproto/common-web": "^0.5.15", "@atproto/lex-cbor": "^0.1.7", "@atproto/lex-data": "^0.1.8", "multiformats": "^13.0.0", "pino": "^10.3.1" } }, "sha512-kdizsqq8jbPZ0YiQDaK8HXeH48Ss2fbRlX4Ga+3Tz8F+Eb2eDNvCEp2Z7+5EajrdBjXhI97Sn8ZBQC0CSWItyg=="],
 
@@ -166,7 +166,7 @@
 
     "@atproto/did": ["@atproto/did@0.5.6", "", { "dependencies": { "zod": "^3.23.8" } }, "sha512-8bLfOnaoWBmg9S8naqzk5mG8zYAXfSKT4odB5OHcCAd1o7p6RFb0Rk9WGobEgboKtxP2CIeul6mzI5PUT4v6Gg=="],
 
-    "@atproto/identity": ["@atproto/identity@0.5.17", "", { "dependencies": { "@atproto-labs/fetch-node": "^0.4.1", "@atproto/common-web": "^0.5.15", "@atproto/crypto": "^0.5.7" } }, "sha512-e/+O2q1Iniue0wUWIRIOT/h8ekbTrMpXnrCs8PgZs5QZOj1vEMVeqYXTyEdS+Bl8JYjbEYKnNrFF7HvhJMEsCA=="],
+    "@atproto/identity": ["@atproto/identity@0.5.20", "", { "dependencies": { "@atproto-labs/fetch-node": "^0.4.3", "@atproto/common-web": "^0.5.15", "@atproto/crypto": "^0.5.7" } }, "sha512-zjhGn+nG6LD2r9F4dPU17KfU3d6YfOZi1uDcVViOAftdKgEQZsZEX4XmmHU5KzOVJFJwk50JtLwO/s33W5CTmQ=="],
 
     "@atproto/jwk": ["@atproto/jwk@0.7.4", "", { "dependencies": { "multiformats": "^13.0.0", "zod": "^3.23.8" } }, "sha512-tq7TUDmNfe1yDfpRgdGQMJdl9TUlJmREQNCag9yg5w8Evu+TOiFiLgiOCbo7X4ouRPSgd1DpOzXbUa8UyKKMZA=="],
 
@@ -192,7 +192,7 @@
 
     "@atproto/oauth-client": ["@atproto/oauth-client@0.8.10", "", { "dependencies": { "@atproto-labs/did-resolver": "^0.3.11", "@atproto-labs/fetch": "^0.4.0", "@atproto-labs/handle-resolver": "^0.4.10", "@atproto-labs/identity-resolver": "^0.4.11", "@atproto-labs/simple-store": "^0.5.1", "@atproto-labs/simple-store-memory": "^0.2.6", "@atproto/did": "^0.5.6", "@atproto/jwk": "^0.7.4", "@atproto/oauth-types": "^0.7.7", "@atproto/xrpc": "^0.8.16", "core-js": "^3.50.0", "multiformats": "^13.0.0", "zod": "^3.23.8" } }, "sha512-vo8HyiM4eqmierE6dTYcUnnWXUwM/+YarWO7AqTqqPmRMlJSLGh29o6NUdOw7K/omNZboJFwruiayW22UEL+Og=="],
 
-    "@atproto/oauth-client-node": ["@atproto/oauth-client-node@0.5.10", "", { "dependencies": { "@atproto-labs/did-resolver": "^0.3.11", "@atproto-labs/handle-resolver-node": "^0.2.12", "@atproto-labs/simple-store": "^0.5.1", "@atproto/did": "^0.5.6", "@atproto/jwk": "^0.7.4", "@atproto/jwk-jose": "^0.2.4", "@atproto/jwk-webcrypto": "^0.3.4", "@atproto/oauth-client": "^0.8.10", "@atproto/oauth-types": "^0.7.7" } }, "sha512-f/kJL+nMXmaIbA6iJFXdhj9b03JtH6qM3APHfj3qndYQekzDMPiB3/GWZ+s1spIxUIy/TvCGB6v2hGcpnwFU/Q=="],
+    "@atproto/oauth-client-node": ["@atproto/oauth-client-node@0.5.12", "", { "dependencies": { "@atproto-labs/did-resolver": "^0.3.11", "@atproto-labs/handle-resolver-node": "^0.2.14", "@atproto-labs/simple-store": "^0.5.1", "@atproto/did": "^0.5.6", "@atproto/jwk": "^0.7.4", "@atproto/jwk-jose": "^0.2.4", "@atproto/jwk-webcrypto": "^0.3.4", "@atproto/oauth-client": "^0.8.10", "@atproto/oauth-types": "^0.7.7" } }, "sha512-Afz863wyf+i28EMB0U0kATla4C0fX33GQLR3JYSvYj6OcMHMxhsYfGggPkXqnCrmlTUt4PXbLrvpIMnwisdoww=="],
 
     "@atproto/oauth-types": ["@atproto/oauth-types@0.7.7", "", { "dependencies": { "@atproto/did": "^0.5.6", "@atproto/jwk": "^0.7.4", "zod": "^3.23.8" } }, "sha512-HhY0n6BJtFlxHJTOwT34uf7BiMaEluuwiZqHkamWoFvl+Gk7bPgWhPslr4kX2J/7ryFxhdsKVj1tjWjy0AhjTw=="],
 
