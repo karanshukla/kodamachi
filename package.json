@@ -26,8 +26,8 @@
     "@playwright/test": "^1.64.1",
     "@types/bun": "1.4.2",
     "@types/node": "^26.6.5",
-    "dotenv": "^18.0.8",
-    "happy-dom": "^20.14.6",
+    "dotenv": "^18.0.9",
+    "happy-dom": "^21.0.4",
     "husky": "^9.1.7",
     "lint-staged": "^17.6.0",
     "railway": "^3.16.0"
