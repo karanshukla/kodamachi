@@ -8,8 +8,8 @@ go 1.26.0
 require github.com/bluesky-social/indigo v0.0.0-20260629160527-dfe5578fd537
 
 require (
-	github.com/caddyserver/caddy/v2 v2.11.6
-	golang.org/x/sync v0.23.0
+	github.com/caddyserver/caddy/v2 v2.11.7
+	golang.org/x/sync v0.24.0
 )
 
 require (
@@ -48,6 +48,7 @@ require (
 	github.com/dgryski/go-farm v0.0.0-20240924180020-3414d57e47da // indirect
 	github.com/dlclark/regexp2/v2 v2.8.0 // indirect
 	github.com/dunglas/go-urlpattern v1.0.0 // indirect
+	github.com/dunglas/httpsfv v1.1.1 // indirect
 	github.com/dustin/go-humanize v1.1.0 // indirect
 	github.com/earthboundkid/versioninfo/v2 v2.24.1 // indirect
 	github.com/felixge/httpsnoop v1.1.0 // indirect
