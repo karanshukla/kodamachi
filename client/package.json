@@ -37,7 +37,7 @@
     "@vitest/coverage-istanbul": "^5.0.5",
     "happy-dom": "^21.0.4",
     "msw": "^3.0.3",
-    "oxlint": "^1.89.0",
+    "oxlint": "^1.90.0",
     "postcss": "^8.5.31",
     "postcss-preset-mantine": "^1.18.0",
     "postcss-simple-vars": "^7.0.1",
