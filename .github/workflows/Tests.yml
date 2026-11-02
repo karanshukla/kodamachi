@@ -61,7 +61,9 @@ jobs:
       - name: Audit dependencies
         # GHSA-mrhx-c7xc-m3w5: zod 3.x has no patched release and @atproto/* still
         # requires zod@^3. Our own zod is 4.6.6+. Drop once atproto moves to zod 4.
-        run: bun audit --ignore=GHSA-mrhx-c7xc-m3w5
+        # GHSA-gcqx-w48m-w2h4: deepmerge 4.3.1 is the latest release; it is only
+        # reached through vite-plugin-pwa's build-time workbox-build.
+        run: bun audit --ignore=GHSA-mrhx-c7xc-m3w5 --ignore=GHSA-gcqx-w48m-w2h4
 
       - name: Verify generated brand static assets are current
         working-directory: client
