@@ -91,7 +91,7 @@
         "@aturi.to/waypoints": "0.1.4",
         "@axiomhq/pino": "^2.0.0",
         "@hono/zod-validator": "^0.9.1",
-        "@types/cryptr": "^4.0.3",
+        "@types/cryptr": "^6.4.0",
         "@types/web-push": "^3.6.4",
         "cryptr": "^6.4.0",
         "dotenv": "^18.0.9",
@@ -585,7 +585,7 @@
 
     "@types/chai": ["@types/chai@5.2.3", "", { "dependencies": { "@types/deep-eql": "*", "assertion-error": "^2.0.1" } }, "sha512-Mw558oeA9fFbv65/y4mHtXDs9bPnFMZAL/jxdPFUpOHHIXX91mcgEHbS5Lahr+pwZFR8A7GQleRWeI6cGFC2UA=="],
 
-    "@types/cryptr": ["@types/cryptr@4.0.3", "", {}, "sha512-Y0sNUDr+LoI9bRpuxsFGDLwX7i+qpzgzb/Y5aETIMRKZ+43KsjHQ8h3YDMs814TvG6gPViNll6YQu6zwiONKGQ=="],
+    "@types/cryptr": ["@types/cryptr@6.4.0", "", { "dependencies": { "cryptr": "*" } }, "sha512-ahmEzgsHytNPkv7UMO/BA4V4V9gQMr0j7I+lYIOv5d0bNNhMhDB7woNTmYmorzHaZs5BGVsmWGYhq38KY/oVBQ=="],
 
     "@types/debug": ["@types/debug@4.1.13", "", { "dependencies": { "@types/ms": "*" } }, "sha512-KSVgmQmzMwPlmtljOomayoR89W4FynCAi3E8PPs7vmDVPe84hT+vGPKkJfThkmXs0x0jAaa9U8uW8bbfyS2fWw=="],
 
