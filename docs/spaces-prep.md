@@ -3,7 +3,9 @@
 Tracks the `spaces-prep` branch against atproto spaces (proposal
 [0016](https://github.com/bluesky-social/proposals/tree/main/0016-permissioned-data),
 reference PDS in [atproto#5187](https://github.com/bluesky-social/atproto/pull/5187)).
-Both are drafts; recheck before building on any name below.
+#5187 is still a draft. Names below are checked against the
+`0.0.0-spaces-alpha-20261105160032` release on the `alpha` dist-tag; each later
+release ships a migration note in `alpha-migrations/` on that branch.
 
 ## Built
 
@@ -33,17 +35,19 @@ finish it:
 ## Not built, in order
 
 1. **Space-type lexicon.** Sketch in `docs/spaces/app.kodamachi.inbox.draft.json`.
-   The field names under `main` are a guess from the proposal prose. It lives
-   outside `server/lexicons/` on purpose: the installed `@atproto/lexicon` has no
-   `space` type, so `bun run lexgen` and `publish-lexicons` would reject it. Move it
-   once the tooling accepts it.
+   The alpha `@atproto/lexicon` defines a `space` def (`name` required, 1–64 chars,
+   plus `key` and `collections`); the `key` value is still a guess. It lives outside
+   `server/lexicons/` on purpose: the installed release has no `space` type, so
+   `bun run lexgen` and `publish-lexicons` would reject it. Move it once the tooling
+   accepts it.
 2. **Bot DID**, provisioned, with the write grant on its own account and only the
    manage grant requested of recipients at sign-in (#228 acceptance criteria).
 3. **`SpaceInboxStore`** implementing `InboxStore` over `com.atproto.space.*`.
    `putIgnoringDuplicates` keys on `tid`; pin "ignores a duplicate tid" and
    "writes a new tid" as a test pair.
-4. **Space creation** via `com.atproto.simplespace` (`createSpace`), owner per the
-   open question above, `member-list` policy with the bot as sole member.
+4. **Space creation** via `com.atproto.space.createSpace` (`{ spaceType, policy }`)
+   with a `com.atproto.memberspace.policy`, then the bot added with
+   `com.atproto.memberspace.putMember` (`write: true`).
 5. **OAuth scope** `space:app.kodamachi.inbox?...` in the client metadata. Permission
    sets need the concrete type; wildcards are standalone-scope only.
 
@@ -53,7 +57,7 @@ The bot DID is the sole writer into a per-recipient space (the queue), because a
 signed commit carries the author's key and askers have no identity. The queue drains
 into the recipient's own PDS at login. The `message` table is kept only as the
 rollback path during the bake (dual-writes), then dropped on an announced cutoff.
-Access policy is `#memberListPolicy` with the bot as sole member.
+Access policy is `com.atproto.memberspace.policy` with the bot as sole member.
 
 **The recipient owns the space**; the bot is a temporary passthrough. The recipient
 provisions it at sign-in (`manage=create`) and adds the bot as the one member
@@ -68,17 +72,21 @@ provisions it at sign-in (`manage=create`) and adds the bot as the one member
 
 ## Open, per #228
 
-- **`appAccess`**: `#open` or an `#allowList` of client ids.
+- **`allowedApps`** on the memberspace policy: omit it (any app reads) or list
+  client ids. Setting it requires a client attestation on reads; it never limits
+  writes.
 - **Bot write ceiling**: one writer shares one rate-limit bucket, roughly 1,666
   questions an hour across all users, unless the bot's PDS is self-hosted.
 - **Drained marker meaning**: `inbox_drain` currently marks "table backfilled into the
   space". Recheck it against the login-time queue-to-PDS drain before wiring either.
 
-## Upstream churn to watch
+## Upstream, as of the Nov 5 alpha
 
-- `Repo` to `SpaceRepo`; `listSpaces` filters by `spaceType`; a `did` to `authority`
-  rename was requested.
-- DPoP replaced by HTTP Message Signatures.
-- The PR's sync endpoints (`getRepoState`, `getRepoOplog`, `getMembers`) differ
-  from the proposal's (`listRepoOps`, `getLatestCommit`).
-- Check whether `@atproto/api` ships `com.atproto.space.*` before hand-writing clients.
+- `updateSpace` replaces the policy wholesale; changing one field means reading it
+  with `getSpace` and sending the whole object back.
+- Space credentials come from `getSpaceCredential` with the delegation token in the
+  request body.
+- Sync endpoints are `getLatestCommit`, `listRepoOps` and `listRepos`, with commits
+  checked by a shared-secret MAC.
+- `@atproto/api@alpha` ships `com.atproto.space.*` and `com.atproto.memberspace.*`,
+  so no hand-written clients.
