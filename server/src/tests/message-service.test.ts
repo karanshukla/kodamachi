@@ -10,6 +10,8 @@ import type { ImageGenerationResult } from "../lib/image-generator";
 import { getServerMessages } from "../lib/i18n";
 import type { InboxStore } from "../services/inbox-store";
 import { MessageService, type Message, type ProfileResolver } from "../services/message-service";
+import { MemoryDrainMarker } from "./helpers/memory-drain-marker";
+import { MemoryInboxStore } from "./helpers/memory-inbox-store";
 
 describe("MessageService", () => {
   let mockDb: any;
@@ -789,18 +791,70 @@ describe("MessageService", () => {
     assert.strictEqual((mockLogger.error as any).mock.calls.length, 1);
   });
 
-  test("deleteMessage throws when message belongs to different user", async () => {
-    const tid = "tid";
-    const did = "did:foo";
-    mockSelectBuilder.executeTakeFirst.mockImplementationOnce(async () => ({
-      tid,
-      recipient: "did:other",
-    }));
-    await assert.rejects(
-      () => messageService.deleteMessage(tid, did, mockAgent),
-      /Not authorized to delete this message/
-    );
-    assert.strictEqual(mockAgent.com.atproto.repo.deleteRecord.mock.calls.length, 0);
+  describe("deleteMessage looks only in the caller's own inbox", () => {
+    const question = { tid: "tid", message: "hi", createdAt: "2026-09-01T00:00:00.000Z" };
+    let store: MemoryInboxStore;
+    let service: MessageService;
+
+    beforeEach(() => {
+      store = new MemoryInboxStore();
+      service = new MessageService(mockDb, mockResolver, mockLogger, store);
+    });
+
+    test("deleteMessage deletes a question from the caller's own inbox", async () => {
+      store.seed("did:foo", question);
+
+      await service.deleteMessage("tid", "did:foo", mockAgent);
+
+      assert.deepStrictEqual(store.tids("did:foo"), []);
+    });
+
+    test("deleteMessage reports another user's question as not found and leaves it", async () => {
+      store.seed("did:other", question);
+
+      await assert.rejects(
+        () => service.deleteMessage("tid", "did:foo", mockAgent),
+        /Message not found/
+      );
+
+      assert.deepStrictEqual(store.tids("did:other"), ["tid"]);
+      assert.strictEqual(mockAgent.com.atproto.repo.deleteRecord.mock.calls.length, 0);
+    });
+  });
+
+  describe("syncMessages and the drain", () => {
+    const question = { tid: "tid", message: "hi", createdAt: "2026-09-01T00:00:00.000Z" };
+    let store: MemoryInboxStore;
+    let marker: MemoryDrainMarker;
+    let service: MessageService;
+
+    beforeEach(() => {
+      store = new MemoryInboxStore();
+      marker = new MemoryDrainMarker();
+      service = new MessageService(mockDb, mockResolver, mockLogger, store, marker);
+      mockAgent.com.atproto.repo.listRecords.mockClear();
+      mockAgent.com.atproto.repo.createRecord.mockClear();
+    });
+
+    test("syncMessages leaves the PDS alone for a drained user", async () => {
+      store.seed("did:foo", question);
+      marker.drained.add("did:foo");
+
+      const result = await service.syncMessages("did:foo", mockAgent);
+
+      assert.strictEqual(result.syncedCount, 0);
+      assert.strictEqual(mockAgent.com.atproto.repo.listRecords.mock.calls.length, 0);
+      assert.strictEqual(mockAgent.com.atproto.repo.createRecord.mock.calls.length, 0);
+    });
+
+    test("syncMessages still syncs a user who is not drained", async () => {
+      store.seed("did:foo", question);
+
+      const result = await service.syncMessages("did:foo", mockAgent);
+
+      assert.strictEqual(result.syncedCount, 1);
+      assert.strictEqual(mockAgent.com.atproto.repo.createRecord.mock.calls.length, 1);
+    });
   });
 
   test("respondToMessage throws when image generation returns no blob", async () => {

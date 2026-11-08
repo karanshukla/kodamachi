@@ -6,7 +6,6 @@ import {
   INBOX_CLOSED,
   MESSAGE_NOT_FOUND,
   MessageService,
-  NOT_AUTHORIZED_TO_DELETE,
   RECIPIENT_NOT_FOUND,
 } from "#/services/message-service";
 import { NotificationService } from "#/services/notification-service";
@@ -253,9 +252,6 @@ export function createMessageHono(ctx: AppContext, deps: MessageDeps = {}): Hono
       const rejection = errorMessage(err);
       if (rejection === MESSAGE_NOT_FOUND) {
         return c.json(errorBody("MESSAGE_NOT_FOUND", MESSAGE_NOT_FOUND), 404);
-      }
-      if (rejection === NOT_AUTHORIZED_TO_DELETE) {
-        return c.json(errorBody("MESSAGE_DELETE_NOT_AUTHORIZED", NOT_AUTHORIZED_TO_DELETE), 403);
       }
       ctx.logger.error({ err, tid, did }, "Failed to delete message");
       return c.json(errorBody("MESSAGE_DELETE_FAILED", "Failed to delete message"), 500);
