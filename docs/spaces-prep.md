@@ -4,8 +4,9 @@ Tracks the `spaces-prep` branch against atproto spaces (proposal
 [0016](https://github.com/bluesky-social/proposals/tree/main/0016-permissioned-data),
 reference PDS in [atproto#5187](https://github.com/bluesky-social/atproto/pull/5187)).
 #5187 is still a draft. Names below are checked against the
-`0.0.0-spaces-alpha-20261105160032` release on the `alpha` dist-tag; each later
-release ships a migration note in `alpha-migrations/` on that branch.
+`0.0.0-spaces-alpha-20261117141222` release on the `alpha` dist-tag (the Nov 12
+release notes); each later release ships a migration note in `alpha-migrations/` on
+that branch.
 
 ## Built
 
@@ -35,19 +36,25 @@ finish it:
 ## Not built, in order
 
 1. **Space-type lexicon.** Sketch in `docs/spaces/app.kodamachi.inbox.draft.json`.
-   The alpha `@atproto/lexicon` defines a `space` def (`name` required, 1–64 chars,
-   plus `key` and `collections`); the `key` value is still a guess. It lives outside
+   The alpha `@atproto/lexicon` defines a `space` def (`collections`, optional `key`
+   and `title`, 1–64 chars); the `key` value is still a guess. It lives outside
    `server/lexicons/` on purpose: the installed release has no `space` type, so
    `bun run lexgen` and `publish-lexicons` would reject it. Move it once the tooling
    accepts it.
 2. **Bot DID**, provisioned, with the write grant on its own account and only the
-   manage grant requested of recipients at sign-in (#228 acceptance criteria).
-3. **`SpaceInboxStore`** implementing `InboxStore` over `com.atproto.space.*`.
-   `putIgnoringDuplicates` keys on `tid`; pin "ignores a duplicate tid" and
-   "writes a new tid" as a test pair.
-4. **Space creation** via `com.atproto.space.createSpace` (`{ spaceType, policy }`)
-   with a `com.atproto.memberspace.policy`, then the bot added with
-   `com.atproto.memberspace.putMember` (`write: true`).
+   manage grant requested of recipients at sign-in (#228 acceptance criteria). Space
+   routes refuse app-password sessions, so the bot signs in with OAuth or its full
+   password, unlike `publish-lexicons`.
+3. **`SpaceInboxStore`** implementing `InboxStore` over `com.atproto.space.*`,
+   through `@atproto/lex-space` (`SpaceClient` to write, `SpaceReader.listAll()` to
+   read). Reads skip records with `valid: false`, which covers schema mismatches and
+   records filed under a collection other than their `$type`, as `InboxDrain` skips
+   legacy records that fail `validateRecord`. `putIgnoringDuplicates` keys on `tid`;
+   pin "ignores a duplicate tid" and "writes a new tid" as a test pair.
+4. **Space creation** via `com.atproto.space.createSpace` (`{ spaceType, policy }`,
+   returns `{ space }`) with a `com.atproto.memberspace.policy`, then the bot added
+   with `com.atproto.memberspace.putMembers` (`members: [{ did, read, write: true }]`;
+   all three fields are required).
 5. **OAuth scope** `space:app.kodamachi.inbox?...` in the client metadata. Permission
    sets need the concrete type; wildcards are standalone-scope only.
 
@@ -80,13 +87,16 @@ provisions it at sign-in (`manage=create`) and adds the bot as the one member
 - **Drained marker meaning**: `inbox_drain` currently marks "table backfilled into the
   space". Recheck it against the login-time queue-to-PDS drain before wiring either.
 
-## Upstream, as of the Nov 5 alpha
+## Upstream, as of the Nov 12 alpha
 
 - `updateSpace` replaces the policy wholesale; changing one field means reading it
   with `getSpace` and sending the whole object back.
-- Space credentials come from `getSpaceCredential` with the delegation token in the
-  request body.
-- Sync endpoints are `getLatestCommit`, `listRepoOps` and `listRepos`, with commits
-  checked by a shared-secret MAC.
+- Space credentials come from `authorizeSpaceSync` with the delegation token in the
+  request body; notification registration rides on the same call.
+- Sync endpoints are `getLatestCommit`, `listRepoOps` and `listWriters`, with commits
+  MACed through HTTP Message Signatures over an HPKE-derived secret.
 - `@atproto/api@alpha` ships `com.atproto.space.*` and `com.atproto.memberspace.*`,
-  so no hand-written clients.
+  and `@atproto/lex-space` wraps credentials, signing and record checks, so no
+  hand-written clients.
+- The reference PDS squashed its spaces migrations, so alpha PDS databases do not
+  upgrade. A self-hosted bot PDS (the write-ceiling escape above) starts fresh.
