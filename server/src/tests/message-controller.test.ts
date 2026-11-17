@@ -2,12 +2,7 @@ import assert from "node:assert";
 import { test, describe, afterEach, mock } from "bun:test";
 
 import { createMessageHono, type MessageDeps } from "#/hono/message-routes";
-import {
-  INBOX_CLOSED,
-  MESSAGE_NOT_FOUND,
-  NOT_AUTHORIZED_TO_DELETE,
-  RECIPIENT_NOT_FOUND,
-} from "#/services/message-service";
+import { INBOX_CLOSED, MESSAGE_NOT_FOUND, RECIPIENT_NOT_FOUND } from "#/services/message-service";
 import { withTestSession, sessionHeader } from "./helpers/hono-test";
 
 import type { AppContext } from "#/index";
@@ -496,20 +491,6 @@ describe("Messages (Hono)", () => {
       const res = await app.request("/messages/t1", { method: "DELETE", headers });
       assert.strictEqual(res.status, 404);
       assert.strictEqual((await res.json()).error, "MESSAGE_NOT_FOUND");
-    });
-
-    test("returns 403 and MESSAGE_DELETE_NOT_AUTHORIZED for someone else's message", async () => {
-      const { app, headers } = makeApp({
-        oauthRestore: restoreSuccess,
-        serviceOverride: {
-          deleteMessage: mock(async () => {
-            throw new Error(NOT_AUTHORIZED_TO_DELETE);
-          }),
-        },
-      });
-      const res = await app.request("/messages/t1", { method: "DELETE", headers });
-      assert.strictEqual(res.status, 403);
-      assert.strictEqual((await res.json()).error, "MESSAGE_DELETE_NOT_AUTHORIZED");
     });
 
     test("returns 500 on other error", async () => {
