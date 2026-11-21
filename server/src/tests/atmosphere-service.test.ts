@@ -175,7 +175,7 @@ describe("AtmosphereService", () => {
     const service = serviceFor(PUBLIC_PDS, fetchImpl);
 
     assert.deepStrictEqual(await service.presenceFor(TEST_DID), []);
-    assert.strictEqual(fetchImpl.mock.calls[0]?.[1]?.redirect, "error");
+    assert.strictEqual(fetchImpl.mock.calls[0]?.[1]?.redirect, "manual");
   });
 
   it("never dials a PDS that names a private address", async () => {

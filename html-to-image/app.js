@@ -1,6 +1,7 @@
 import puppeteer from "puppeteer";
 import express from "express";
 import rateLimit from "express-rate-limit";
+import cors from "cors";
 import fs from "fs";
 import tmp from "tmp";
 import { fileURLToPath } from "url";
@@ -11,15 +12,6 @@ const FORMATS = {
   jpeg: { contentType: "image/jpeg", args: { type: "jpeg" } },
   webp: { contentType: "image/webp", args: { type: "webp" } },
 };
-
-const MIN_VIEWPORT_DIMENSION = 1;
-const MAX_VIEWPORT_DIMENSION = 4096;
-
-function clampDimension(value, fallback) {
-  const num = Number(value);
-  if (!Number.isFinite(num) || num <= 0) return fallback;
-  return Math.min(MAX_VIEWPORT_DIMENSION, Math.max(MIN_VIEWPORT_DIMENSION, Math.trunc(num)));
-}
 
 // Cap concurrent pages: uncapped bursts spawn one renderer per request and multiply RSS; excess requests queue.
 export const MAX_CONCURRENT_RENDERS = 3;
@@ -55,23 +47,11 @@ class Semaphore {
 const VISUAL_READINESS_TIMEOUT_MS = 8000;
 
 function waitForWebfonts(page) {
-  let timer;
-  const timeout = new Promise((resolve) => {
-    timer = setTimeout(resolve, VISUAL_READINESS_TIMEOUT_MS);
-    timer.unref?.();
-  });
-  return Promise.race([
-    page
-      .evaluate(() => {
-        if (document.fonts && document.fonts.ready) {
-          return document.fonts.ready;
-        }
-        return Promise.resolve();
-      })
-      .catch(() => {}),
-    timeout,
-  ]).finally(() => {
-    if (timer) clearTimeout(timer);
+  return page.evaluate(() => {
+    if (document.fonts && document.fonts.ready) {
+      return document.fonts.ready;
+    }
+    return Promise.resolve();
   });
 }
 
@@ -89,32 +69,15 @@ async function waitForVisualReadiness(page) {
   await Promise.all([waitForWebfonts(page), waitForDecodedImages(page)]);
 }
 
-const ALLOWED_HTTPS_ORIGINS = new Set([
-  "https://fonts.googleapis.com",
-  "https://fonts.gstatic.com",
-  "https://cdn.bsky.app",
-  "https://av-cdn.bsky.app",
-]);
-
 /**
- * Inline image data URLs and allowlisted HTTPS asset origins (Google Fonts, Bluesky CDN) only:
- * a render never reaches local files, arbitrary external origins, or private-network hosts.
+ * Inline data and public https assets (webfonts, Bluesky CDN images) only:
+ * a render never reaches local files or plain-http private-network hosts.
  *
  * @see [app.test.js](./app.test.js): 'lets data: and https: requests through'
  * and 'aborts file:, http: and other requests'.
  */
 export function isAllowedRequest(url) {
-  if (typeof url !== "string") return false;
-  if (/^data:image\/[a-z0-9.+-]+(?:;[a-z0-9.+-]+=[^;,]+)*(?:;base64)?,/i.test(url)) {
-    return true;
-  }
-  if (!url.startsWith("https://")) return false;
-  try {
-    const parsed = new URL(url);
-    return ALLOWED_HTTPS_ORIGINS.has(parsed.origin);
-  } catch {
-    return false;
-  }
+  return url.startsWith("data:") || url.startsWith("https://");
 }
 
 async function blockDisallowedRequests(page) {
@@ -262,6 +225,7 @@ export function createApp(getBrowser, { onRenderComplete = () => {}, warm = asyn
   const app = express();
   const renderSemaphore = new Semaphore(MAX_CONCURRENT_RENDERS);
 
+  app.use(cors());
   app.use(express.json({ limit: "2mb" }));
   app.use(rateLimit({ windowMs: 60_000, limit: 60, standardHeaders: true, legacyHeaders: false }));
 
@@ -295,7 +259,7 @@ export function createApp(getBrowser, { onRenderComplete = () => {}, warm = asyn
     if (req.body.source === "") {
       return next({ status: 400, message: "'source' must not be empty" });
     }
-    if (typeof req.body.format !== "string" || !Object.hasOwn(FORMATS, req.body.format)) {
+    if (!FORMATS[req.body.format]) {
       return next({
         status: 400,
         message: `'format' must be one of: ${Object.keys(FORMATS).join(", ")}`,
@@ -303,9 +267,7 @@ export function createApp(getBrowser, { onRenderComplete = () => {}, warm = asyn
     }
     if (
       req.body.options !== undefined &&
-      (req.body.options === null ||
-        typeof req.body.options !== "object" ||
-        Array.isArray(req.body.options))
+      (typeof req.body.options !== "object" || Array.isArray(req.body.options))
     ) {
       return next({ status: 400, message: "'options' must be an object if provided" });
     }
@@ -329,17 +291,13 @@ export function createApp(getBrowser, { onRenderComplete = () => {}, warm = asyn
       try {
         const page = await browser.newPage();
         try {
-          if (typeof page.setJavaScriptEnabled === "function") {
-            await page.setJavaScriptEnabled(false);
-          }
           await blockDisallowedRequests(page);
-          await page.setViewport({
-            width: clampDimension(options.width, 1920),
-            height: clampDimension(options.height, 1080),
-          });
+          await page.setViewport({ width: options.width || 1920, height: options.height || 1080 });
           await page.setContent(source);
           await waitForVisualReadiness(page);
-          await page.screenshot(Object.assign({}, format.args, { path: tmpoutput.name }));
+          await page.screenshot(
+            Object.assign({}, options.args, format.args, { path: tmpoutput.name })
+          );
         } finally {
           await page.close();
         }

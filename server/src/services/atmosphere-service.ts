@@ -1,4 +1,3 @@
-import { lookup } from "node:dns/promises";
 import {
   buildWaypointsForParsed,
   parseURI,
@@ -10,18 +9,13 @@ import {
 import { Logger } from "pino";
 
 import { EXTRA_APPS } from "../lib/atmosphere-extras";
-import { isPublicPdsUrl, isPublicUnicastIp } from "../lib/public-pds-url";
+import { isPublicPdsUrl } from "../lib/public-pds-url";
 import { withRetry } from "../lib/retry";
 import { createTtlCache } from "../lib/ttl-cache";
 
 export interface AtprotoDataResolver {
   did: { resolveAtprotoData(did: string): Promise<{ pds?: string } | undefined> };
 }
-
-export type DnsLookupFn = (hostname: string) => Promise<Array<{ address: string }>>;
-
-const defaultDnsLookup: DnsLookupFn = async (hostname: string) =>
-  lookup(hostname, { all: true, verbatim: true });
 
 /** A public page never pays for a repo scan twice in an hour. */
 const PRESENCE_TTL_MS = 60 * 60 * 1000;
@@ -33,9 +27,6 @@ const MAX_CACHED_REPOS = 500;
 
 /** Per attempt, not per loop, so one hung PDS cannot eat the retry budget. */
 const DESCRIBE_REPO_TIMEOUT_MS = 5000;
-
-/** Cap describeRepo body size at 512 KB so a malicious PDS cannot exhaust memory. */
-export const MAX_DESCRIBE_REPO_BYTES = 512 * 1024;
 
 const NO_APPS: string[] = [];
 
@@ -130,16 +121,12 @@ export function appLinksFor(
 
 export class AtmosphereService {
   private cache = createTtlCache<string[]>(MAX_CACHED_REPOS);
-  private dnsLookup: DnsLookupFn;
 
   constructor(
     private idResolver: AtprotoDataResolver,
     private logger: Logger,
-    private fetchImpl: typeof fetch = fetch,
-    dnsLookup?: DnsLookupFn
-  ) {
-    this.dnsLookup = dnsLookup ?? (fetchImpl === fetch ? defaultDnsLookup : async () => [{ address: "93.184.216.34" }]);
-  }
+    private fetchImpl: typeof fetch = fetch
+  ) {}
 
   /**
    * Which Atmosphere apps an account uses, read off its own PDS. Never rejects:
@@ -163,21 +150,12 @@ export class AtmosphereService {
     }
   }
 
-  private async assertResolvesToPublicIp(pdsUrl: string): Promise<void> {
-    const hostname = new URL(pdsUrl).hostname.replace(/\.+$/, "");
-    const records = await this.dnsLookup(hostname);
-    if (!records || records.length === 0 || !records.every((r) => isPublicUnicastIp(r.address))) {
-      throw new Error(`Refusing to scan a PDS resolving to a non-public IP: ${hostname}`);
-    }
-  }
-
   private async scanRepo(did: string): Promise<Set<string>> {
     const atprotoData = await this.idResolver.did.resolveAtprotoData(did);
     const pds = atprotoData?.pds;
     if (!pds || !isPublicPdsUrl(pds)) {
       throw new Error(`Refusing to scan a repo at a non-public PDS: ${pds}`);
     }
-    await this.assertResolvesToPublicIp(pds);
 
     const url = `${pds.replace(/\/$/, "")}/xrpc/com.atproto.repo.describeRepo?repo=${encodeURIComponent(did)}`;
     const body = await withRetry(() => this.readDescribeRepo(url), this.logger, {
@@ -188,58 +166,22 @@ export class AtmosphereService {
   }
 
   /**
-   * `redirect: "error"` is the other half of `isPublicPdsUrl`: a public host
+   * `redirect: "manual"` is the other half of `isPublicPdsUrl`: a public host
    * can 302 to a private address (SSRF). A real describeRepo never redirects.
    *
    * @see [atmosphere-service.test.ts](../tests/atmosphere-service.test.ts):
    * "refuses to follow a redirect away from the PDS it validated".
    */
   private async readDescribeRepo(url: string): Promise<DescribeRepoResponse> {
-    await this.assertResolvesToPublicIp(url);
     const response = await this.fetchImpl(url, {
-      redirect: "error",
+      redirect: "manual",
       signal: AbortSignal.timeout(DESCRIBE_REPO_TIMEOUT_MS),
     });
     if (response.status >= 300 && response.status < 400) {
-      throw new Error(`describeRepo redirected to ${response.headers?.get?.("location")}`);
+      throw new Error(`describeRepo redirected to ${response.headers.get("location")}`);
     }
     if (!response.ok) {
       throw new Error(`describeRepo answered ${response.status}`);
-    }
-    const contentLength = Number(response.headers?.get?.("content-length") ?? "0");
-    if (contentLength > MAX_DESCRIBE_REPO_BYTES) {
-      throw new Error(`describeRepo response too large: ${contentLength}`);
-    }
-    if (response.body && typeof response.body.getReader === "function") {
-      const reader = response.body.getReader();
-      const chunks: Uint8Array[] = [];
-      let total = 0;
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        if (value) {
-          total += value.byteLength;
-          if (total > MAX_DESCRIBE_REPO_BYTES) {
-            await reader.cancel().catch(() => {});
-            throw new Error(`describeRepo body exceeded ${MAX_DESCRIBE_REPO_BYTES} bytes`);
-          }
-          chunks.push(value);
-        }
-      }
-      const merged = new Uint8Array(total);
-      let offset = 0;
-      for (const chunk of chunks) {
-        merged.set(chunk, offset);
-        offset += chunk.byteLength;
-      }
-      return JSON.parse(new TextDecoder().decode(merged)) as DescribeRepoResponse;
-    }
-    if (typeof response.text === "function") {
-      const text = await response.text();
-      if (Buffer.byteLength(text, "utf8") > MAX_DESCRIBE_REPO_BYTES) {
-        throw new Error(`describeRepo body exceeded ${MAX_DESCRIBE_REPO_BYTES} bytes`);
-      }
-      return JSON.parse(text) as DescribeRepoResponse;
     }
     return (await response.json()) as DescribeRepoResponse;
   }

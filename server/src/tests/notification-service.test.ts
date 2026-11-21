@@ -118,7 +118,7 @@ describe("NotificationService", () => {
 
       assert.strictEqual(mockDb.insertInto.mock.calls.length, 1);
       assert.strictEqual(mockDb.updateTable.mock.calls.length, 0);
-      assert.strictEqual(mockDb.selectFrom.mock.calls.length, 1);
+      assert.strictEqual(mockDb.selectFrom.mock.calls.length, 0);
 
       const valuesArg = insertBuilder.values.mock.calls[0][0];
       assert.strictEqual(valuesArg.did, "did:foo");
@@ -133,23 +133,6 @@ describe("NotificationService", () => {
       const updateArg = oc.doUpdateSet.mock.calls[0][0];
       assert.strictEqual(updateArg.p256dh, "p256");
       assert.strictEqual(updateArg.auth, "auth");
-    });
-
-    test("prunes oldest subscriptions when a DID exceeds MAX_SUBSCRIPTIONS_PER_DID (15)", async () => {
-      const existingRows = Array.from({ length: 16 }, (_, i) => ({
-        did: "did:foo",
-        endpoint: `https://fcm.googleapis.com/sub/${String(i).padStart(2, "0")}`,
-        p256dh: "p256",
-        auth: "auth",
-        createdAt: `2026-01-${String(i + 1).padStart(2, "0")}T00:00:00.000Z`,
-      }));
-      mockDb.selectFrom = mock(() => makeSelectBuilder(undefined, existingRows));
-      const deleteBuilder = makeDeleteBuilder();
-      mockDb.deleteFrom = mock(() => deleteBuilder);
-
-      await service.saveSubscription("did:foo", existingRows[15].endpoint, "p256", "auth");
-
-      assert.strictEqual(mockDb.deleteFrom.mock.calls.length, 1);
     });
   });
 

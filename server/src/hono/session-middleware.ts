@@ -60,15 +60,11 @@ export async function setSession(c: Context, session: AppSessionData): Promise<v
     path: "/",
     httpOnly: true,
     sameSite: "Lax",
-    secure: env.PUBLIC_URL.startsWith("https://"),
     maxAge: MAX_AGE_SECONDS,
   });
 }
 
 export function clearSession(c: Context): void {
   c.set(SESSION_VAR, null);
-  deleteCookie(c, SESSION_COOKIE, {
-    path: "/",
-    secure: env.PUBLIC_URL.startsWith("https://"),
-  });
+  deleteCookie(c, SESSION_COOKIE, { path: "/" });
 }

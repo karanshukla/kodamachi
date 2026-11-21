@@ -2,7 +2,6 @@ import { z } from "zod";
 import { Hono } from "hono";
 
 import { errorBody, errorMessage } from "#/lib/errors";
-import { AuthService } from "#/services/auth-service";
 import {
   INBOX_CLOSED,
   MESSAGE_NOT_FOUND,
@@ -32,7 +31,6 @@ export interface MessageDeps {
   messageService?: MessageService;
   notificationService?: NotificationService;
   renderService?: RenderService;
-  authService?: AuthService;
 }
 
 export function createMessageHono(ctx: AppContext, deps: MessageDeps = {}): Hono {
@@ -43,7 +41,6 @@ export function createMessageHono(ctx: AppContext, deps: MessageDeps = {}): Hono
     deps.notificationService ?? new NotificationService(ctx.db, ctx.resolver, ctx.logger);
   // Built once at boot, so the render store outlives the request that filled it.
   const renderService = deps.renderService ?? new RenderService(ctx.db, ctx.resolver, ctx.logger);
-  const authService = deps.authService ?? new AuthService(ctx);
 
   app.post(
     "/messages/example",
@@ -280,12 +277,6 @@ export function createMessageHono(ctx: AppContext, deps: MessageDeps = {}): Hono
     }
     try {
       await messageService.deleteUserData(did, agent);
-      try {
-        await authService.revokeSession(did);
-      } catch {}
-      if (typeof ctx.db?.deleteFrom === "function") {
-        await ctx.db.deleteFrom("auth_session").where("key", "=", did).execute();
-      }
       notificationService
         .deleteAllSubscriptionsForUser(did)
         .catch((err) => ctx.logger.error({ err, did }, "Failed to delete push subscriptions"));

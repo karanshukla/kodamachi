@@ -2,7 +2,7 @@ import { z } from "zod";
 import { Hono } from "hono";
 
 import { errorBody } from "#/lib/errors";
-import { NotificationService, isAllowedPushEndpoint } from "#/services/notification-service";
+import { NotificationService } from "#/services/notification-service";
 import { getAccounts, type AppSessionData } from "#/auth/session";
 import { getSession } from "./session-middleware";
 import { notAuthenticated, sessionDid, validateJson } from "./route-helpers";
@@ -11,13 +11,8 @@ import type { AppContext } from "#/index";
 
 const PUSH_NOT_CONFIGURED = "Web push not configured";
 
-const pushEndpointSchema = z
-  .string()
-  .url()
-  .refine(isAllowedPushEndpoint, { message: "Disallowed push endpoint URL" });
-
 const subscribeSchema = z.object({
-  endpoint: pushEndpointSchema,
+  endpoint: z.string().url(),
   keys: z.object({
     p256dh: z.string().min(1),
     auth: z.string().min(1),
@@ -53,8 +48,7 @@ export function createNotificationHono(ctx: AppContext, deps: NotificationDeps =
       const signedInDids = getAccounts(getSession(c) as AppSessionData).map(
         (account) => account.did
       );
-      const liveDids = await filterLiveSessionDids(ctx, signedInDids);
-      await notificationService.syncSubscriptionsAcrossAccounts(liveDids);
+      await notificationService.syncSubscriptionsAcrossAccounts(signedInDids);
       ctx.logger.info({ did }, "Push subscription registered");
       return c.json({ ok: true }, 201);
     } catch (err) {
@@ -65,7 +59,7 @@ export function createNotificationHono(ctx: AppContext, deps: NotificationDeps =
 
   app.delete(
     "/notifications/subscribe",
-    validateJson(z.object({ endpoint: pushEndpointSchema })),
+    validateJson(z.object({ endpoint: z.string().url() })),
     async (c) => {
       const did = sessionDid(c);
       if (!did) return notAuthenticated(c);
@@ -82,19 +76,4 @@ export function createNotificationHono(ctx: AppContext, deps: NotificationDeps =
   );
 
   return app;
-}
-
-export async function filterLiveSessionDids(
-  ctx: Pick<AppContext, "db">,
-  dids: string[]
-): Promise<string[]> {
-  if (dids.length === 0) return [];
-  if (typeof ctx.db?.selectFrom !== "function") return dids;
-  const rows = await ctx.db
-    .selectFrom("auth_session")
-    .select("key")
-    .where("key", "in", dids)
-    .execute();
-  const liveSet = new Set(rows.map((r) => r.key));
-  return dids.filter((d) => liveSet.has(d));
 }

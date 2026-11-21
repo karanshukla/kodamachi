@@ -33,7 +33,6 @@
     {
       "name": "cardybot-bluesky",
       "user_agent_regex": "Bluesky Cardyb",
-      "path_regex": "^/(profile/[^/]+/?|og-cache/[^/]+\\.png)$",
       "action": "ALLOW"
     },
     {
