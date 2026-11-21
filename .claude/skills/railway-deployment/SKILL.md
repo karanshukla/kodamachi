@@ -21,7 +21,7 @@ Railway deprecated Config as Code (per-service `railway.json` / `railway.toml`) 
 - **Do not run `railway config migrate`.** It only walks _up_ from the working directory, so it never finds anything in this monorepo, and what it does emit puts the real settings in comments and names services after directories.
 - **Do not apply a bare `railway config pull` without reading the diff.** The importer maps managed data services onto helper defaults: it wanted to move `Postgres (Auth and Data)` from `ghcr.io/railwayapp-templates/postgres-ssl:16` to `postgres:18`, a major version jump off the SSL template image against a mounted volume. That entry uses `database(name, "postgres", { image })` specifically to pin the real image. Leave it that way.
 
-`anubis/prometheus/railway.json` was also removed. It had no corresponding Railway service, so it had been dead config for some time.
+The `anubis/prometheus/` directory is gone too. It had no corresponding Railway service, so it had been dead config for some time.
 
 ## Production server services must bind a wildcard HOST
 
