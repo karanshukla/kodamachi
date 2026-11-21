@@ -1,3 +1,4 @@
+import { safeFetchWrap } from "@atproto-labs/fetch-node";
 import {
   buildWaypointsForParsed,
   parseURI,
@@ -125,7 +126,7 @@ export class AtmosphereService {
   constructor(
     private idResolver: AtprotoDataResolver,
     private logger: Logger,
-    private fetchImpl: typeof fetch = fetch
+    private fetchImpl: (url: string, init: RequestInit) => Promise<Response> = safeFetchWrap()
   ) {}
 
   /**
@@ -166,8 +167,11 @@ export class AtmosphereService {
   }
 
   /**
-   * `redirect: "manual"` is the other half of `isPublicPdsUrl`: a public host
-   * can 302 to a private address (SSRF). A real describeRepo never redirects.
+   * The PDS URL comes from a DID document anyone can publish, so the default
+   * `fetchImpl` is atproto's SSRF-safe fetch: it rejects names that resolve to
+   * private addresses, which `isPublicPdsUrl` cannot see, and caps the body
+   * size. `redirect: "manual"` keeps a public host from 302ing to a private
+   * one. A real describeRepo never redirects.
    *
    * @see [atmosphere-service.test.ts](../tests/atmosphere-service.test.ts):
    * "refuses to follow a redirect away from the PDS it validated".
