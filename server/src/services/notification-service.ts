@@ -65,8 +65,6 @@ export function createConcurrencyLimiter(limit: number) {
 
 // Shared across instances: one process, one egress.
 export const PUSH_CONCURRENCY_LIMIT = 10;
-/** Socket idle timeout: a hung push service would otherwise hold a limiter slot forever. */
-export const PUSH_SEND_TIMEOUT_MS = 5000;
 const pushLimiter = createConcurrencyLimiter(PUSH_CONCURRENCY_LIMIT);
 
 const PUSH_SERVICE_HOSTS = new Set(["fcm.googleapis.com", "updates.push.services.mozilla.com"]);
@@ -220,8 +218,7 @@ export class NotificationService {
       await pushLimiter.run(() =>
         sendNotification(
           { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
-          payload,
-          { timeout: PUSH_SEND_TIMEOUT_MS }
+          payload
         )
       );
     } catch (err) {
