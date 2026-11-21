@@ -7,7 +7,8 @@
 		format json
 	}
 	servers {
-		trusted_proxies static private_ranges
+		trusted_proxies static private_ranges 100.64.0.0/10
+		client_ip_headers X-Real-IP
 	}
 }
 
@@ -37,7 +38,7 @@
 	import passive_health_checks
 	header_up Host {upstream_hostport}
 	header_up X-Forwarded-Proto {scheme}
-	header_up X-Forwarded-For {remote_host}
+	header_up X-Forwarded-For {client_ip}
 	header_up X-Forwarded-Host {host}
 }
 

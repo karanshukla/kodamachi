@@ -1,8 +1,15 @@
 diff --git a/dist/unicast.js b/dist/unicast.js
-index ce1ecf5a17cedab2f4c386bc238f295be200ddfe..8376dc165e25e22d856c952207c65341a409c8a8 100644
+index ce1ecf5a17cedab2f4c386bc238f295be200ddfe..537dc151fa6b91da1535cc0f64b95b210df06835 100644
 --- a/dist/unicast.js
 +++ b/dist/unicast.js
-@@ -10,6 +10,60 @@ const { IPv4, IPv6 } = ipaddr;
+@@ -6,10 +6,88 @@ import { Agent as Undici8Agent } from 'undici_v8'; // NodeJS 26
+ import { FetchRequestError, asRequest, extractUrl, } from '@atproto-labs/fetch';
+ import { compareVersions, isUnicastIpHostname, parseVersion } from './util.js';
+ const { IPv4, IPv6 } = ipaddr;
++const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308]);
++// Matches the fetch spec's limit.
++const MAX_REDIRECTS = 20;
+ /**
   * @see {@link https://owasp.org/Top10/A10_2021-Server-Side_Request_Forgery_%28SSRF%29/}
   */
  export function unicastFetchWrap({ fetch = globalThis.fetch, } = {}) {
@@ -16,14 +23,7 @@ index ce1ecf5a17cedab2f4c386bc238f295be200ddfe..8376dc165e25e22d856c952207c65341
 +    // than on the socket, so a name that changes answers between the check and
 +    // the connect (DNS rebinding) is not caught the way the Node path catches it.
 +    if (process.versions.bun) {
-+        return async function (input, init) {
-+            if (init != null && 'dispatcher' in init && init.dispatcher != null) {
-+                const request = asRequest(input, init);
-+                await request.body?.cancel();
-+                const cause = new FetchRequestError(request, 500, 'SSRF protection cannot be used with a custom request dispatcher');
-+                throw new TypeError('fetch failed', { cause });
-+            }
-+            const url = extractUrl(input);
++        const rejectUnlessUnicast = async (url, request) => {
 +            // Fail closed on anything that isn't HTTP(S). The checks below are all
 +            // keyed on url.hostname, which is "" for schemes like file:, so they
 +            // would wave such a URL through — and Bun's fetch, unlike Node's, will
@@ -32,13 +32,11 @@ index ce1ecf5a17cedab2f4c386bc238f295be200ddfe..8376dc165e25e22d856c952207c65341
 +            // so this is the backstop for that validation regressing, not a
 +            // reachable hole today.
 +            if (url.protocol !== 'http:' && url.protocol !== 'https:') {
-+                const request = asRequest(input, init);
 +                await request.body?.cancel();
 +                const cause = new FetchRequestError(request, 400, `Unsupported protocol "${url.protocol}"`);
 +                throw new TypeError('fetch failed', { cause });
 +            }
 +            if (url.hostname && isUnicastIpHostname(url.hostname) === false) {
-+                const request = asRequest(input, init);
 +                await request.body?.cancel();
 +                const cause = new FetchRequestError(request, 400, 'Hostname is a non-unicast address');
 +                throw new TypeError('fetch failed', { cause });
@@ -51,13 +49,43 @@ index ce1ecf5a17cedab2f4c386bc238f295be200ddfe..8376dc165e25e22d856c952207c65341
 +                    unicastLookup(url.hostname, { all: true }, (err) => resolve(err));
 +                });
 +                if (rejection) {
-+                    const request = asRequest(input, init);
 +                    await request.body?.cancel();
 +                    const cause = new FetchRequestError(request, 400, rejection.message);
 +                    throw new TypeError('fetch failed', { cause });
 +                }
 +            }
-+            return fetch.call(this, input, init);
++        };
++        return async function (input, init) {
++            let request = asRequest(input, init);
++            if (init != null && 'dispatcher' in init && init.dispatcher != null) {
++                await request.body?.cancel();
++                const cause = new FetchRequestError(request, 500, 'SSRF protection cannot be used with a custom request dispatcher');
++                throw new TypeError('fetch failed', { cause });
++            }
++            await rejectUnlessUnicast(new URL(request.url), request);
++            if (request.redirect !== 'follow') {
++                return fetch.call(this, request);
++            }
++            // Bun follows redirects inside fetch, past the check above, so a public
++            // host could bounce the request to a private one (@atproto/identity's
++            // well-known handle lookup asks for redirect: 'follow'). Follow them
++            // here instead, checking every hop. Callers that follow only GET.
++            let response = await fetch.call(this, new Request(request, { redirect: 'manual' }));
++            for (let hops = 0; REDIRECT_STATUSES.has(response.status) && response.headers.has('location'); hops++) {
++                await response.body?.cancel();
++                if (hops === MAX_REDIRECTS) {
++                    const cause = new FetchRequestError(request, 502, 'Too many redirects');
++                    throw new TypeError('fetch failed', { cause });
++                }
++                request = new Request(new URL(response.headers.get('location'), request.url), {
++                    headers: request.headers,
++                    signal: request.signal,
++                    redirect: 'manual',
++                });
++                await rejectUnlessUnicast(new URL(request.url), request);
++                response = await fetch.call(this, request);
++            }
++            return response;
 +        };
 +    }
      // @NOTE we parse here instead of top-level to allow version mocking in tests.

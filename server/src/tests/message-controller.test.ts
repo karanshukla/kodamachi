@@ -68,6 +68,7 @@ describe("Messages (Hono)", () => {
       dbResult?: any;
       serviceOverride?: any;
       notificationOverride?: any;
+      revokeSession?: any;
       session?: AppSessionData | null;
       oauthRestore?: any;
     } = {}
@@ -78,16 +79,19 @@ describe("Messages (Hono)", () => {
     }
     const service = makeService(opts.serviceOverride);
     const notifications = makeNotificationService(opts.notificationOverride);
+    const auth = { revokeSession: opts.revokeSession ?? mock(async () => {}) };
     const app = withTestSession(
       createMessageHono(ctx, {
         messageService: service,
         notificationService: notifications,
-      } as MessageDeps)
+        authService: auth,
+      } as unknown as MessageDeps)
     );
     return {
       app,
       service,
       notifications,
+      auth,
       ctx,
       headers: sessionHeader(opts.session ?? { did: "did:foo" }),
     };
@@ -563,6 +567,24 @@ describe("Messages (Hono)", () => {
       const res = await app.request("/delete-account", { method: "DELETE", headers });
       const body = await res.json();
       assert.deepStrictEqual(body, { success: true });
+    });
+
+    test("revokes the OAuth session so no tokens outlive the account", async () => {
+      const { app, auth, headers } = makeApp({ oauthRestore: restoreSuccess });
+      await app.request("/delete-account", { method: "DELETE", headers });
+      assert.deepStrictEqual(auth.revokeSession.mock.calls[0], ["did:foo"]);
+    });
+
+    test("still reports success, and logs, when revoking the OAuth session fails", async () => {
+      const { app, ctx, headers } = makeApp({
+        oauthRestore: restoreSuccess,
+        revokeSession: mock(async () => {
+          throw new Error("authorization server unreachable");
+        }),
+      });
+      const res = await app.request("/delete-account", { method: "DELETE", headers });
+      assert.deepStrictEqual(await res.json(), { success: true });
+      assert.strictEqual((ctx.logger.error as any).mock.calls.length, 1);
     });
 
     test("drops push subscriptions (fire-and-forget) on success", async () => {

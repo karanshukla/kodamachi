@@ -2,7 +2,7 @@
 
 import { addPlugins, precacheAndRoute } from "workbox-precaching";
 import { registerRoute, NavigationRoute } from "workbox-routing";
-import { NetworkFirst, CacheFirst } from "workbox-strategies";
+import { NetworkFirst, NetworkOnly, CacheFirst } from "workbox-strategies";
 
 import { APP_NAME } from "./lib/brand";
 import { isWafInterstitial } from "./lib/wafInterstitial";
@@ -38,7 +38,7 @@ const networkOnlyUrls = ["/api/", "/oauth"];
 registerRoute(({ url }) => {
   if (url.origin !== SW_ORIGIN) return false;
   return networkOnlyUrls.some((p) => url.pathname.startsWith(p));
-}, new NetworkFirst());
+}, new NetworkOnly());
 
 const navigationRoute = new NavigationRoute(
   new NetworkFirst({

@@ -8,7 +8,6 @@ on:
 
 permissions:
   contents: read
-  pull-requests: write
 
 # Cancels superseded PR runs: seven jobs per run would starve the queue. Main is exempt, since its runs are the merge-status record.
 concurrency:
@@ -41,6 +40,9 @@ jobs:
     name: Client Tests
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    permissions:
+      contents: read
+      pull-requests: write
 
     steps:
       - uses: actions/checkout@v4
@@ -150,6 +152,9 @@ jobs:
     name: Server Tests
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    permissions:
+      contents: read
+      pull-requests: write
 
     steps:
       - uses: actions/checkout@v4

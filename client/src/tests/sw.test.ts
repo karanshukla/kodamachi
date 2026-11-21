@@ -6,6 +6,7 @@ const precacheAndRouteMock = vi.fn();
 const addPluginsMock = vi.fn();
 const registerRouteMock = vi.fn();
 const networkFirstCtor = vi.fn();
+const networkOnlyCtor = vi.fn();
 const cacheFirstCtor = vi.fn();
 const navigationRouteCtor = vi.fn();
 
@@ -25,6 +26,11 @@ vi.mock("workbox-strategies", () => ({
   NetworkFirst: class {
     constructor(...args: unknown[]) {
       networkFirstCtor(...args);
+    }
+  },
+  NetworkOnly: class {
+    constructor(...args: unknown[]) {
+      networkOnlyCtor(...args);
     }
   },
   CacheFirst: class {
@@ -66,6 +72,7 @@ describe("sw.ts", () => {
     addPluginsMock.mockClear();
     registerRouteMock.mockClear();
     networkFirstCtor.mockClear();
+    networkOnlyCtor.mockClear();
     cacheFirstCtor.mockClear();
     navigationRouteCtor.mockClear();
     await loadServiceWorker();
@@ -102,6 +109,7 @@ describe("sw.ts", () => {
 
   it("registers the network-only, navigation, and static-asset routes", () => {
     expect(registerRouteMock).toHaveBeenCalledTimes(3);
+    expect(networkOnlyCtor).toHaveBeenCalledOnce();
     expect(networkFirstCtor).toHaveBeenCalled();
     expect(cacheFirstCtor).toHaveBeenCalledWith({
       cacheName: "nf-static-v2",

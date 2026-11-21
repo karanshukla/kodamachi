@@ -2,7 +2,7 @@ import { z } from "zod";
 import { Hono } from "hono";
 
 import { errorBody } from "#/lib/errors";
-import { NotificationService } from "#/services/notification-service";
+import { NotificationService, isPushServiceEndpoint } from "#/services/notification-service";
 import { getAccounts, type AppSessionData } from "#/auth/session";
 import { getSession } from "./session-middleware";
 import { notAuthenticated, sessionDid, validateJson } from "./route-helpers";
@@ -12,7 +12,7 @@ import type { AppContext } from "#/index";
 const PUSH_NOT_CONFIGURED = "Web push not configured";
 
 const subscribeSchema = z.object({
-  endpoint: z.string().url(),
+  endpoint: z.string().url().refine(isPushServiceEndpoint),
   keys: z.object({
     p256dh: z.string().min(1),
     auth: z.string().min(1),

@@ -54,8 +54,10 @@ backwards compatibility with the upstream template.
 `admin off` (no need for the admin API on Railway), `persist_config off` (storage
 isn't persistent anyway), and `auto_https off` (Railway terminates TLS at its edge).
 Runtime and access logs are both JSON, which is what the Axiom log drain expects.
-`trusted_proxies static private_ranges` trusts Railway's proxy so `{remote_host}`
-is the real client IP rather than the edge.
+Railway's edge connects from `100.64.0.0/10`, which `private_ranges` does not cover,
+and overwrites `X-Real-IP` with the real client address. Trusting that range and
+reading `X-Real-IP` makes `{client_ip}` the visitor rather than the edge node, which
+is what the server's per-IP rate limits key on.
 
 ## The `navyfragen.app` redirect
 
@@ -118,7 +120,7 @@ render or a cold start does not eject a healthy single-replica upstream.
 
 `header_up Host {upstream_hostport}` is set on every proxy so the upstream sees the
 resolved private hostname rather than `navyfragen.app`. The backend proxies also
-forward `X-Forwarded-Proto`, `X-Forwarded-For` (from the trusted `{remote_host}`),
+forward `X-Forwarded-Proto`, `X-Forwarded-For` (from `{client_ip}`),
 and `X-Forwarded-Host`.
 
 Security headers are applied to every response: `X-Content-Type-Options: nosniff`,
