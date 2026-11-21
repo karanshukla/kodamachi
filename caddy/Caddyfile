@@ -37,7 +37,7 @@
 	import passive_health_checks
 	header_up Host {upstream_hostport}
 	header_up X-Forwarded-Proto {scheme}
-	header_up X-Forwarded-For {remote_host}
+	header_up X-Forwarded-For {client_ip}
 	header_up X-Forwarded-Host {host}
 }
 

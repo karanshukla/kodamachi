@@ -3,7 +3,7 @@
 // Run: bun serve.ts (PORT env, default 3000)
 
 import { fileURLToPath } from "node:url";
-import { dirname, normalize, join } from "node:path";
+import { dirname, normalize, join, sep } from "node:path";
 import { statSync } from "node:fs";
 
 const DIST = join(dirname(fileURLToPath(import.meta.url)), "dist");
@@ -14,9 +14,14 @@ const INDEX_HTML = join(DIST, "index.html");
 function resolveStaticFile(urlPath: string): string | null {
   const clean = urlPath.split("?")[0]!.split("#")[0]!;
   // Decode first so encoded traversal (%2e%2e) is caught by normalize.
-  const decoded = decodeURIComponent(clean);
+  let decoded: string;
+  try {
+    decoded = decodeURIComponent(clean);
+  } catch {
+    return null;
+  }
   const resolved = normalize(join(DIST, decoded));
-  if (!resolved.startsWith(DIST)) return null;
+  if (!resolved.startsWith(DIST + sep)) return null;
   try {
     return statSync(resolved).isFile() ? resolved : null;
   } catch {

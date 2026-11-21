@@ -65,7 +65,34 @@ export function createConcurrencyLimiter(limit: number) {
 
 // Shared across instances: one process, one egress.
 export const PUSH_CONCURRENCY_LIMIT = 10;
+export const MAX_SUBSCRIPTIONS_PER_DID = 15;
+export const PUSH_SEND_TIMEOUT_MS = 5000;
 const pushLimiter = createConcurrencyLimiter(PUSH_CONCURRENCY_LIMIT);
+
+const ALLOWED_PUSH_HOSTS = new Set([
+  "fcm.googleapis.com",
+  "android.googleapis.com",
+  "updates.push.services.mozilla.com",
+  "updates-autopush.stage.mozaws.net",
+  "web.push.apple.com",
+]);
+
+const ALLOWED_PUSH_SUFFIXES = [".push.apple.com", ".notify.windows.com", ".wns.windows.com"];
+
+export function isAllowedPushEndpoint(raw: string): boolean {
+  let url: URL;
+  try {
+    url = new URL(raw);
+  } catch {
+    return false;
+  }
+  if (url.protocol !== "https:") return false;
+  if (url.username || url.password) return false;
+  const host = url.hostname.toLowerCase().replace(/\.+$/, "");
+  if (!host) return false;
+  if (ALLOWED_PUSH_HOSTS.has(host)) return true;
+  return ALLOWED_PUSH_SUFFIXES.some((suffix) => host.endsWith(suffix) && host.length > suffix.length);
+}
 
 export class NotificationService {
   constructor(
@@ -81,6 +108,7 @@ export class NotificationService {
   /**
    * Upserts by (did, endpoint): one row per signed-in account per device.
    * Single-statement because read-then-write races on the unique constraint.
+   * Caps stored subscriptions per DID at MAX_SUBSCRIPTIONS_PER_DID (15), pruning oldest excess rows.
    */
   async saveSubscription(
     did: string,
@@ -93,6 +121,22 @@ export class NotificationService {
       .values({ did, endpoint, p256dh, auth, createdAt: new Date().toISOString() })
       .onConflict((oc) => oc.columns(["did", "endpoint"]).doUpdateSet({ p256dh, auth }))
       .execute();
+
+    const rows = await this.db
+      .selectFrom("push_subscription")
+      .selectAll()
+      .where("did", "=", did)
+      .execute();
+    if (rows.length > MAX_SUBSCRIPTIONS_PER_DID) {
+      const sorted = [...rows].sort((a, b) =>
+        String(a.createdAt ?? "").localeCompare(String(b.createdAt ?? ""))
+      );
+      const excess = sorted.slice(0, rows.length - MAX_SUBSCRIPTIONS_PER_DID);
+      await Promise.all(
+        excess.map((row) => this.deleteSubscription(did, row.endpoint))
+      );
+    }
+
     this.logger.info({ did }, "Push subscription saved");
   }
 
@@ -199,7 +243,8 @@ export class NotificationService {
       await pushLimiter.run(() =>
         sendNotification(
           { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
-          payload
+          payload,
+          { timeout: PUSH_SEND_TIMEOUT_MS }
         )
       );
     } catch (err) {

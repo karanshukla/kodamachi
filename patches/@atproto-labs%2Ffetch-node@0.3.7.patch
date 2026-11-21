@@ -2,7 +2,7 @@ diff --git a/dist/unicast.js b/dist/unicast.js
 index ce1ecf5a17cedab2f4c386bc238f295be200ddfe..8376dc165e25e22d856c952207c65341a409c8a8 100644
 --- a/dist/unicast.js
 +++ b/dist/unicast.js
-@@ -10,6 +10,60 @@ const { IPv4, IPv6 } = ipaddr;
+@@ -10,6 +10,91 @@ const { IPv4, IPv6 } = ipaddr;
   * @see {@link https://owasp.org/Top10/A10_2021-Server-Side_Request_Forgery_%28SSRF%29/}
   */
  export function unicastFetchWrap({ fetch = globalThis.fetch, } = {}) {
@@ -11,44 +11,26 @@ index ce1ecf5a17cedab2f4c386bc238f295be200ddfe..8376dc165e25e22d856c952207c65341
 +    // connect-time lookup hook to hang the dispatcher on.
 +    //
 +    // Bun therefore runs the same unicastLookup checks ahead of the request
-+    // instead of during connect. The guard is equivalent for a hostname that
-+    // resolves consistently, but it is validated before the connection rather
-+    // than on the socket, so a name that changes answers between the check and
-+    // the connect (DNS rebinding) is not caught the way the Node path catches it.
++    // instead of during connect, and follows redirects manually so every
++    // redirect hop is re-validated against unicastLookup as well.
 +    if (process.versions.bun) {
-+        return async function (input, init) {
-+            if (init != null && 'dispatcher' in init && init.dispatcher != null) {
-+                const request = asRequest(input, init);
-+                await request.body?.cancel();
-+                const cause = new FetchRequestError(request, 500, 'SSRF protection cannot be used with a custom request dispatcher');
-+                throw new TypeError('fetch failed', { cause });
-+            }
-+            const url = extractUrl(input);
-+            // Fail closed on anything that isn't HTTP(S). The checks below are all
-+            // keyed on url.hostname, which is "" for schemes like file:, so they
-+            // would wave such a URL through — and Bun's fetch, unlike Node's, will
-+            // happily read file: URLs. Callers do validate schemes before reaching
-+            // here (@atproto/common-web's validateUrl, oauth-types' webUriSchema),
-+            // so this is the backstop for that validation regressing, not a
-+            // reachable hole today.
++        const validateTargetUrl = async (url, input, init) => {
 +            if (url.protocol !== 'http:' && url.protocol !== 'https:') {
 +                const request = asRequest(input, init);
 +                await request.body?.cancel();
 +                const cause = new FetchRequestError(request, 400, `Unsupported protocol "${url.protocol}"`);
 +                throw new TypeError('fetch failed', { cause });
 +            }
-+            if (url.hostname && isUnicastIpHostname(url.hostname) === false) {
++            const cleanHost = url.hostname.replace(/\.+$/, '');
++            if (cleanHost && isUnicastIpHostname(cleanHost) === false) {
 +                const request = asRequest(input, init);
 +                await request.body?.cancel();
 +                const cause = new FetchRequestError(request, 400, 'Hostname is a non-unicast address');
 +                throw new TypeError('fetch failed', { cause });
 +            }
-+            // isUnicastIpHostname only parses literal IPs — it returns undefined for
-+            // a DNS name, so without this every name that resolves to a private or
-+            // loopback address would pass straight through to Bun's fetch.
-+            if (url.hostname && isUnicastIpHostname(url.hostname) === undefined) {
++            if (cleanHost && isUnicastIpHostname(cleanHost) === undefined) {
 +                const rejection = await new Promise((resolve) => {
-+                    unicastLookup(url.hostname, { all: true }, (err) => resolve(err));
++                    unicastLookup(cleanHost, { all: true }, (err) => resolve(err));
 +                });
 +                if (rejection) {
 +                    const request = asRequest(input, init);
@@ -57,7 +39,45 @@ index ce1ecf5a17cedab2f4c386bc238f295be200ddfe..8376dc165e25e22d856c952207c65341
 +                    throw new TypeError('fetch failed', { cause });
 +                }
 +            }
-+            return fetch.call(this, input, init);
++        };
++        return async function (input, init) {
++            if (init != null && 'dispatcher' in init && init.dispatcher != null) {
++                const request = asRequest(input, init);
++                await request.body?.cancel();
++                const cause = new FetchRequestError(request, 500, 'SSRF protection cannot be used with a custom request dispatcher');
++                throw new TypeError('fetch failed', { cause });
++            }
++            const redirectMode = init?.redirect ?? (input instanceof Request ? input.redirect : 'follow');
++            let currentUrl = extractUrl(input);
++            await validateTargetUrl(currentUrl, input, init);
++            if (redirectMode === 'manual' || redirectMode === 'error') {
++                return fetch.call(this, input, init);
++            }
++            let currentInput = input;
++            let currentInit = { ...init, redirect: 'manual' };
++            const maxRedirects = 5;
++            for (let hop = 0; hop <= maxRedirects; hop++) {
++                const response = await fetch.call(this, currentInput, currentInit);
++                if (response.status < 300 || response.status >= 400) {
++                    return response;
++                }
++                const location = response.headers.get('location');
++                if (!location) {
++                    return response;
++                }
++                if (hop === maxRedirects) {
++                    const request = asRequest(currentInput, currentInit);
++                    const cause = new FetchRequestError(request, 400, 'Too many redirects');
++                    throw new TypeError('fetch failed', { cause });
++                }
++                await response.body?.cancel();
++                currentUrl = new URL(location, currentUrl);
++                await validateTargetUrl(currentUrl, currentInput, currentInit);
++                currentInput = currentUrl.toString();
++                if (response.status === 303 || ((response.status === 301 || response.status === 302) && currentInit.method && currentInit.method.toUpperCase() === 'POST')) {
++                    currentInit = { ...currentInit, method: 'GET', body: undefined };
++                }
++            }
 +        };
 +    }
      // @NOTE we parse here instead of top-level to allow version mocking in tests.

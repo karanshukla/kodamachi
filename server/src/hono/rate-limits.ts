@@ -19,7 +19,12 @@ const TOO_MANY = "Too many requests, please try again later.";
 /** Local dev has no proxy hop, so all requests share the "local" bucket. */
 function clientIp(c: Context): string {
   const xff = c.req.header("x-forwarded-for");
-  return xff ? xff.split(",")[0].trim() : "local";
+  if (!xff) return "local";
+  const hops = xff
+    .split(",")
+    .map((part) => part.trim())
+    .filter(Boolean);
+  return hops.at(-1) || "local";
 }
 
 async function recipientOf(c: Context): Promise<string> {

@@ -79,16 +79,16 @@ func newCaddyProxy(target *url.URL) (http.Handler, error) {
 		return nil, err
 	}
 	engineURL := &url.URL{Scheme: "http", Host: engineAddr}
-	proxy := httputil.NewSingleHostReverseProxy(engineURL)
-	baseDirector := proxy.Director
-	proxy.Director = func(req *http.Request) {
-		baseDirector(req)
-		// The default director leaves req.Host alone, and the engine's site
-		// block is host-matched: without this Caddy silently no-ops.
-		req.Host = engineURL.Host
-		req.Header.Set(caddyUpstreamHeader, target.Host)
+	proxy := &httputil.ReverseProxy{
+		Rewrite: func(pr *httputil.ProxyRequest) {
+			pr.SetURL(engineURL)
+			// SetURL rewrites Out.Host to engineURL.Host so the engine's host-matched
+			// site block matches, and Rewrite strips any client-supplied
+			// X-Navyfragen-Internal-Upstream before we set our trusted target.
+			pr.Out.Header.Set(caddyUpstreamHeader, target.Host)
+		},
+		ErrorHandler: proxyErrorHandler,
 	}
-	proxy.ErrorHandler = proxyErrorHandler
 	return proxy, nil
 }
 

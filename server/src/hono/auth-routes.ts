@@ -19,6 +19,7 @@ import { AuthService } from "#/services/auth-service";
 import { NotificationService } from "#/services/notification-service";
 import { clearSession, getSession, setSession } from "./session-middleware";
 import { createE2EAuthHono } from "./e2e-auth-routes";
+import { filterLiveSessionDids } from "./notification-routes";
 import { validateJson } from "./route-helpers";
 
 import type { AppContext } from "#/index";

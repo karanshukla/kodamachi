@@ -38,6 +38,7 @@ function stopServer(server) {
 // Mock page writes dummy bytes so createReadStream succeeds.
 function makeMockBrowser({ failScreenshot = false } = {}) {
   const calls = {
+    setJavaScriptEnabled: [],
     setRequestInterception: [],
     requestHandlers: [],
     setViewport: [],
@@ -47,6 +48,9 @@ function makeMockBrowser({ failScreenshot = false } = {}) {
     screenshot: [],
   };
   const page = {
+    setJavaScriptEnabled: async (value) => {
+      calls.setJavaScriptEnabled.push(value);
+    },
     setRequestInterception: async (value) => {
       calls.setRequestInterception.push(value);
     },
@@ -420,23 +424,14 @@ describe("POST / options.args passthrough", () => {
   });
   after(() => stopServer(server));
 
-  test("merges options.args into screenshot call", async () => {
+  test("ignores arbitrary options.args and only passes format.args and temp path", async () => {
     await post(url, {
       source: "<h1>hi</h1>",
       format: "png",
-      options: { args: { fullPage: true } },
+      options: { args: { path: "/tmp/pwned.png", type: "jpeg" } },
     });
-    assert.equal(calls.screenshot[0].fullPage, true);
+    assert.notEqual(calls.screenshot[0].path, "/tmp/pwned.png");
     assert.equal(calls.screenshot[0].type, "png");
-  });
-
-  test("format.args overrides options.args for conflicting keys", async () => {
-    await post(url, {
-      source: "<h1>hi</h1>",
-      format: "png",
-      options: { args: { type: "jpeg" } },
-    });
-    assert.equal(calls.screenshot[1].type, "png");
   });
 });
 

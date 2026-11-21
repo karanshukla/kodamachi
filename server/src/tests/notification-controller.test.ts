@@ -43,7 +43,7 @@ describe("Notifications (Hono)", () => {
 
   const sessionDid = { did: "did:foo" } as AppSessionData;
   const validBody = {
-    endpoint: "https://push.example.com/sub",
+    endpoint: "https://fcm.googleapis.com/fcm/send/sub",
     keys: { p256dh: "p256-key", auth: "auth-key" },
   };
 
@@ -72,6 +72,19 @@ describe("Notifications (Hono)", () => {
   });
 
   describe("POST /notifications/subscribe", () => {
+    test("returns 400 when endpoint is not an allowed Web Push service", async () => {
+      const { app, headers } = makeApp();
+      const res = await app.request("/notifications/subscribe", {
+        method: "POST",
+        headers: { ...headers, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          endpoint: "https://evil.example.com/sub",
+          keys: { p256dh: "p256-key", auth: "auth-key" },
+        }),
+      });
+      assert.strictEqual(res.status, 400);
+    });
+
     test("returns 403 when no session", async () => {
       const { app } = makeApp({}, null);
       const res = await app.request("/notifications/subscribe", {
@@ -104,7 +117,7 @@ describe("Notifications (Hono)", () => {
       assert.deepStrictEqual(body, { ok: true });
       const args = service.saveSubscription.mock.calls[0];
       assert.strictEqual(args[0], "did:foo");
-      assert.strictEqual(args[1], "https://push.example.com/sub");
+      assert.strictEqual(args[1], "https://fcm.googleapis.com/fcm/send/sub");
     });
 
     test("syncs the subscription across every account remembered on this device", async () => {
@@ -156,7 +169,7 @@ describe("Notifications (Hono)", () => {
       const res = await app.request("/notifications/subscribe", {
         method: "DELETE",
         headers: { ...sessionHeader(null), "Content-Type": "application/json" },
-        body: JSON.stringify({ endpoint: "https://push.example.com/sub" }),
+        body: JSON.stringify({ endpoint: "https://fcm.googleapis.com/fcm/send/sub" }),
       });
       assert.strictEqual(res.status, 403);
     });
@@ -166,13 +179,13 @@ describe("Notifications (Hono)", () => {
       const res = await app.request("/notifications/subscribe", {
         method: "DELETE",
         headers: { ...headers, "Content-Type": "application/json" },
-        body: JSON.stringify({ endpoint: "https://push.example.com/sub" }),
+        body: JSON.stringify({ endpoint: "https://fcm.googleapis.com/fcm/send/sub" }),
       });
       const body = await res.json();
       assert.deepStrictEqual(body, { ok: true });
       const args = service.deleteSubscription.mock.calls[0];
       assert.strictEqual(args[0], "did:foo");
-      assert.strictEqual(args[1], "https://push.example.com/sub");
+      assert.strictEqual(args[1], "https://fcm.googleapis.com/fcm/send/sub");
     });
 
     test("returns 500 when service throws", async () => {
@@ -184,7 +197,7 @@ describe("Notifications (Hono)", () => {
       const res = await app.request("/notifications/subscribe", {
         method: "DELETE",
         headers: { ...headers, "Content-Type": "application/json" },
-        body: JSON.stringify({ endpoint: "https://push.example.com/sub" }),
+        body: JSON.stringify({ endpoint: "https://fcm.googleapis.com/fcm/send/sub" }),
       });
       assert.strictEqual(res.status, 500);
     });
