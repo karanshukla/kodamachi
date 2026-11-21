@@ -65,7 +65,28 @@ export function createConcurrencyLimiter(limit: number) {
 
 // Shared across instances: one process, one egress.
 export const PUSH_CONCURRENCY_LIMIT = 10;
+/** Socket idle timeout: a hung push service would otherwise hold a limiter slot forever. */
+export const PUSH_SEND_TIMEOUT_MS = 5000;
 const pushLimiter = createConcurrencyLimiter(PUSH_CONCURRENCY_LIMIT);
+
+const PUSH_SERVICE_HOSTS = new Set(["fcm.googleapis.com", "updates.push.services.mozilla.com"]);
+const PUSH_SERVICE_SUFFIXES = [".push.apple.com", ".notify.windows.com"];
+
+/**
+ * The browsers' own push services. Any other endpoint is a host the subscriber
+ * picked, and web-push buffers whatever that host answers with no size limit.
+ *
+ * @see [notification-controller.test.ts](../tests/notification-controller.test.ts):
+ * "returns 400 when endpoint is not an allowed Web Push service".
+ */
+export function isPushServiceEndpoint(endpoint: string): boolean {
+  const url = URL.parse(endpoint);
+  if (url?.protocol !== "https:") return false;
+  return (
+    PUSH_SERVICE_HOSTS.has(url.hostname) ||
+    PUSH_SERVICE_SUFFIXES.some((suffix) => url.hostname.endsWith(suffix))
+  );
+}
 
 export class NotificationService {
   constructor(
@@ -199,7 +220,8 @@ export class NotificationService {
       await pushLimiter.run(() =>
         sendNotification(
           { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
-          payload
+          payload,
+          { timeout: PUSH_SEND_TIMEOUT_MS }
         )
       );
     } catch (err) {

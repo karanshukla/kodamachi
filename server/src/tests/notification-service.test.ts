@@ -11,7 +11,11 @@ import { test, describe, beforeAll, afterAll, beforeEach, afterEach, mock } from
 import webPush from "web-push";
 const { generateVAPIDKeys } = webPush;
 
-import { NotificationService, createConcurrencyLimiter } from "../services/notification-service";
+import {
+  NotificationService,
+  createConcurrencyLimiter,
+  isPushServiceEndpoint,
+} from "../services/notification-service";
 
 function makeSelectBuilder(existing: any, rows: any[]) {
   return {
@@ -472,6 +476,20 @@ describe("NotificationService", () => {
         assert.strictEqual(mockLogger.error.mock.calls.length, 1);
       });
     });
+  });
+});
+
+describe("isPushServiceEndpoint", () => {
+  test("accepts an endpoint under a push service's domain", () => {
+    assert.strictEqual(isPushServiceEndpoint("https://web.push.apple.com/QGuQyavXut"), true);
+  });
+
+  test("rejects a host that only starts with a push service's domain", () => {
+    assert.strictEqual(isPushServiceEndpoint("https://fcm.googleapis.com.evil.example/x"), false);
+  });
+
+  test("rejects a push service reached over plain HTTP", () => {
+    assert.strictEqual(isPushServiceEndpoint("http://fcm.googleapis.com/fcm/send/x"), false);
   });
 });
 
