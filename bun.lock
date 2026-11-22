@@ -23,7 +23,7 @@
       "name": "kodamachi-client",
       "version": "1.0.0",
       "dependencies": {
-        "@atcute/bluesky-richtext-parser": "^2.1.2",
+        "@atcute/bluesky-richtext-parser": "^2.1.3",
         "@aturi.to/waypoints-react": "^0.1.4",
         "@mantine/core": "^9.8.0",
         "@mantine/hooks": "^9.8.0",
@@ -140,7 +140,7 @@
 
     "@apideck/better-ajv-errors": ["@apideck/better-ajv-errors@0.3.7", "", { "dependencies": { "jsonpointer": "^5.0.1", "leven": "^3.1.0" }, "peerDependencies": { "ajv": ">=8" } }, "sha512-TajUJwGWbDwkCx/CZi7tRE8PVB7simCvKJfHUsSdvps+aTM/PDPP4gkLmKnc+x3CE//y9i/nj74GqdL/hwk7Iw=="],
 
-    "@atcute/bluesky-richtext-parser": ["@atcute/bluesky-richtext-parser@2.1.2", "", {}, "sha512-Wt3rGAszLY7z1S1wx2j3SXIbMpij+kFdtx0ODp67csPZ4xThAQ53r7pdcTIOmMzfymV4/nFYnTLrzBi0XDpKJA=="],
+    "@atcute/bluesky-richtext-parser": ["@atcute/bluesky-richtext-parser@2.1.3", "", {}, "sha512-V/KYkbBDyVRJQC08na0Gr445yiYRpoMV5y+VUDHpfBa5VeiQ2KqVbk25nWz6cUK0I3b0t33hWCe73B8415xKUQ=="],
 
     "@atproto-labs/did-resolver": ["@atproto-labs/did-resolver@0.3.13", "", { "dependencies": { "@atproto-labs/fetch": "^0.4.2", "@atproto-labs/pipe": "^0.2.5", "@atproto-labs/simple-store": "^0.5.1", "@atproto-labs/simple-store-memory": "^0.2.6", "@atproto/did": "^0.5.6", "zod": "^3.23.8" } }, "sha512-peNomkIMFcvsrq+1CHXiWv/sAakcYFenIWCB+EI94TPdDezNgRs39R6c8XaU3+UxSbzkfky7R3ywSOiKVVIY1g=="],
 
