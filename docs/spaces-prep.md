@@ -4,7 +4,7 @@ Tracks the `spaces-prep` branch against atproto spaces (proposal
 [0016](https://github.com/bluesky-social/proposals/tree/main/0016-permissioned-data),
 reference PDS in [atproto#5187](https://github.com/bluesky-social/atproto/pull/5187)).
 #5187 is still a draft. Names below are checked against the
-`0.0.0-spaces-alpha-20261117141222` release on the `alpha` dist-tag (the Nov 12
+`0.0.0-spaces-alpha-20261124235736` release on the `alpha` dist-tag (the Nov 24
 release notes); each later release ships a migration note in `alpha-migrations/` on
 that branch.
 
@@ -40,21 +40,30 @@ finish it:
    and `title`, 1–64 chars); the `key` value is still a guess. It lives outside
    `server/lexicons/` on purpose: the installed release has no `space` type, so
    `bun run lexgen` and `publish-lexicons` would reject it. Move it once the tooling
-   accepts it.
+   accepts it. Every collection a space type lists must be a record lexicon that
+   consumers can resolve, or their `lex install` fails, so publish
+   `app.kodamachi.inbox.question` before the space type.
 2. **Bot DID**, provisioned, with the write grant on its own account and only the
    manage grant requested of recipients at sign-in (#228 acceptance criteria). Space
    routes refuse app-password sessions, so the bot signs in with OAuth or its full
    password, unlike `publish-lexicons`.
 3. **`SpaceInboxStore`** implementing `InboxStore` over `com.atproto.space.*`,
    through `@atproto/lex-space` (`SpaceClient` to write, `SpaceReader.listAll()` to
-   read). Reads skip records with `valid: false`, which covers schema mismatches and
-   records filed under a collection other than their `$type`, as `InboxDrain` skips
-   legacy records that fail `validateRecord`. `putIgnoringDuplicates` keys on `tid`;
-   pin "ignores a duplicate tid" and "writes a new tid" as a test pair.
+   read). The typed helpers take a collection NSID or a built record, not a schema:
+   `listAll(app.kodamachi.inbox.question.$type)` with `repo` required, and
+   `put(app.kodamachi.inbox.question.$build({ ... }), { rkey })`. Reads skip records
+   with `valid: false`, which covers schema mismatches and records filed under a
+   collection other than their `$type`, as `InboxDrain` skips legacy records that fail
+   `validateRecord`. `putIgnoringDuplicates` keys on `tid`; pin "ignores a duplicate
+   tid" and "writes a new tid" as a test pair. A server-side `SpaceReader` contacts
+   hosts named by DID documents, so give it an SSRF-protected `fetch`; under Bun that
+   means the patched `@atproto-labs/fetch-node` (#286), not the global `fetch`.
 4. **Space creation** via `com.atproto.space.createSpace` (`{ spaceType, policy }`,
    returns `{ space }`) with a `com.atproto.memberspace.policy`, then the bot added
    with `com.atproto.memberspace.putMembers` (`members: [{ did, read, write: true }]`;
-   all three fields are required).
+   all three fields are required). A space ref is
+   `at:space/{recipientDid}/app.kodamachi.inbox/{skey}`; if one is stored, store that
+   form and read it back through `SpaceRef.for()`, never by splitting the string.
 5. **OAuth scope** `space:app.kodamachi.inbox?...` in the client metadata. Permission
    sets need the concrete type; wildcards are standalone-scope only.
 
@@ -82,13 +91,21 @@ provisions it at sign-in (`manage=create`) and adds the bot as the one member
 - **`allowedApps`** on the memberspace policy: omit it (any app reads) or list
   client ids. Setting it requires a client attestation on reads; it never limits
   writes.
-- **Bot write ceiling**: one writer shares one rate-limit bucket, roughly 1,666
-  questions an hour across all users, unless the bot's PDS is self-hosted.
+- **Bot write ceiling**: one writer shares one rate-limit bucket. Space writes have
+  their own budget, separate from the bot's public repo writes: 5,000 points an hour
+  and 35,000 a day at 3 per create, so roughly 1,666 questions an hour and 11,666 a
+  day across all users, unless the bot's PDS is self-hosted. Each recipient's host
+  also accepts at most 1,500 `notifyRepoUpdate` calls an hour (10,000 a day) from the
+  bot; past that the bot's host retries, so delivery slows rather than drops.
 - **Drained marker meaning**: `inbox_drain` currently marks "table backfilled into the
   space". Recheck it against the login-time queue-to-PDS drain before wiring either.
 
-## Upstream, as of the Nov 12 alpha
+## Upstream, as of the Nov 24 alpha
 
+- Space URIs are `at:space/{spaceDid}/{spaceType}/{skey}[/{authorDid}/{collection}/{rkey}]`;
+  the old `at://{spaceDid}/space/...` form is read leniently until beta and never
+  written.
+- Space methods refuse app-password sessions, privileged ones included.
 - `updateSpace` replaces the policy wholesale; changing one field means reading it
   with `getSpace` and sending the whole object back.
 - Space credentials come from `authorizeSpaceSync` with the delegation token in the
