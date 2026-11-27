@@ -276,3 +276,16 @@ migrations["014"] = {
     await db.schema.alterTable("user_settings").dropColumn("atmosphereLinksEnabled").execute();
   },
 };
+
+migrations["015"] = {
+  async up(db: Kysely<unknown>) {
+    await db.schema
+      .createTable("inbox_drain")
+      .addColumn("did", "varchar", (col) => col.primaryKey())
+      .addColumn("drainedAt", "varchar", (col) => col.notNull())
+      .execute();
+  },
+  async down(db: Kysely<unknown>) {
+    await db.schema.dropTable("inbox_drain").ifExists().execute();
+  },
+};

@@ -9,6 +9,7 @@ export type DatabaseSchema = {
   sessions: Sessions;
   user_settings: UserSettings;
   push_subscription: PushSubscription;
+  inbox_drain: InboxDrainRow;
 };
 
 /** @deprecated Dropped by migration 004; the type remains only for `down()`. */
@@ -74,6 +75,12 @@ export type PushSubscription = {
   p256dh: string;
   auth: string;
   createdAt: string;
+};
+
+/** One row per user whose inbox has been moved into their space. */
+export type InboxDrainRow = {
+  did: string;
+  drainedAt: string;
 };
 
 type AuthStateJson = string;
